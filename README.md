@@ -22,7 +22,7 @@ A blazingly fast HTTP server framework for TypeScript and Bun, designed to outpe
 ## 🚀 Quick Start
 
 ```bash
-bun add verb
+bun add github:wess/verb
 ```
 
 ```typescript
