@@ -7,13 +7,10 @@ const HTML_HEADERS = Object.freeze({ "Content-Type": "text/html" });
 
 // Pre-allocated common responses
 const NOT_FOUND_RESPONSE = new Response("Not Found", { status: 404 });
-const INTERNAL_ERROR_RESPONSE = new Response(
-	JSON.stringify({ error: "Internal Server Error" }),
-	{
-		status: 500,
-		headers: JSON_HEADERS,
-	},
-);
+const INTERNAL_ERROR_RESPONSE = new Response(JSON.stringify({ error: "Internal Server Error" }), {
+  status: 500,
+  headers: JSON_HEADERS,
+});
 
 // Response cache for common static responses
 const responseCache = new Map<string, Response>();
@@ -30,33 +27,30 @@ const responseCache = new Map<string, Response>();
  * ```
  */
 export const json = (data: unknown, status = 200): Response => {
-	// Cache simple static responses
-	if (
-		status === 200 &&
-		typeof data === "object" &&
-		data &&
-		Object.keys(data).length <= 2
-	) {
-		const cacheKey = `json:${status}:${JSON.stringify(data)}`;
-		const cached = responseCache.get(cacheKey);
-		if (cached) return cached.clone();
+  // Cache simple static responses
+  if (status === 200 && typeof data === "object" && data && Object.keys(data).length <= 2) {
+    const cacheKey = `json:${status}:${JSON.stringify(data)}`;
+    const cached = responseCache.get(cacheKey);
+    if (cached) {
+      return cached.clone();
+    }
 
-		const response = new Response(JSON.stringify(data), {
-			status,
-			headers: JSON_HEADERS,
-		});
+    const response = new Response(JSON.stringify(data), {
+      status,
+      headers: JSON_HEADERS,
+    });
 
-		if (responseCache.size < 100) {
-			// Limit cache size
-			responseCache.set(cacheKey, response.clone());
-		}
-		return response;
-	}
+    if (responseCache.size < 100) {
+      // Limit cache size
+      responseCache.set(cacheKey, response.clone());
+    }
+    return response;
+  }
 
-	return new Response(JSON.stringify(data), {
-		status,
-		headers: JSON_HEADERS,
-	});
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: JSON_HEADERS,
+  });
 };
 
 /**
@@ -71,27 +65,29 @@ export const json = (data: unknown, status = 200): Response => {
  * ```
  */
 export const text = (data: string, status = 200): Response => {
-	// Cache common text responses
-	if (status === 200 && data.length < 50) {
-		const cacheKey = `text:${status}:${data}`;
-		const cached = responseCache.get(cacheKey);
-		if (cached) return cached.clone();
+  // Cache common text responses
+  if (status === 200 && data.length < 50) {
+    const cacheKey = `text:${status}:${data}`;
+    const cached = responseCache.get(cacheKey);
+    if (cached) {
+      return cached.clone();
+    }
 
-		const response = new Response(data, {
-			status,
-			headers: TEXT_HEADERS,
-		});
+    const response = new Response(data, {
+      status,
+      headers: TEXT_HEADERS,
+    });
 
-		if (responseCache.size < 100) {
-			responseCache.set(cacheKey, response.clone());
-		}
-		return response;
-	}
+    if (responseCache.size < 100) {
+      responseCache.set(cacheKey, response.clone());
+    }
+    return response;
+  }
 
-	return new Response(data, {
-		status,
-		headers: TEXT_HEADERS,
-	});
+  return new Response(data, {
+    status,
+    headers: TEXT_HEADERS,
+  });
 };
 
 /**
@@ -106,10 +102,10 @@ export const text = (data: string, status = 200): Response => {
  * ```
  */
 export const html = (data: string, status = 200): Response =>
-	new Response(data, {
-		status,
-		headers: HTML_HEADERS,
-	});
+  new Response(data, {
+    status,
+    headers: HTML_HEADERS,
+  });
 
 /**
  * Creates a JSON error response
@@ -123,26 +119,28 @@ export const html = (data: string, status = 200): Response =>
  * ```
  */
 export const error = (message: string, status = 500): Response => {
-	// Return pre-allocated response for common errors
-	if (status === 500 && message === "Internal Server Error") {
-		return INTERNAL_ERROR_RESPONSE.clone();
-	}
+  // Return pre-allocated response for common errors
+  if (status === 500 && message === "Internal Server Error") {
+    return INTERNAL_ERROR_RESPONSE.clone();
+  }
 
-	// Cache common error responses
-	const cacheKey = `error:${status}:${message}`;
-	const cached = responseCache.get(cacheKey);
-	if (cached) return cached.clone();
+  // Cache common error responses
+  const cacheKey = `error:${status}:${message}`;
+  const cached = responseCache.get(cacheKey);
+  if (cached) {
+    return cached.clone();
+  }
 
-	const response = new Response(JSON.stringify({ error: message }), {
-		status,
-		headers: JSON_HEADERS,
-	});
+  const response = new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: JSON_HEADERS,
+  });
 
-	if (responseCache.size < 100) {
-		responseCache.set(cacheKey, response.clone());
-	}
+  if (responseCache.size < 100) {
+    responseCache.set(cacheKey, response.clone());
+  }
 
-	return response;
+  return response;
 };
 
 /**
@@ -155,10 +153,10 @@ export const notFound = (): Response => NOT_FOUND_RESPONSE.clone();
  * Fast redirect response
  */
 export const redirect = (location: string, status = 302): Response =>
-	new Response(null, {
-		status,
-		headers: { Location: location },
-	});
+  new Response(null, {
+    status,
+    headers: { Location: location },
+  });
 
 /**
  * Streaming response for large data
@@ -179,13 +177,13 @@ export const redirect = (location: string, status = 302): Response =>
  * ```
  */
 export const stream = (
-	stream: ReadableStream,
-	contentType = "application/octet-stream",
-	headers: Record<string, string> = {},
+  stream: ReadableStream,
+  contentType = "application/octet-stream",
+  headers: Record<string, string> = {},
 ): Response =>
-	new Response(stream, {
-		headers: { "Content-Type": contentType, ...headers },
-	});
+  new Response(stream, {
+    headers: { "Content-Type": contentType, ...headers },
+  });
 
 /**
  * Stream a file directly from the filesystem
@@ -197,24 +195,21 @@ export const stream = (
  * return streamFile("./large-video.mp4", "video/mp4");
  * ```
  */
-export const streamFile = async (
-	filePath: string,
-	contentType?: string,
-): Promise<Response> => {
-	const file = Bun.file(filePath);
-	const exists = await file.exists();
+export const streamFile = async (filePath: string, contentType?: string): Promise<Response> => {
+  const file = Bun.file(filePath);
+  const exists = await file.exists();
 
-	if (!exists) {
-		return notFound();
-	}
+  if (!exists) {
+    return notFound();
+  }
 
-	const headers: Record<string, string> = {
-		"Content-Type": contentType || file.type || "application/octet-stream",
-		"Content-Length": file.size.toString(),
-		"Accept-Ranges": "bytes",
-	};
+  const headers: Record<string, string> = {
+    "Content-Type": contentType || file.type || "application/octet-stream",
+    "Content-Length": file.size.toString(),
+    "Accept-Ranges": "bytes",
+  };
 
-	return new Response(file, { headers });
+  return new Response(file, { headers });
 };
 
 /**
@@ -235,45 +230,51 @@ export const streamFile = async (
  * ```
  */
 export const streamSSE = (
-	generator: AsyncGenerator<{
-		data: string;
-		event?: string;
-		id?: string;
-		retry?: number;
-	}>,
+  generator: AsyncGenerator<{
+    data: string;
+    event?: string;
+    id?: string;
+    retry?: number;
+  }>,
 ): Response => {
-	const stream = new ReadableStream({
-		async start(controller) {
-			const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
 
-			try {
-				for await (const event of generator) {
-					let message = "";
+      try {
+        for await (const event of generator) {
+          let message = "";
 
-					if (event.event) message += `event: ${event.event}\n`;
-					if (event.id) message += `id: ${event.id}\n`;
-					if (event.retry) message += `retry: ${event.retry}\n`;
-					message += `data: ${event.data}\n\n`;
+          if (event.event) {
+            message += `event: ${event.event}\n`;
+          }
+          if (event.id) {
+            message += `id: ${event.id}\n`;
+          }
+          if (event.retry) {
+            message += `retry: ${event.retry}\n`;
+          }
+          message += `data: ${event.data}\n\n`;
 
-					controller.enqueue(encoder.encode(message));
-				}
-			} catch (error) {
-				controller.error(error);
-			} finally {
-				controller.close();
-			}
-		},
-	});
+          controller.enqueue(encoder.encode(message));
+        }
+      } catch (error) {
+        controller.error(error);
+      } finally {
+        controller.close();
+      }
+    },
+  });
 
-	return new Response(stream, {
-		headers: {
-			"Content-Type": "text/event-stream",
-			"Cache-Control": "no-cache",
-			Connection: "keep-alive",
-			"Access-Control-Allow-Origin": "*",
-			"Access-Control-Allow-Headers": "Cache-Control",
-		},
-	});
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Cache-Control",
+    },
+  });
 };
 
 /**
@@ -291,26 +292,26 @@ export const streamSSE = (
  * ```
  */
 export const streamJSON = (generator: AsyncGenerator<unknown>): Response => {
-	const stream = new ReadableStream({
-		async start(controller) {
-			const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
 
-			try {
-				for await (const item of generator) {
-					const json = `${JSON.stringify(item)}\n`;
-					controller.enqueue(encoder.encode(json));
-				}
-			} catch (error) {
-				controller.error(error);
-			} finally {
-				controller.close();
-			}
-		},
-	});
+      try {
+        for await (const item of generator) {
+          const json = `${JSON.stringify(item)}\n`;
+          controller.enqueue(encoder.encode(json));
+        }
+      } catch (error) {
+        controller.error(error);
+      } finally {
+        controller.close();
+      }
+    },
+  });
 
-	return new Response(stream, {
-		headers: { "Content-Type": "application/x-ndjson" },
-	});
+  return new Response(stream, {
+    headers: { "Content-Type": "application/x-ndjson" },
+  });
 };
 
 /**
@@ -325,41 +326,41 @@ export const streamJSON = (generator: AsyncGenerator<unknown>): Response => {
  * ```
  */
 export const streamText = (
-	chunks: string[] | AsyncGenerator<string>,
-	contentType = "text/plain",
-	delay = 0,
+  chunks: string[] | AsyncGenerator<string>,
+  contentType = "text/plain",
+  delay = 0,
 ): Response => {
-	const stream = new ReadableStream({
-		async start(controller) {
-			const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
 
-			try {
-				if (Array.isArray(chunks)) {
-					for (const chunk of chunks) {
-						controller.enqueue(encoder.encode(chunk));
-						if (delay > 0) {
-							await new Promise((resolve) => setTimeout(resolve, delay));
-						}
-					}
-				} else {
-					for await (const chunk of chunks) {
-						controller.enqueue(encoder.encode(chunk));
-						if (delay > 0) {
-							await new Promise((resolve) => setTimeout(resolve, delay));
-						}
-					}
-				}
-			} catch (error) {
-				controller.error(error);
-			} finally {
-				controller.close();
-			}
-		},
-	});
+      try {
+        if (Array.isArray(chunks)) {
+          for (const chunk of chunks) {
+            controller.enqueue(encoder.encode(chunk));
+            if (delay > 0) {
+              await new Promise((resolve) => setTimeout(resolve, delay));
+            }
+          }
+        } else {
+          for await (const chunk of chunks) {
+            controller.enqueue(encoder.encode(chunk));
+            if (delay > 0) {
+              await new Promise((resolve) => setTimeout(resolve, delay));
+            }
+          }
+        }
+      } catch (error) {
+        controller.error(error);
+      } finally {
+        controller.close();
+      }
+    },
+  });
 
-	return new Response(stream, {
-		headers: { "Content-Type": contentType },
-	});
+  return new Response(stream, {
+    headers: { "Content-Type": contentType },
+  });
 };
 
 /**
@@ -376,6 +377,6 @@ export const clearResponseCache = (): void => responseCache.clear();
  * Get response cache stats
  */
 export const getResponseCacheStats = () => ({
-	size: responseCache.size,
-	keys: Array.from(responseCache.keys()),
+  size: responseCache.size,
+  keys: Array.from(responseCache.keys()),
 });

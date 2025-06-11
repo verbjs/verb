@@ -8,7 +8,7 @@
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 80
+    "lineWidth": 100
   },
   "linter": {
     "enabled": true,
@@ -25,21 +25,21 @@
       },
       "suspicious": {
         "noDebugger": "error",
-        "noConsoleLog": "warn",
-        "noExplicitAny":"off"
+        "noConsoleLog": "off",
+        "noExplicitAny": "off"
       }
     }
   },
   "javascript": {
     "formatter": {
+      "enabled": true,
       "quoteStyle": "double",
       "semicolons": "always",
       "trailingCommas": "all",
       "bracketSpacing": true,
-      "bracketSameLine": false
+      "bracketSameLine": false,
+      "indentWidth": 2,
+      "indentStyle": "space"
     }
-  },
-  "typescript": {
-    "enabled": true
   }
 }

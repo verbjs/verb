@@ -296,6 +296,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+.claude
+CLAUDE.md
 
 ### Node Patch ###
 # Serverless Webpack directories

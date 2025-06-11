@@ -5,20 +5,20 @@ import type { Handler } from "./types.ts";
  * Configuration options for static file serving
  */
 interface StaticOptions {
-	/** Root directory to serve files from */
-	root: string;
-	/** Index file(s) to serve for directory requests (default: ["index.html"]) */
-	index?: string | string[];
-	/** How to handle dotfiles (default: "deny") */
-	dotfiles?: "allow" | "deny";
-	/** Extensions to try if file not found (e.g., [".html"]) */
-	extensions?: string[];
-	/** Cache max-age in seconds (default: 0) */
-	maxAge?: number;
-	/** Add immutable directive to Cache-Control */
-	immutable?: boolean;
-	/** Enable ETag generation (default: true) */
-	etag?: boolean;
+  /** Root directory to serve files from */
+  root: string;
+  /** Index file(s) to serve for directory requests (default: ["index.html"]) */
+  index?: string | string[];
+  /** How to handle dotfiles (default: "deny") */
+  dotfiles?: "allow" | "deny";
+  /** Extensions to try if file not found (e.g., [".html"]) */
+  extensions?: string[];
+  /** Cache max-age in seconds (default: 0) */
+  maxAge?: number;
+  /** Add immutable directive to Cache-Control */
+  immutable?: boolean;
+  /** Enable ETag generation (default: true) */
+  etag?: boolean;
 }
 
 /**
@@ -26,41 +26,41 @@ interface StaticOptions {
  * @private
  */
 const MIME_TYPES: Record<string, string> = {
-	// Text
-	".html": "text/html",
-	".css": "text/css",
-	".js": "application/javascript",
-	".mjs": "application/javascript",
-	".json": "application/json",
-	".txt": "text/plain",
-	".xml": "application/xml",
+  // Text
+  ".html": "text/html",
+  ".css": "text/css",
+  ".js": "application/javascript",
+  ".mjs": "application/javascript",
+  ".json": "application/json",
+  ".txt": "text/plain",
+  ".xml": "application/xml",
 
-	// Images
-	".jpg": "image/jpeg",
-	".jpeg": "image/jpeg",
-	".png": "image/png",
-	".gif": "image/gif",
-	".webp": "image/webp",
-	".svg": "image/svg+xml",
-	".ico": "image/x-icon",
+  // Images
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
 
-	// Fonts
-	".woff": "font/woff",
-	".woff2": "font/woff2",
-	".ttf": "font/ttf",
-	".otf": "font/otf",
+  // Fonts
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".otf": "font/otf",
 
-	// Media
-	".mp4": "video/mp4",
-	".webm": "video/webm",
-	".mp3": "audio/mpeg",
-	".ogg": "audio/ogg",
+  // Media
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".mp3": "audio/mpeg",
+  ".ogg": "audio/ogg",
 
-	// Documents
-	".pdf": "application/pdf",
-	".zip": "application/zip",
-	".tar": "application/x-tar",
-	".gz": "application/gzip",
+  // Documents
+  ".pdf": "application/pdf",
+  ".zip": "application/zip",
+  ".tar": "application/x-tar",
+  ".gz": "application/gzip",
 };
 
 /**
@@ -70,10 +70,8 @@ const MIME_TYPES: Record<string, string> = {
  * @private
  */
 const getMimeType = (path: string): string => {
-	const ext = path.match(/\.[^.]+$/)?.[0];
-	return ext
-		? MIME_TYPES[ext] || "application/octet-stream"
-		: "application/octet-stream";
+  const ext = path.match(/\.[^.]+$/)?.[0];
+  return ext ? MIME_TYPES[ext] || "application/octet-stream" : "application/octet-stream";
 };
 
 /**
@@ -83,8 +81,8 @@ const getMimeType = (path: string): string => {
  * @private
  */
 const normalizePath = (path: string): string => {
-	// Remove leading slash and normalize
-	return path.replace(/^\/+/, "").replace(/\/+/g, "/");
+  // Remove leading slash and normalize
+  return path.replace(/^\/+/, "").replace(/\/+/g, "/");
 };
 
 /**
@@ -94,9 +92,9 @@ const normalizePath = (path: string): string => {
  * @private
  */
 const isPathSafe = (path: string): boolean => {
-	// Prevent directory traversal
-	const normalized = normalizePath(path);
-	return !normalized.includes("..") && !normalized.includes("./");
+  // Prevent directory traversal
+  const normalized = normalizePath(path);
+  return !normalized.includes("..") && !normalized.includes("./");
 };
 
 /**
@@ -115,114 +113,111 @@ const isPathSafe = (path: string): boolean => {
  * ```
  */
 export const serveStatic = (options: StaticOptions): Handler => {
-	const {
-		root,
-		index = ["index.html"],
-		dotfiles = "deny",
-		extensions = [],
-		maxAge = 0,
-		immutable = false,
-		etag = true,
-	} = options;
+  const {
+    root,
+    index = ["index.html"],
+    dotfiles = "deny",
+    extensions = [],
+    maxAge = 0,
+    immutable = false,
+    etag = true,
+  } = options;
 
-	const indexFiles = Array.isArray(index) ? index : [index];
+  const indexFiles = Array.isArray(index) ? index : [index];
 
-	return async (req, params) => {
-		const url = new URL(req.url);
-		let pathname = url.pathname;
+  return async (req, params) => {
+    const url = new URL(req.url);
+    let pathname = url.pathname;
 
-		// Get the path from wildcard or direct path
-		if (params["*"]) {
-			pathname = params["*"];
-		}
+    // Get the path from wildcard or direct path
+    if (params["*"]) {
+      pathname = params["*"];
+    }
 
-		// Security check
-		if (!isPathSafe(pathname)) {
-			return notFound();
-		}
+    // Security check
+    if (!isPathSafe(pathname)) {
+      return notFound();
+    }
 
-		// Check dotfiles
-		if (
-			dotfiles === "deny" &&
-			pathname.split("/").some((part) => part.startsWith("."))
-		) {
-			return notFound();
-		}
+    // Check dotfiles
+    if (dotfiles === "deny" && pathname.split("/").some((part) => part.startsWith("."))) {
+      return notFound();
+    }
 
-		const normalizedPath = normalizePath(pathname);
-		let filePath = `${root}/${normalizedPath}`;
+    const normalizedPath = normalizePath(pathname);
+    let filePath = `${root}/${normalizedPath}`;
 
-		try {
-			let file = Bun.file(filePath);
-			let exists = await file.exists();
+    try {
+      let file = Bun.file(filePath);
+      let exists = await file.exists();
 
-			// Try index files for directories
-			if (!exists && !filePath.match(/\.[^.]+$/)) {
-				for (const indexFile of indexFiles) {
-					const indexPath = `${filePath}/${indexFile}`.replace(/\/+/g, "/");
-					const indexFileObj = Bun.file(indexPath);
-					if (await indexFileObj.exists()) {
-						file = indexFileObj;
-						filePath = indexPath;
-						exists = true;
-						break;
-					}
-				}
-			}
+      // Try index files for directories
+      if (!exists && !filePath.match(/\.[^.]+$/)) {
+        for (const indexFile of indexFiles) {
+          const indexPath = `${filePath}/${indexFile}`.replace(/\/+/g, "/");
+          const indexFileObj = Bun.file(indexPath);
+          if (await indexFileObj.exists()) {
+            file = indexFileObj;
+            filePath = indexPath;
+            exists = true;
+            break;
+          }
+        }
+      }
 
-			// Try extensions
-			if (!exists && extensions.length > 0) {
-				for (const ext of extensions) {
-					const extPath = `${filePath}${ext}`;
-					const extFile = Bun.file(extPath);
-					if (await extFile.exists()) {
-						file = extFile;
-						filePath = extPath;
-						exists = true;
-						break;
-					}
-				}
-			}
+      // Try extensions
+      if (!exists && extensions.length > 0) {
+        for (const ext of extensions) {
+          const extPath = `${filePath}${ext}`;
+          const extFile = Bun.file(extPath);
+          if (await extFile.exists()) {
+            file = extFile;
+            filePath = extPath;
+            exists = true;
+            break;
+          }
+        }
+      }
 
-			if (!exists) {
-				return notFound();
-			}
+      if (!exists) {
+        return notFound();
+      }
 
-			// Handle conditional requests
-			if (etag && req.headers.get("if-none-match")) {
-				const fileEtag = `"${file.size}-${file.lastModified}"`;
-				if (req.headers.get("if-none-match") === fileEtag) {
-					return new Response(null, { status: 304 });
-				}
-			}
+      // Handle conditional requests
+      if (etag && req.headers.get("if-none-match")) {
+        const fileEtag = `"${file.size}-${file.lastModified}"`;
+        if (req.headers.get("if-none-match") === fileEtag) {
+          return new Response(null, { status: 304 });
+        }
+      }
 
-			// Build headers
-			const headers: Record<string, string> = {
-				"Content-Type": getMimeType(filePath),
-				"Content-Length": file.size.toString(),
-			};
+      // Build headers
+      const headers: Record<string, string> = {
+        "Content-Type": getMimeType(filePath),
+        "Content-Length": file.size.toString(),
+      };
 
-			// Cache control
-			if (maxAge > 0) {
-				const cacheControl = immutable
-					? `public, max-age=${maxAge}, immutable`
-					: `public, max-age=${maxAge}`;
-				headers["Cache-Control"] = cacheControl;
-			}
+      // Cache control
+      if (maxAge > 0) {
+        const cacheControl = immutable
+          ? `public, max-age=${maxAge}, immutable`
+          : `public, max-age=${maxAge}`;
+        headers["Cache-Control"] = cacheControl;
+      }
 
-			// ETag
-			if (etag) {
-				headers.ETag = `"${file.size}-${file.lastModified}"`;
-			}
+      // ETag
+      if (etag) {
+        headers.ETag = `"${file.size}-${file.lastModified}"`;
+      }
 
-			// Last-Modified
-			headers["Last-Modified"] = new Date(file.lastModified).toUTCString();
+      // Last-Modified
+      headers["Last-Modified"] = new Date(file.lastModified).toUTCString();
 
-			return new Response(file, { headers });
-		} catch (err) {
-			return notFound();
-		}
-	};
+      return new Response(file, { headers });
+    } catch (_err) {
+      return notFound();
+    }
+  };
 };
 
 /**
@@ -242,7 +237,5 @@ export const serveStatic = (options: StaticOptions): Handler => {
  * }));
  * ```
  */
-export const staticFiles = (
-	root: string,
-	options?: Partial<StaticOptions>,
-): Handler => serveStatic({ root, ...options });
+export const staticFiles = (root: string, options?: Partial<StaticOptions>): Handler =>
+  serveStatic({ root, ...options });
