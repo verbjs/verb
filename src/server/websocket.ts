@@ -181,7 +181,10 @@ export class WebSocketClient {
 
         this.ws.onerror = (event) => {
           // Try to extract error from event, fallback to event itself
-          const err = (event as any).error instanceof Error ? (event as any).error : new Error("WebSocket error event");
+          const err =
+            (event as any).error instanceof Error
+              ? (event as any).error
+              : new Error("WebSocket error event");
           this.handlers.error?.(this.ws as any, err);
           reject(err);
         };

@@ -1,20 +1,20 @@
 /**
  * HTTP Mock Server for Testing
- * 
+ *
  * Provides a lightweight, in-memory HTTP server for unit testing
  * without needing to start actual network servers.
  */
 
 import type { Handler, Method, Middleware } from "../../types.ts";
 
+import { type MountableApp, mountApp } from "../../mount.ts";
 import {
+  type RouterConfig,
+  RouterType,
+  type UniversalRouter,
   createUniversalRouter,
   defaultRouterConfig,
-  RouterType,
-  type RouterConfig,
-  type UniversalRouter,
 } from "../../routers/index.ts";
-import { type MountableApp, mountApp } from "../../mount.ts";
 
 /**
  * Mock HTTP request configuration
@@ -77,7 +77,7 @@ export const createMockHttpServer = (options: MockHttpServerOptions = {}): MockH
     throw new Error("Router type must be specified in routerConfig.");
   }
   const router = createUniversalRouter(routerConfig.type, routerConfig.options);
-  
+
   const state: MockHttpServerState = {
     router,
     baseURL,
@@ -102,16 +102,11 @@ export class MockHttpServer {
    * Make a mock HTTP request
    */
   async request(config: MockRequestConfig): Promise<MockResponse> {
-    const {
-      method = "GET",
-      url = "/",
-      headers = {},
-      body,
-    } = config;
+    const { method = "GET", url = "/", headers = {}, body } = config;
 
     // Construct full URL
     const fullURL = url.startsWith("http") ? url : `${this.state.baseURL}${url}`;
-    
+
     // Create mock request
     const request = new Request(fullURL, {
       method,
@@ -128,7 +123,7 @@ export class MockHttpServer {
     try {
       // Handle request through router
       const response = await this.state.router.handleRequest(request);
-      
+
       // Convert response to mock response format
       const responseHeaders: Record<string, string> = {};
       response.headers.forEach((value, key) => {
@@ -136,7 +131,7 @@ export class MockHttpServer {
       });
 
       const responseBody = await response.text();
-      
+
       const mockResponse: MockResponse = {
         status: response.status,
         statusText: response.statusText,
@@ -351,7 +346,7 @@ export class MockHttpServer {
   /**
    * Get the last request/response pair
    */
-  getLastRequest(): typeof this.state.requestHistory[0] | undefined {
+  getLastRequest(): (typeof this.state.requestHistory)[0] | undefined {
     return this.state.requestHistory[this.state.requestHistory.length - 1];
   }
 
@@ -376,7 +371,8 @@ export class MockHttpServer {
     if (!target) {
       throw new Error("No response to assert against");
     }
-    const body = typeof target.body === "string" ? target.body : new TextDecoder().decode(target.body);
+    const body =
+      typeof target.body === "string" ? target.body : new TextDecoder().decode(target.body);
     if (!body.includes(text)) {
       throw new Error(`Expected body to contain "${text}", got: ${body}`);
     }
@@ -390,7 +386,8 @@ export class MockHttpServer {
     if (!target) {
       throw new Error("No response to assert against");
     }
-    const body = typeof target.body === "string" ? target.body : new TextDecoder().decode(target.body);
+    const body =
+      typeof target.body === "string" ? target.body : new TextDecoder().decode(target.body);
     const actual = JSON.parse(body);
     if (JSON.stringify(actual) !== JSON.stringify(expected)) {
       throw new Error(`Expected JSON ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);

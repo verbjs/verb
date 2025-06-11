@@ -4,7 +4,7 @@ import {
 	addRoute,
 	findRoute,
 	handleRequest,
-} from "../../src/router.ts";
+} from "../../src/routers/manual.ts";
 import { text } from "../../src/response.ts";
 
 describe("Router", () => {

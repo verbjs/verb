@@ -1,6 +1,6 @@
 import { type MountableApp, mountApp } from "./mount.ts";
 import { type Plugin, PluginManager, type PluginRegistrationOptions } from "./plugin.ts";
-import { addMiddleware, addRoute, createRouter, handleRequest } from "./router.ts";
+import { addMiddleware, addRoute, createRouter, handleRequest } from "./routers/manual.ts";
 // mock.ts - Mock server for testing
 import type { Handler, Middleware } from "./types.ts";
 

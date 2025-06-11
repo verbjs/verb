@@ -4,7 +4,7 @@
  */
 
 import { type Dirent, readdirSync, statSync } from "node:fs";
-import { join, extname, relative, sep } from "node:path";
+import { extname, join, relative, sep } from "node:path";
 import type { Handler, Method, Middleware } from "../types.ts";
 
 /**
@@ -82,20 +82,20 @@ function defaultPatternTransform(filePath: string): string {
 
   // Convert dynamic parameters: [id] -> :id
   pattern = pattern.replace(/\[([^\]]+)\]/g, ":$1");
-  
+
   // Convert catch-all routes: [...rest] -> *
   pattern = pattern.replace(/\[\.\.\.([^\]]+)\]/g, "*");
-  
+
   // Ensure pattern starts with /
   if (!pattern.startsWith("/")) {
     pattern = `/${pattern}`;
   }
-  
+
   // Handle empty pattern (root)
   if (pattern === "/") {
     return "/";
   }
-  
+
   return pattern;
 }
 
@@ -113,9 +113,11 @@ function extractMethodFromFilename(filename: string): Method {
 /**
  * Create a new filesystem router
  */
-export const createFilesystemRouter = (options?: FilesystemRouterOptions): FilesystemRouterState => {
+export const createFilesystemRouter = (
+  options?: FilesystemRouterOptions,
+): FilesystemRouterState => {
   const mergedOptions = { ...defaultOptions, ...options };
-  
+
   const state: FilesystemRouterState = {
     routes: new Map(),
     middlewares: [],
@@ -126,7 +128,7 @@ export const createFilesystemRouter = (options?: FilesystemRouterOptions): Files
 
   // Initial route scanning
   scanRoutes(state);
-  
+
   return state;
 };
 
@@ -135,7 +137,7 @@ export const createFilesystemRouter = (options?: FilesystemRouterOptions): Files
  */
 export const scanRoutes = async (state: FilesystemRouterState): Promise<void> => {
   const { routesDir, extensions, filter, transformPattern } = state.options;
-  
+
   try {
     // Check if routes directory exists
     const routesDirStat = statSync(routesDir);
@@ -150,18 +152,21 @@ export const scanRoutes = async (state: FilesystemRouterState): Promise<void> =>
 
   const newRoutes = new Map<string, FileRoute[]>();
   const newFileCache = new Map<string, { handler: Handler; mtime: number }>();
-  
+
   await scanDirectory(routesDir, routesDir, newRoutes, newFileCache, {
     extensions,
     filter,
     transformPattern,
   });
-  
+
   state.routes = newRoutes;
   state.fileCache = newFileCache;
   state.lastScan = Date.now();
-  
-  const totalRoutes = Array.from(newRoutes.values()).reduce((sum, routes) => sum + routes.length, 0);
+
+  const totalRoutes = Array.from(newRoutes.values()).reduce(
+    (sum, routes) => sum + routes.length,
+    0,
+  );
   console.log(`Filesystem router: scanned ${totalRoutes} routes from ${routesDir}`);
 };
 
@@ -177,10 +182,10 @@ async function scanDirectory(
     extensions: string[];
     filter: (filePath: string) => boolean;
     transformPattern: (filePath: string) => string;
-  }
+  },
 ): Promise<void> {
   let entries: Dirent[];
-  
+
   try {
     entries = readdirSync(currentDir, { withFileTypes: true });
   } catch (error) {
@@ -190,33 +195,33 @@ async function scanDirectory(
 
   for (const entry of entries) {
     const fullPath = join(currentDir, entry.name);
-    
+
     if (entry.isDirectory()) {
       // Recursively scan subdirectories
       await scanDirectory(fullPath, baseDir, routes, fileCache, options);
     } else if (entry.isFile()) {
       const ext = extname(entry.name);
-      
+
       // Check if file should be processed
       if (!options.extensions.includes(ext)) continue;
       if (!options.filter(fullPath)) continue;
-      
+
       // Get relative path from base directory
       const relativePath = relative(baseDir, fullPath);
-      
+
       try {
         // Get file stats for hot reloading
         const stats = statSync(fullPath);
-        
+
         // Extract method from filename
         const method = extractMethodFromFilename(entry.name);
-        
+
         // Transform file path to route pattern
         const pattern = options.transformPattern(relativePath);
-        
+
         // Load route handler
         const handler = await loadRouteHandler(fullPath, fileCache, stats.mtime);
-        
+
         if (handler) {
           const route: FileRoute = {
             method,
@@ -225,7 +230,7 @@ async function scanDirectory(
             handler,
             mtime: stats.mtime.getTime(),
           };
-          
+
           // Group routes by method
           const key = method;
           if (!routes.has(key)) {
@@ -246,33 +251,33 @@ async function scanDirectory(
 async function loadRouteHandler(
   filePath: string,
   fileCache: Map<string, { handler: Handler; mtime: number }>,
-  mtime: number
+  mtime: number,
 ): Promise<Handler | null> {
   // Check cache for hot reloading
   const cached = fileCache.get(filePath);
   if (cached && cached.mtime === mtime) {
     return cached.handler;
   }
-  
+
   try {
     // Clear require cache for hot reloading (if applicable)
     if (typeof require !== "undefined" && require.cache) {
       delete require.cache[filePath];
     }
-    
+
     // Dynamic import for ES modules
     const module = await import(`file://${filePath}?t=${Date.now()}`);
-    
+
     // Look for default export (handler function)
     if (typeof module.default === "function") {
       const handler = module.default as Handler;
-      
+
       // Cache the handler
       fileCache.set(filePath, { handler, mtime });
-      
+
       return handler;
     }
-    
+
     console.warn(`Route file ${filePath} does not export a default handler function`);
     return null;
   } catch (error) {
@@ -284,7 +289,10 @@ async function loadRouteHandler(
 /**
  * Add middleware to filesystem router
  */
-export const addFilesystemMiddleware = (state: FilesystemRouterState, middleware: Middleware): void => {
+export const addFilesystemMiddleware = (
+  state: FilesystemRouterState,
+  middleware: Middleware,
+): void => {
   state.middlewares.push(middleware);
 };
 
@@ -296,7 +304,7 @@ function matchRoute(pattern: string, pathname: string): { params: Record<string,
   if (pattern === pathname) {
     return { params: {} };
   }
-  
+
   // Convert pattern to regex
   const paramNames: string[] = [];
   let regexPattern = pattern
@@ -309,31 +317,31 @@ function matchRoute(pattern: string, pathname: string): { params: Record<string,
     })
     // Handle catch-all *
     .replace(/\*/g, "(.*)");
-  
+
   // Add anchors
   regexPattern = `^${regexPattern}$`;
-  
+
   const regex = new RegExp(regexPattern);
   const match = pathname.match(regex);
-  
+
   if (!match) {
     return null;
   }
-  
+
   // Extract parameters
   const params: Record<string, string> = {};
-  
+
   for (let i = 0; i < paramNames.length; i++) {
     if (match[i + 1] !== undefined) {
       params[paramNames[i]] = decodeURIComponent(match[i + 1]);
     }
   }
-  
+
   // Handle catch-all parameter
   if (pattern.includes("*") && match[match.length - 1] !== undefined) {
     params["*"] = decodeURIComponent(match[match.length - 1]);
   }
-  
+
   return { params };
 }
 
@@ -343,18 +351,18 @@ function matchRoute(pattern: string, pathname: string): { params: Record<string,
 export const findFilesystemRoute = (
   state: FilesystemRouterState,
   method: Method,
-  pathname: string
+  pathname: string,
 ): { route: FileRoute; params: Record<string, string> } | null => {
   // Check for hot reload if enabled
   if (state.options.hotReload && Date.now() - state.lastScan > 1000) {
     scanRoutes(state);
   }
-  
+
   const routes = state.routes.get(method);
   if (!routes) {
     return null;
   }
-  
+
   // Try to match routes in order
   for (const route of routes) {
     const match = matchRoute(route.pattern, pathname);
@@ -362,7 +370,7 @@ export const findFilesystemRoute = (
       return { route, params: match.params };
     }
   }
-  
+
   return null;
 };
 
@@ -371,19 +379,19 @@ export const findFilesystemRoute = (
  */
 export const handleFilesystemRequest = async (
   state: FilesystemRouterState,
-  req: Request
+  req: Request,
 ): Promise<Response> => {
   const url = new URL(req.url);
   const method = req.method as Method;
   const pathname = url.pathname;
-  
+
   // Find matching route
   const match = findFilesystemRoute(state, method, pathname);
-  
+
   if (!match) {
     return new Response("Not Found", { status: 404 });
   }
-  
+
   // Execute middleware chain
   let index = 0;
   const next = async (): Promise<Response> => {
@@ -391,11 +399,11 @@ export const handleFilesystemRequest = async (
       const middleware = state.middlewares[index++];
       return middleware(req, next);
     }
-    
+
     // Execute route handler
     return match.route.handler(req, match.params);
   };
-  
+
   return next();
 };
 
@@ -404,22 +412,25 @@ export const handleFilesystemRequest = async (
  */
 export const getFilesystemRoutes = (state: FilesystemRouterState): FileRoute[] => {
   const allRoutes: FileRoute[] = [];
-  
+
   for (const routes of state.routes.values()) {
     allRoutes.push(...routes);
   }
-  
+
   return allRoutes.sort((a, b) => a.pattern.localeCompare(b.pattern));
 };
 
 /**
  * Hot reload a specific route file
  */
-export const reloadRoute = async (state: FilesystemRouterState, filePath: string): Promise<void> => {
+export const reloadRoute = async (
+  state: FilesystemRouterState,
+  filePath: string,
+): Promise<void> => {
   try {
     const stats = statSync(filePath);
     const cached = state.fileCache.get(filePath);
-    
+
     if (cached && cached.mtime !== stats.mtime.getTime()) {
       // File has been modified, reload it
       await loadRouteHandler(filePath, state.fileCache, stats.mtime.getTime());

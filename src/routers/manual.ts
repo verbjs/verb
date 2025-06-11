@@ -1,6 +1,6 @@
-import { notFound } from "./response.ts";
+import { notFound } from "../response.ts";
 // Optimized functional router implementation using radix tree
-import type { Handler, Method, Middleware, RadixNode, Route, Router } from "./types.ts";
+import type { Handler, Method, Middleware, RadixNode, Route, Router } from "../types.ts";
 
 /**
  * Creates a new router instance with radix tree optimization

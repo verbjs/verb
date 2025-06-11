@@ -2,6 +2,21 @@
  * Router types and exports for Verb
  */
 
+// Import functions for internal use
+import {
+  createRouter,
+  addMiddleware,
+  findRoute,
+  handleRequest,
+} from "./manual.ts";
+
+import {
+  createFilesystemRouter,
+  addFilesystemMiddleware,
+  findFilesystemRoute,
+  handleFilesystemRequest,
+} from "./filesystem.ts";
+
 // Re-export manual router (original router)
 export {
   createRouter,
@@ -9,11 +24,17 @@ export {
   addMiddleware,
   findRoute,
   handleRequest,
-  type Router,
-  type Route,
-  type RouteMatch,
-  type TrieNode,
 } from "./manual.ts";
+
+// Re-export types from types.ts
+export type {
+  Router,
+  Route,
+  RadixNode,
+  Handler,
+  Method,
+  Middleware,
+} from "../types.ts";
 
 // Re-export filesystem router
 export {
@@ -36,7 +57,7 @@ export const RouterType = {
   FILESYSTEM: "filesystem",
 } as const;
 
-export type RouterType = typeof RouterType[keyof typeof RouterType];
+export type RouterType = (typeof RouterType)[keyof typeof RouterType];
 
 // Universal router interface
 export interface UniversalRouter {
@@ -50,13 +71,10 @@ export interface UniversalRouter {
 /**
  * Create a universal router wrapper
  */
-export const createUniversalRouter = (
-  type: RouterType,
-  options?: any
-): UniversalRouter => {
+export const createUniversalRouter = (type: RouterType, options?: any): UniversalRouter => {
   if (type === RouterType.MANUAL) {
     const manualRouter = createRouter();
-    
+
     return {
       type: RouterType.MANUAL,
       state: manualRouter,
@@ -65,10 +83,10 @@ export const createUniversalRouter = (
       findRoute: (method, pathname) => findRoute(manualRouter, method, pathname),
     };
   }
-  
+
   if (type === RouterType.FILESYSTEM) {
     const filesystemRouter = createFilesystemRouter(options);
-    
+
     return {
       type: RouterType.FILESYSTEM,
       state: filesystemRouter,
@@ -77,7 +95,7 @@ export const createUniversalRouter = (
       findRoute: (method, pathname) => findFilesystemRoute(filesystemRouter, method, pathname),
     };
   }
-  
+
   throw new Error(`Unknown router type: ${type}`);
 };
 

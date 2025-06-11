@@ -1,19 +1,19 @@
 /**
  * HTTP/2 Mock Server for Testing
- * 
+ *
  * Provides a lightweight, in-memory HTTP/2 server for unit testing
  * with HTTP/2 specific features like server push simulation.
  */
 
-import type { Handler, Method, Middleware } from "../../types.ts";
+import { type MountableApp, mountApp } from "../../mount.ts";
 import {
+  type RouterConfig,
+  RouterType,
+  type UniversalRouter,
   createUniversalRouter,
   defaultRouterConfig,
-  RouterType,
-  type RouterConfig,
-  type UniversalRouter,
 } from "../../routers/index.ts";
-import { type MountableApp, mountApp } from "../../mount.ts";
+import type { Handler, Method, Middleware } from "../../types.ts";
 
 /**
  * Mock HTTP/2 push resource
@@ -100,7 +100,7 @@ export const createMockHttp2Server = (options: MockHttp2ServerOptions = {}): Moc
   } = options;
 
   const router = createUniversalRouter(routerConfig.type!, routerConfig.options);
-  
+
   const state: MockHttp2ServerState = {
     router,
     baseURL,
@@ -134,12 +134,12 @@ export class MockHttp2Server {
       headers = {},
       body,
       priority = 16, // Default HTTP/2 priority
-      weight = 16,   // Default HTTP/2 weight
+      weight = 16, // Default HTTP/2 weight
     } = config;
 
     // Construct full URL
     const fullURL = url.startsWith("http") ? url : `${this.state.baseURL}${url}`;
-    
+
     // Add HTTP/2 specific headers
     const http2Headers = {
       ":method": method,
@@ -166,7 +166,7 @@ export class MockHttp2Server {
     try {
       // Handle request through router
       const response = await this.state.router.handleRequest(request);
-      
+
       // Convert response to mock HTTP/2 response format
       const responseHeaders: Record<string, string> = {};
       response.headers.forEach((value, key) => {
@@ -177,9 +177,9 @@ export class MockHttp2Server {
       responseHeaders[":status"] = response.status.toString();
 
       const responseBody = await response.text();
-      
+
       // Get push resources for this URL
-      const pushedResources = this.state.enablePush 
+      const pushedResources = this.state.enablePush
         ? this.state.pushResources.get(new URL(fullURL).pathname) || []
         : [];
 
@@ -217,7 +217,7 @@ export class MockHttp2Server {
       const errorResponse: MockHttp2Response = {
         status: 500,
         statusText: "Internal Server Error",
-        headers: { 
+        headers: {
           "content-type": "application/json",
           ":status": "500",
         },
@@ -258,7 +258,11 @@ export class MockHttp2Server {
   /**
    * POST request shorthand
    */
-  async post(url: string, body?: any, headers?: Record<string, string>): Promise<MockHttp2Response> {
+  async post(
+    url: string,
+    body?: any,
+    headers?: Record<string, string>,
+  ): Promise<MockHttp2Response> {
     const defaultHeaders = { "content-type": "application/json", ...headers };
     const requestBody = typeof body === "object" ? JSON.stringify(body) : body;
     return this.request({ method: "POST", url, body: requestBody, headers: defaultHeaders });
@@ -283,7 +287,11 @@ export class MockHttp2Server {
   /**
    * PATCH request shorthand
    */
-  async patch(url: string, body?: any, headers?: Record<string, string>): Promise<MockHttp2Response> {
+  async patch(
+    url: string,
+    body?: any,
+    headers?: Record<string, string>,
+  ): Promise<MockHttp2Response> {
     const defaultHeaders = { "content-type": "application/json", ...headers };
     const requestBody = typeof body === "object" ? JSON.stringify(body) : body;
     return this.request({ method: "PATCH", url, body: requestBody, headers: defaultHeaders });
@@ -418,7 +426,7 @@ export class MockHttp2Server {
   /**
    * Get the last request/response pair
    */
-  getLastRequest(): typeof this.state.requestHistory[0] | undefined {
+  getLastRequest(): (typeof this.state.requestHistory)[0] | undefined {
     return this.state.requestHistory[this.state.requestHistory.length - 1];
   }
 
@@ -444,7 +452,9 @@ export class MockHttp2Server {
       throw new Error("No response to assert against");
     }
     if (target.pushedResources.length !== expectedCount) {
-      throw new Error(`Expected ${expectedCount} pushed resources, got ${target.pushedResources.length}`);
+      throw new Error(
+        `Expected ${expectedCount} pushed resources, got ${target.pushedResources.length}`,
+      );
     }
   }
 
@@ -469,7 +479,8 @@ export class MockHttp2Server {
     if (!target) {
       throw new Error("No response to assert against");
     }
-    const body = typeof target.body === "string" ? target.body : new TextDecoder().decode(target.body);
+    const body =
+      typeof target.body === "string" ? target.body : new TextDecoder().decode(target.body);
     if (!body.includes(text)) {
       throw new Error(`Expected body to contain "${text}", got: ${body}`);
     }
@@ -483,7 +494,8 @@ export class MockHttp2Server {
     if (!target) {
       throw new Error("No response to assert against");
     }
-    const body = typeof target.body === "string" ? target.body : new TextDecoder().decode(target.body);
+    const body =
+      typeof target.body === "string" ? target.body : new TextDecoder().decode(target.body);
     const actual = JSON.parse(body);
     if (JSON.stringify(actual) !== JSON.stringify(expected)) {
       throw new Error(`Expected JSON ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);

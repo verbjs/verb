@@ -1,4 +1,4 @@
-import { addRoute } from "./router.ts";
+import { addRoute } from "./routers/manual.ts";
 import type { Handler, Method, Router } from "./types.ts";
 
 export interface MountableApp {

@@ -3,11 +3,11 @@ import { serve } from "bun";
 import type { Handler, Method, Middleware } from "../types.ts";
 
 import {
+  type RouterConfig,
+  RouterType,
+  type UniversalRouter,
   createUniversalRouter,
   defaultRouterConfig,
-  RouterType,
-  type RouterConfig,
-  type UniversalRouter,
 } from "../routers/index.ts";
 
 import { getCached, setCached } from "../cache.ts";
@@ -419,7 +419,9 @@ export const createHttp2Server = (options: Http2ServerOptions) => {
         const { addRoute } = require("../routers/manual.ts");
         return addRoute(router.state, "GET", path, handler);
       }
-      throw new Error(`Route registration not supported for ${router.type} router. Use filesystem routes instead.`);
+      throw new Error(
+        `Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
+      );
     },
     /** Register POST route (only for manual router) */
     post: (path: string, handler: Handler) => {
@@ -427,7 +429,9 @@ export const createHttp2Server = (options: Http2ServerOptions) => {
         const { addRoute } = require("../routers/manual.ts");
         return addRoute(router.state, "POST", path, handler);
       }
-      throw new Error(`Route registration not supported for ${router.type} router. Use filesystem routes instead.`);
+      throw new Error(
+        `Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
+      );
     },
     /** Register PUT route (only for manual router) */
     put: (path: string, handler: Handler) => {
@@ -435,7 +439,9 @@ export const createHttp2Server = (options: Http2ServerOptions) => {
         const { addRoute } = require("../routers/manual.ts");
         return addRoute(router.state, "PUT", path, handler);
       }
-      throw new Error(`Route registration not supported for ${router.type} router. Use filesystem routes instead.`);
+      throw new Error(
+        `Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
+      );
     },
     /** Register DELETE route (only for manual router) */
     delete: (path: string, handler: Handler) => {
@@ -443,7 +449,9 @@ export const createHttp2Server = (options: Http2ServerOptions) => {
         const { addRoute } = require("../routers/manual.ts");
         return addRoute(router.state, "DELETE", path, handler);
       }
-      throw new Error(`Route registration not supported for ${router.type} router. Use filesystem routes instead.`);
+      throw new Error(
+        `Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
+      );
     },
     /** Register PATCH route (only for manual router) */
     patch: (path: string, handler: Handler) => {
@@ -451,7 +459,9 @@ export const createHttp2Server = (options: Http2ServerOptions) => {
         const { addRoute } = require("../routers/manual.ts");
         return addRoute(router.state, "PATCH", path, handler);
       }
-      throw new Error(`Route registration not supported for ${router.type} router. Use filesystem routes instead.`);
+      throw new Error(
+        `Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
+      );
     },
     /** Register HEAD route (only for manual router) */
     head: (path: string, handler: Handler) => {
@@ -459,7 +469,9 @@ export const createHttp2Server = (options: Http2ServerOptions) => {
         const { addRoute } = require("../routers/manual.ts");
         return addRoute(router.state, "HEAD", path, handler);
       }
-      throw new Error(`Route registration not supported for ${router.type} router. Use filesystem routes instead.`);
+      throw new Error(
+        `Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
+      );
     },
     /** Register OPTIONS route (only for manual router) */
     options: (path: string, handler: Handler) => {
@@ -467,7 +479,9 @@ export const createHttp2Server = (options: Http2ServerOptions) => {
         const { addRoute } = require("../routers/manual.ts");
         return addRoute(router.state, "OPTIONS", path, handler);
       }
-      throw new Error(`Route registration not supported for ${router.type} router. Use filesystem routes instead.`);
+      throw new Error(
+        `Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
+      );
     },
     /** Add middleware to the stack */
     use: (middleware: Middleware) => router.addMiddleware(middleware),
