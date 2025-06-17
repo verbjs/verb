@@ -1,4 +1,4 @@
-import { expect, test, describe } from "bun:test";
+import { expect, test, describe, afterAll } from "bun:test";
 import { createMockServer } from "../../src/mock.ts";
 import {
 	stream,
@@ -7,6 +7,7 @@ import {
 	streamJSON,
 	streamText,
 } from "../../src/response.ts";
+import { createTempFile, cleanupTempFiles } from "../utils/cleanup.ts";
 
 describe("Streaming Response Functions", () => {
 	test("stream() creates readable stream response", async () => {
@@ -163,28 +164,18 @@ describe("Streaming Response Functions", () => {
 		const testFilePath = "./test-stream-file.txt";
 		const testContent = "This is test content for streaming";
 
-		await Bun.write(testFilePath, testContent);
+		await createTempFile(testFilePath, testContent);
 
-		try {
-			const response = await streamFile(testFilePath);
-			expect(response.status).toBe(200);
-			expect(response.headers.get("content-type")).toMatch(/^text\/plain/);
-			expect(response.headers.get("accept-ranges")).toBe("bytes");
-			expect(response.headers.get("content-length")).toBe(
-				testContent.length.toString(),
-			);
+		const response = await streamFile(testFilePath);
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toMatch(/^text\/plain/);
+		expect(response.headers.get("accept-ranges")).toBe("bytes");
+		expect(response.headers.get("content-length")).toBe(
+			testContent.length.toString(),
+		);
 
-			const responseText = await response.text();
-			expect(responseText).toBe(testContent);
-		} finally {
-			// Clean up test file
-			try {
-				await Bun.write(testFilePath, ""); // Clear file
-				// Note: In a real test environment, you might want to actually delete the file
-			} catch (error) {
-				// Ignore cleanup errors
-			}
-		}
+		const responseText = await response.text();
+		expect(responseText).toBe(testContent);
 	});
 
 	test("streamFile() with custom content type", async () => {
@@ -192,23 +183,19 @@ describe("Streaming Response Functions", () => {
 		const testFilePath = "./test-stream-custom.json";
 		const testContent = '{"message": "hello"}';
 
-		await Bun.write(testFilePath, testContent);
+		await createTempFile(testFilePath, testContent);
 
-		try {
-			const response = await streamFile(testFilePath, "application/json");
-			expect(response.status).toBe(200);
-			expect(response.headers.get("content-type")).toBe("application/json");
+		const response = await streamFile(testFilePath, "application/json");
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toBe("application/json");
 
-			const responseText = await response.text();
-			expect(responseText).toBe(testContent);
-		} finally {
-			// Clean up test file
-			try {
-				await Bun.write(testFilePath, "");
-			} catch (error) {
-				// Ignore cleanup errors
-			}
-		}
+		const responseText = await response.text();
+		expect(responseText).toBe(testContent);
+	});
+
+	// Add cleanup after all tests
+	afterAll(async () => {
+		await cleanupTempFiles();
 	});
 });
 
@@ -287,5 +274,10 @@ describe("Streaming Integration Tests", () => {
 
 		// The error will be handled by the stream's error handling
 		// In a real implementation, you might want to test error recovery
+	});
+	
+	// Add cleanup after all tests
+	afterAll(async () => {
+		await cleanupTempFiles();
 	});
 });

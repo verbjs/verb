@@ -1,16 +1,29 @@
 {
   "name": "verb",
-  "module": "src/index.ts",
   "type": "module",
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun run build:cli && bun run build:server && bun run build:site",
+    "build:cli": "cd packages/cli && bun run build",
+    "build:server": "cd packages/server && bun run build",
+    "build:site": "cd packages/site && bun run build",
+    "dev:site": "cd packages/site && bun run dev",
+    "cli": "bun packages/cli/src/main.ts",
+    "site:generate": "bun run cli site generate --input packages/site/content --output packages/site/dist",
+    "site:serve": "bun run cli site generate --input packages/site/content --output packages/site/dist --serve --watch",
+    "clean": "rm -rf packages/*/dist",
+    "clean:site": "rm -rf packages/site/dist",
+    "clean:test": "find . -name 'test-*' -type f -delete",
+    "test": "bun test",
+    "test:clean": "bun test && bun run clean:test",
+    "lint": "biome lint --fix ./packages/**/src/**/*.ts",
+    "format": "biome format --write ./packages/**/src/**/*.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@types/bun": "latest",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0"
+    "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"

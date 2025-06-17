@@ -1,0 +1,49 @@
+{
+  "name": "@verb/cli",
+  "version": "0.0.1",
+  "description": "Command-line interface for Verb framework",
+  "module": "src/main.ts",
+  "type": "module",
+  "bin": {
+    "verb": "./dist/main.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "bun run --watch src/main.ts",
+    "build": "bun build src/main.ts --outdir dist --target node",
+    "prepublish": "bun run build",
+    "test": "bun test"
+  },
+  "keywords": [
+    "verb",
+    "cli",
+    "framework",
+    "web",
+    "server",
+    "static-site",
+    "generator"
+  ],
+  "author": "Wess Cope",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "chokidar": "^4.0.3",
+    "commander": "^14.0.0",
+    "fs-extra": "^11.3.0",
+    "glob": "^11.0.3",
+    "inquirer": "^12.6.3",
+    "ora": "^8.2.0"
+  }
+}

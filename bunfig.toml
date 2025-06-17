@@ -1,0 +1,6 @@
+[test]
+# Use setup files for each package
+preload = [
+  "./packages/server/tests/setup.ts",
+  "./packages/cli/tests/setup.ts"
+]
