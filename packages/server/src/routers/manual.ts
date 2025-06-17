@@ -94,22 +94,25 @@ const insertRoute = (node: RadixNode, path: string, handler: Handler): void => {
 };
 
 /**
- * Searches the radix tree for a matching route
+ * Searches the radix tree for a matching route with optimized parameter handling
+ * Uses a more efficient approach to parameter handling and reduces object creation
  */
 const searchRoute = (
 	node: RadixNode,
 	path: string,
 	params: Record<string, string>,
 ): { handler: Handler; params: Record<string, string> } | null => {
-	if (path === "" && node.handler) {
-		return { handler: node.handler, params };
+	// Root node or exact match at leaf
+	if (path === "") {
+		return node.handler ? { handler: node.handler, params } : null;
 	}
 
-	// Try exact match first (fastest)
+	// Fast path: Try exact match first (most common case)
 	const nextSlash = path.indexOf("/", 1);
 	const segment = nextSlash === -1 ? path : path.slice(0, nextSlash);
 	const remainingPath = nextSlash === -1 ? "" : path.slice(nextSlash);
 
+	// Check for exact match (fastest path)
 	const exactChild = node.children.get(segment);
 	if (exactChild) {
 		const result = searchRoute(exactChild, remainingPath, params);
@@ -118,23 +121,27 @@ const searchRoute = (
 		}
 	}
 
-	// Try parameter match
+	// Try parameter match if no exact match found
 	const paramChild = node.children.get(":param");
-	if (paramChild) {
-		const newParams = { ...params };
-		if (paramChild.params[0]) {
-			newParams[paramChild.params[0]] = segment.slice(1); // Remove leading slash
-		}
+	if (paramChild && paramChild.params[0]) {
+		// Create new params object only when needed
+		const newParams = Object.create(params);
+		// Set parameter value (remove leading slash)
+		newParams[paramChild.params[0]] = segment.slice(1);
+		
 		const result = searchRoute(paramChild, remainingPath, newParams);
 		if (result) {
 			return result;
 		}
 	}
 
-	// Try wildcard match (last resort)
+	// Try wildcard match as last resort
 	const wildcardChild = node.children.get("*");
 	if (wildcardChild?.handler) {
-		const newParams = { ...params, "*": path.slice(1) }; // Remove leading slash
+		// Create new params object only when needed
+		const newParams = Object.create(params);
+		// Set wildcard parameter
+		newParams["*"] = path.slice(1); // Remove leading slash
 		return { handler: wildcardChild.handler, params: newParams };
 	}
 
@@ -199,47 +206,54 @@ const compilePath = (path: string): { pattern: RegExp; params: string[] } => {
 
 /**
  * Optimized route finding using radix tree
+ * Uses the radix tree as the primary lookup method for better performance
  */
 export const findRoute = (
 	router: Router,
 	method: Method,
 	pathname: string,
 ): { route: Route; params: Record<string, string> } | null => {
+	// Use radix tree as primary lookup method
 	const radixRoots = router.radixRoots;
 	if (!radixRoots) {
 		return null;
 	}
+	
 	const root = radixRoots.get(method);
-	if (root) {
-		const result = searchRoute(root, pathname, {});
-		if (result) {
-			// Create a route object for compatibility
-			const route: Route = {
-				method,
-				pattern: /(?:)/, // Not used in radix tree
-				params: Object.keys(result.params),
-				handler: result.handler,
-			};
-			return { route, params: result.params };
+	if (!root) {
+		return null; // No routes for this method
+	}
+	
+	const result = searchRoute(root, pathname, {});
+	if (result) {
+		// Create a route object for compatibility
+		const route: Route = {
+			method,
+			pattern: /(?:)/, // Not used in radix tree
+			params: Object.keys(result.params),
+			handler: result.handler,
+		};
+		return { route, params: result.params };
+	}
+	
+	// Only fall back to legacy search if explicitly configured
+	// This can be controlled by a feature flag if needed
+	if (process.env.ENABLE_LEGACY_ROUTER === 'true') {
+		const routes = router.routes.get(method);
+		if (routes) {
+			for (const route of routes) {
+				const match = pathname.match(route.pattern);
+				if (match) {
+					const params: Record<string, string> = {};
+					route.params.forEach((param, i) => {
+						params[param] = match[i + 1];
+					});
+					return { route, params };
+				}
+			}
 		}
 	}
-
-	// Fallback to legacy linear search for backward compatibility
-	const routes = router.routes.get(method);
-	if (!routes) {
-		return null;
-	}
-
-	for (const route of routes) {
-		const match = pathname.match(route.pattern);
-		if (match) {
-			const params: Record<string, string> = {};
-			route.params.forEach((param, i) => {
-				params[param] = match[i + 1];
-			});
-			return { route, params };
-		}
-	}
+	
 	return null;
 };
 
@@ -251,7 +265,8 @@ export const addMiddleware = (router: Router, middleware: Middleware): void => {
 };
 
 /**
- * Handles an incoming request with optimized routing
+ * Handles an incoming request with optimized routing and middleware execution
+ * Uses a more efficient approach to middleware chain execution
  */
 export const handleRequest = async (
 	router: Router,
@@ -261,20 +276,33 @@ export const handleRequest = async (
 	const method = req.method as Method;
 	const pathname = url.pathname;
 
+	// Find matching route using optimized radix tree
 	const match = findRoute(router, method, pathname);
 	if (!match) {
 		return notFound();
 	}
 
-	// Execute middleware chain
+	// Pre-allocate middleware array length for performance
+	const middlewareCount = router.middlewares.length;
+	
+	// If no middleware, execute handler directly (fast path)
+	if (middlewareCount === 0) {
+		return match.route.handler(req, match.params);
+	}
+	
+	// Execute middleware chain with optimized recursion
 	let index = 0;
-	const next = async (): Promise<Response> => {
-		if (index < router.middlewares.length) {
+	
+	// Use a named function for better performance and stack traces
+	const executeMiddleware = async (): Promise<Response> => {
+		// Check if we've reached the end of middleware chain
+		if (index < middlewareCount) {
 			const middleware = router.middlewares[index++];
-			return middleware(req, next);
+			return middleware(req, executeMiddleware);
 		}
+		// Execute the final handler with route params
 		return match.route.handler(req, match.params);
 	};
 
-	return next();
+	return executeMiddleware();
 };

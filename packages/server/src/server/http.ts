@@ -105,7 +105,7 @@ export const createServer = (options?: ServerOptions) => {
 	const pluginManager = new PluginManager(null, router.state); // Will be updated with server instance
 
 	/**
-	 * Optimized request handler with route caching
+	 * Optimized request handler with improved route caching
 	 * @private
 	 */
 	const fetch = async (req: Request): Promise<Response> => {
@@ -114,34 +114,52 @@ export const createServer = (options?: ServerOptions) => {
 			return router.handleRequest(req);
 		}
 
-		// For manual router, use caching optimization
+		// For manual router, use enhanced caching optimization
 		const url = new URL(req.url);
-		const cacheKey = `${req.method}:${url.pathname}`;
+		const method = req.method as Method;
+		
+		// Create a more specific cache key that includes query parameters for APIs that rely on them
+		// This is more accurate for APIs that use query parameters heavily
+		const hasQueryParams = url.search.length > 0;
+		const cacheKey = hasQueryParams 
+			? `${method}:${url.pathname}:${url.search}`
+			: `${method}:${url.pathname}`;
 
-		// Try cache first
+		// Try cache first for better performance
 		const cached = getCached(cacheKey);
-		if (cached && router.findRoute) {
-			// Execute middleware chain for cached routes
+		if (cached) {
+			// Get middleware count for optimization
+			const middlewareCount = router.state.middlewares.length;
+			
+			// If no middleware, execute handler directly (fast path)
+			if (middlewareCount === 0) {
+				return cached.handler(req, cached.params);
+			}
+			
+			// Execute middleware chain with optimized recursion
 			let index = 0;
-			const next = async (): Promise<Response> => {
-				if (index < router.state.middlewares.length) {
+			
+			// Use a named function for better performance and stack traces
+			const executeMiddleware = async (): Promise<Response> => {
+				// Check if we've reached the end of middleware chain
+				if (index < middlewareCount) {
 					const middleware = router.state.middlewares[index++];
-					return middleware(req, next);
+					return middleware(req, executeMiddleware);
 				}
+				// Execute the cached handler with params
 				return cached.handler(req, cached.params);
 			};
-			return next();
+			
+			return executeMiddleware();
 		}
 
-		// Find route
-		const method = req.method as Method;
+		// Find route using the optimized radix tree
 		const match = router.findRoute?.(method, url.pathname);
-
 		if (!match) {
 			return notFound();
 		}
 
-		// Cache the route (only for manual router)
+		// Cache the route for future requests
 		setCached(cacheKey, match.route.handler, match.params);
 
 		// Handle request with middleware
@@ -182,6 +200,23 @@ export const createServer = (options?: ServerOptions) => {
 		`Server running at ${protocol}://${hostname}:${port}${http2Status}`,
 	);
 
+	/**
+	 * Creates a method handler for HTTP methods
+	 * @param method HTTP method to create handler for
+	 * @returns A function that registers a route for the specified method
+	 */
+	const createMethodHandler = (method: Method) => (path: string, handler: Handler) => {
+		if (router.type === RouterType.MANUAL) {
+			// Use dynamic import for better performance and code splitting
+			return import("../routers/manual.ts").then(({ addRoute }) => 
+				addRoute(router.state, method, path, handler)
+			);
+		}
+		throw new Error(
+			`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
+		);
+	};
+
 	// Create server instance with plugin support
 	const serverInstance = {
 		/** Bun server instance */
@@ -189,75 +224,19 @@ export const createServer = (options?: ServerOptions) => {
 		/** Router type being used */
 		routerType: router.type,
 		/** Register GET route (only for manual router) */
-		get: (path: string, handler: Handler) => {
-			if (router.type === RouterType.MANUAL) {
-				const { addRoute } = require("../routers/manual.ts");
-				return addRoute(router.state, "GET", path, handler);
-			}
-			throw new Error(
-				`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
-			);
-		},
+		get: createMethodHandler("GET"),
 		/** Register POST route (only for manual router) */
-		post: (path: string, handler: Handler) => {
-			if (router.type === RouterType.MANUAL) {
-				const { addRoute } = require("../routers/manual.ts");
-				return addRoute(router.state, "POST", path, handler);
-			}
-			throw new Error(
-				`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
-			);
-		},
+		post: createMethodHandler("POST"),
 		/** Register PUT route (only for manual router) */
-		put: (path: string, handler: Handler) => {
-			if (router.type === RouterType.MANUAL) {
-				const { addRoute } = require("../routers/manual.ts");
-				return addRoute(router.state, "PUT", path, handler);
-			}
-			throw new Error(
-				`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
-			);
-		},
+		put: createMethodHandler("PUT"),
 		/** Register DELETE route (only for manual router) */
-		delete: (path: string, handler: Handler) => {
-			if (router.type === RouterType.MANUAL) {
-				const { addRoute } = require("../routers/manual.ts");
-				return addRoute(router.state, "DELETE", path, handler);
-			}
-			throw new Error(
-				`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
-			);
-		},
+		delete: createMethodHandler("DELETE"),
 		/** Register PATCH route (only for manual router) */
-		patch: (path: string, handler: Handler) => {
-			if (router.type === RouterType.MANUAL) {
-				const { addRoute } = require("../routers/manual.ts");
-				return addRoute(router.state, "PATCH", path, handler);
-			}
-			throw new Error(
-				`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
-			);
-		},
+		patch: createMethodHandler("PATCH"),
 		/** Register HEAD route (only for manual router) */
-		head: (path: string, handler: Handler) => {
-			if (router.type === RouterType.MANUAL) {
-				const { addRoute } = require("../routers/manual.ts");
-				return addRoute(router.state, "HEAD", path, handler);
-			}
-			throw new Error(
-				`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
-			);
-		},
+		head: createMethodHandler("HEAD"),
 		/** Register OPTIONS route (only for manual router) */
-		options: (path: string, handler: Handler) => {
-			if (router.type === RouterType.MANUAL) {
-				const { addRoute } = require("../routers/manual.ts");
-				return addRoute(router.state, "OPTIONS", path, handler);
-			}
-			throw new Error(
-				`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
-			);
-		},
+		options: createMethodHandler("OPTIONS"),
 		/** Add middleware to the stack */
 		use: (middleware: Middleware) => router.addMiddleware(middleware),
 		/** Mount a sub-application at a base path (only for manual router) */
