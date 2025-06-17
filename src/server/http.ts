@@ -94,7 +94,7 @@ export const createServer = (options?: ServerOptions) => {
     router: routerConfig = defaultRouterConfig,
   } = options || {};
 
-  const router = createUniversalRouter(routerConfig.type!, routerConfig.options);
+  const router = createUniversalRouter(routerConfig.type ?? RouterType.MANUAL, routerConfig.options);
   const pluginManager = new PluginManager(null, router.state); // Will be updated with server instance
 
   /**

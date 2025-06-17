@@ -99,7 +99,7 @@ export const createMockHttp2Server = (options: MockHttp2ServerOptions = {}): Moc
     enablePush = true,
   } = options;
 
-  const router = createUniversalRouter(routerConfig.type!, routerConfig.options);
+  const router = createUniversalRouter(routerConfig.type ?? RouterType.MANUAL, routerConfig.options);
 
   const state: MockHttp2ServerState = {
     router,
@@ -374,7 +374,8 @@ export class MockHttp2Server {
    */
   mount(basePath: string, app: MountableApp): void {
     if (this.state.router.type === RouterType.MANUAL) {
-      return mountApp(this.state.router.state, basePath, app);
+      mountApp(this.state.router.state, basePath, app);
+      return;
     }
     throw new Error(`App mounting not supported for ${this.state.router.type} router.`);
   }

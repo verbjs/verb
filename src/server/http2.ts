@@ -345,7 +345,7 @@ export const createHttp2Server = (options: Http2ServerOptions) => {
     );
   }
 
-  const router = createUniversalRouter(routerConfig.type!, routerConfig.options);
+  const router = createUniversalRouter(routerConfig.type ?? RouterType.MANUAL, routerConfig.options);
   const pluginManager = new PluginManager(null, router.state); // Will be updated with server instance
 
   /**

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { createServer } from "../../src/server.ts";
+import { createServer } from "../../src/server/index.ts";
 import {
 	createPushHeader,
 	responseWithPush,
@@ -7,7 +7,7 @@ import {
 	createHttp2Headers,
 	http2Middleware,
 	isHttp2Preface,
-} from "../../src/http2.ts";
+} from "../../src/server/http2.ts";
 import { text, html } from "../../src/response.ts";
 
 describe("HTTP/2 Support", () => {

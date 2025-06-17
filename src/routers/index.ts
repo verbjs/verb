@@ -3,12 +3,7 @@
  */
 
 // Import functions for internal use
-import {
-  createRouter,
-  addMiddleware,
-  findRoute,
-  handleRequest,
-} from "./manual.ts";
+import { createRouter, addMiddleware, findRoute, handleRequest } from "./manual.ts";
 
 import {
   createFilesystemRouter,
@@ -30,6 +25,7 @@ export {
 export type {
   Router,
   Route,
+  RouteMatch,
   RadixNode,
   Handler,
   Method,

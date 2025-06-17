@@ -104,7 +104,7 @@ export type {
   Router,
   Route,
   RouteMatch,
-  TrieNode,
+  RadixNode,
   FilesystemRouterState,
   FilesystemRouterOptions,
   FileRoute,
@@ -283,6 +283,23 @@ export type {
   PluginManagerState,
   PluginBuilderState,
 } from "./plugin.ts";
+
+// React renderer exports
+export {
+  createReactRendererPlugin,
+} from "./plugins/react/renderer.ts";
+
+export type {
+  ReactRendererConfig,
+  RenderOptions,
+} from "./plugins/react/renderer.ts";
+
+export {
+  reactComponent,
+  renderToString,
+  renderToStream,
+  React,
+} from "./react.ts";
 
 export {
   createMemorySessionStore,

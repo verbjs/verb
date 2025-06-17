@@ -48,6 +48,14 @@ export interface RadixNode {
 }
 
 /**
+ * Route match result containing the matched route and extracted parameters
+ */
+export interface RouteMatch {
+  route: Route;
+  params: Record<string, string>;
+}
+
+/**
  * Router instance containing routes and middleware
  */
 export interface Router {

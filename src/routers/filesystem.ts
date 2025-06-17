@@ -203,8 +203,8 @@ async function scanDirectory(
       const ext = extname(entry.name);
 
       // Check if file should be processed
-      if (!options.extensions.includes(ext)) continue;
-      if (!options.filter(fullPath)) continue;
+      if (!options.extensions.includes(ext)) { continue; }
+      if (!options.filter(fullPath)) { continue; }
 
       // Get relative path from base directory
       const relativePath = relative(baseDir, fullPath);
@@ -220,7 +220,7 @@ async function scanDirectory(
         const pattern = options.transformPattern(relativePath);
 
         // Load route handler
-        const handler = await loadRouteHandler(fullPath, fileCache, stats.mtime);
+        const handler = await loadRouteHandler(fullPath, fileCache, stats.mtime.getTime());
 
         if (handler) {
           const route: FileRoute = {
@@ -236,7 +236,7 @@ async function scanDirectory(
           if (!routes.has(key)) {
             routes.set(key, []);
           }
-          routes.get(key)!.push(route);
+          routes.get(key)?.push(route);
         }
       } catch (error) {
         console.error(`Failed to load route ${fullPath}:`, error);
