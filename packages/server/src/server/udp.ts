@@ -15,10 +15,7 @@ export type RemoteInfo = {
  */
 export interface UDPHandler {
 	/** Called when a UDP message is received */
-	message?: (
-		message: Buffer,
-		rinfo: RemoteInfo,
-	) => void;
+	message?: (message: Buffer, rinfo: RemoteInfo) => void;
 	/** Called when the UDP socket is bound and ready */
 	listening?: (address: {
 		address: string;
@@ -226,10 +223,13 @@ export class UDPClient {
 				reject(new Error("UDP request timeout"));
 			}, timeout);
 
-			this.socket.once("message", (responseMessage: Buffer, rinfo: RemoteInfo) => {
-				clearTimeout(timer);
-				resolve({ message: responseMessage, rinfo });
-			});
+			this.socket.once(
+				"message",
+				(responseMessage: Buffer, rinfo: RemoteInfo) => {
+					clearTimeout(timer);
+					resolve({ message: responseMessage, rinfo });
+				},
+			);
 
 			this.socket.once("error", (error: Error) => {
 				clearTimeout(timer);

@@ -7,13 +7,23 @@ export interface WebSocketHandler {
 	/** Called when a WebSocket connection is opened */
 	open?: (ws: ServerWebSocket<WebSocketData>) => void;
 	/** Called when a message is received */
-	message?: (ws: ServerWebSocket<WebSocketData>, message: string | Buffer) => void;
+	message?: (
+		ws: ServerWebSocket<WebSocketData>,
+		message: string | Buffer,
+	) => void;
 	/** Called when a WebSocket connection is closed */
-	close?: (ws: ServerWebSocket<WebSocketData>, code: number, reason: string) => void;
+	close?: (
+		ws: ServerWebSocket<WebSocketData>,
+		code: number,
+		reason: string,
+	) => void;
 	/** Called when an error occurs */
 	error?: (ws: ServerWebSocket<WebSocketData>, error: Error) => void;
 	/** Called when connection is being upgraded */
-	upgrade?: (request: Request, server: { upgrade: (req: Request, data?: WebSocketData) => void }) => boolean | Response;
+	upgrade?: (
+		request: Request,
+		server: { upgrade: (req: Request, data?: WebSocketData) => void },
+	) => boolean | Response;
 }
 
 /** WebSocket connection data */
@@ -179,11 +189,18 @@ export class WebSocketClient {
 				};
 
 				this.ws.onmessage = (event) => {
-					this.handlers.message?.(this.ws as ServerWebSocket<WebSocketData>, event.data);
+					this.handlers.message?.(
+						this.ws as ServerWebSocket<WebSocketData>,
+						event.data,
+					);
 				};
 
 				this.ws.onclose = (event) => {
-					this.handlers.close?.(this.ws as ServerWebSocket<WebSocketData>, event.code, event.reason);
+					this.handlers.close?.(
+						this.ws as ServerWebSocket<WebSocketData>,
+						event.code,
+						event.reason,
+					);
 				};
 
 				this.ws.onerror = (event) => {

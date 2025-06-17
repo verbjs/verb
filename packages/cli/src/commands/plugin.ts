@@ -68,7 +68,10 @@ export function pluginCommand(program: Command): void {
 /**
  * Create a new plugin
  */
-async function createPlugin(name?: string, options?: CommandOptions): Promise<void> {
+async function createPlugin(
+	name?: string,
+	options?: CommandOptions,
+): Promise<void> {
 	console.log(chalk.cyan("🔌 Creating a new Verb plugin\n"));
 
 	// If no name provided or interactive mode, prompt for details
@@ -521,7 +524,10 @@ async function listPlugins(): Promise<void> {
 /**
  * Install a plugin
  */
-async function installPlugin(plugin: string, options?: CommandOptions): Promise<void> {
+async function installPlugin(
+	plugin: string,
+	options?: CommandOptions,
+): Promise<void> {
 	console.log(chalk.cyan(`📦 Installing plugin: ${plugin}\n`));
 
 	const spinner = ora("Installing plugin").start();
@@ -562,7 +568,10 @@ async function installPlugin(plugin: string, options?: CommandOptions): Promise<
 /**
  * Remove a plugin
  */
-async function removePlugin(plugin: string, options?: CommandOptions): Promise<void> {
+async function removePlugin(
+	plugin: string,
+	options?: CommandOptions,
+): Promise<void> {
 	console.log(chalk.cyan(`🗑️  Removing plugin: ${plugin}\n`));
 
 	const spinner = ora("Removing plugin").start();

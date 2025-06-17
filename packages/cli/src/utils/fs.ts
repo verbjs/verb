@@ -96,9 +96,9 @@ export function readJson<T = Record<string, unknown>>(filePath: string): T {
  * Write a JSON file
  */
 export function writeJson<T = Record<string, unknown>>(
-	filePath: string, 
-	data: T, 
-	options?: fs.WriteOptions
+	filePath: string,
+	data: T,
+	options?: fs.WriteOptions,
 ): void {
 	fs.ensureDirSync(path.dirname(filePath));
 	fs.writeJsonSync(filePath, data, { spaces: 2, ...options });

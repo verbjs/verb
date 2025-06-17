@@ -94,25 +94,22 @@ const insertRoute = (node: RadixNode, path: string, handler: Handler): void => {
 };
 
 /**
- * Searches the radix tree for a matching route with optimized parameter handling
- * Uses a more efficient approach to parameter handling and reduces object creation
+ * Searches the radix tree for a matching route
  */
 const searchRoute = (
 	node: RadixNode,
 	path: string,
 	params: Record<string, string>,
 ): { handler: Handler; params: Record<string, string> } | null => {
-	// Root node or exact match at leaf
-	if (path === "") {
-		return node.handler ? { handler: node.handler, params } : null;
+	if (path === "" && node.handler) {
+		return { handler: node.handler, params };
 	}
 
-	// Fast path: Try exact match first (most common case)
+	// Try exact match first (fastest)
 	const nextSlash = path.indexOf("/", 1);
 	const segment = nextSlash === -1 ? path : path.slice(0, nextSlash);
 	const remainingPath = nextSlash === -1 ? "" : path.slice(nextSlash);
 
-	// Check for exact match (fastest path)
 	const exactChild = node.children.get(segment);
 	if (exactChild) {
 		const result = searchRoute(exactChild, remainingPath, params);
@@ -121,27 +118,23 @@ const searchRoute = (
 		}
 	}
 
-	// Try parameter match if no exact match found
+	// Try parameter match
 	const paramChild = node.children.get(":param");
-	if (paramChild && paramChild.params[0]) {
-		// Create new params object only when needed
-		const newParams = Object.create(params);
-		// Set parameter value (remove leading slash)
-		newParams[paramChild.params[0]] = segment.slice(1);
-		
+	if (paramChild) {
+		const newParams = { ...params };
+		if (paramChild.params[0]) {
+			newParams[paramChild.params[0]] = segment.slice(1); // Remove leading slash
+		}
 		const result = searchRoute(paramChild, remainingPath, newParams);
 		if (result) {
 			return result;
 		}
 	}
 
-	// Try wildcard match as last resort
+	// Try wildcard match (last resort)
 	const wildcardChild = node.children.get("*");
 	if (wildcardChild?.handler) {
-		// Create new params object only when needed
-		const newParams = Object.create(params);
-		// Set wildcard parameter
-		newParams["*"] = path.slice(1); // Remove leading slash
+		const newParams = { ...params, "*": path.slice(1) }; // Remove leading slash
 		return { handler: wildcardChild.handler, params: newParams };
 	}
 
@@ -218,12 +211,12 @@ export const findRoute = (
 	if (!radixRoots) {
 		return null;
 	}
-	
+
 	const root = radixRoots.get(method);
 	if (!root) {
 		return null; // No routes for this method
 	}
-	
+
 	const result = searchRoute(root, pathname, {});
 	if (result) {
 		// Create a route object for compatibility
@@ -235,10 +228,10 @@ export const findRoute = (
 		};
 		return { route, params: result.params };
 	}
-	
+
 	// Only fall back to legacy search if explicitly configured
 	// This can be controlled by a feature flag if needed
-	if (process.env.ENABLE_LEGACY_ROUTER === 'true') {
+	if (process.env.ENABLE_LEGACY_ROUTER === "true") {
 		const routes = router.routes.get(method);
 		if (routes) {
 			for (const route of routes) {
@@ -253,7 +246,7 @@ export const findRoute = (
 			}
 		}
 	}
-	
+
 	return null;
 };
 
@@ -284,15 +277,15 @@ export const handleRequest = async (
 
 	// Pre-allocate middleware array length for performance
 	const middlewareCount = router.middlewares.length;
-	
+
 	// If no middleware, execute handler directly (fast path)
 	if (middlewareCount === 0) {
 		return match.route.handler(req, match.params);
 	}
-	
+
 	// Execute middleware chain with optimized recursion
 	let index = 0;
-	
+
 	// Use a named function for better performance and stack traces
 	const executeMiddleware = async (): Promise<Response> => {
 		// Check if we've reached the end of middleware chain

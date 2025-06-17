@@ -117,11 +117,11 @@ export const createServer = (options?: ServerOptions) => {
 		// For manual router, use enhanced caching optimization
 		const url = new URL(req.url);
 		const method = req.method as Method;
-		
+
 		// Create a more specific cache key that includes query parameters for APIs that rely on them
 		// This is more accurate for APIs that use query parameters heavily
 		const hasQueryParams = url.search.length > 0;
-		const cacheKey = hasQueryParams 
+		const cacheKey = hasQueryParams
 			? `${method}:${url.pathname}:${url.search}`
 			: `${method}:${url.pathname}`;
 
@@ -130,15 +130,15 @@ export const createServer = (options?: ServerOptions) => {
 		if (cached) {
 			// Get middleware count for optimization
 			const middlewareCount = router.state.middlewares.length;
-			
+
 			// If no middleware, execute handler directly (fast path)
 			if (middlewareCount === 0) {
 				return cached.handler(req, cached.params);
 			}
-			
+
 			// Execute middleware chain with optimized recursion
 			let index = 0;
-			
+
 			// Use a named function for better performance and stack traces
 			const executeMiddleware = async (): Promise<Response> => {
 				// Check if we've reached the end of middleware chain
@@ -149,7 +149,7 @@ export const createServer = (options?: ServerOptions) => {
 				// Execute the cached handler with params
 				return cached.handler(req, cached.params);
 			};
-			
+
 			return executeMiddleware();
 		}
 
@@ -205,17 +205,18 @@ export const createServer = (options?: ServerOptions) => {
 	 * @param method HTTP method to create handler for
 	 * @returns A function that registers a route for the specified method
 	 */
-	const createMethodHandler = (method: Method) => (path: string, handler: Handler) => {
-		if (router.type === RouterType.MANUAL) {
-			// Use dynamic import for better performance and code splitting
-			return import("../routers/manual.ts").then(({ addRoute }) => 
-				addRoute(router.state, method, path, handler)
+	const createMethodHandler =
+		(method: Method) => (path: string, handler: Handler) => {
+			if (router.type === RouterType.MANUAL) {
+				// Use dynamic import for better performance and code splitting
+				return import("../routers/manual.ts").then(({ addRoute }) =>
+					addRoute(router.state, method, path, handler),
+				);
+			}
+			throw new Error(
+				`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
 			);
-		}
-		throw new Error(
-			`Route registration not supported for ${router.type} router. Use filesystem routes instead.`,
-		);
-	};
+		};
 
 	// Create server instance with plugin support
 	const serverInstance = {
@@ -242,7 +243,10 @@ export const createServer = (options?: ServerOptions) => {
 		/** Mount a sub-application at a base path (only for manual router) */
 		mount: (basePath: string, app: MountableApp) => {
 			if (router.type === RouterType.MANUAL) {
-				return mountApp(router.state, basePath, app);
+				// Use dynamic import for better performance and code splitting
+				return import("../mount.ts").then(({ mountApp }) =>
+					mountApp(router.state, basePath, app),
+				);
 			}
 			throw new Error(`App mounting not supported for ${router.type} router.`);
 		},

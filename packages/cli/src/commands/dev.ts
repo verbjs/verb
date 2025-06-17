@@ -134,7 +134,10 @@ function findEntryPoint(): string | null {
  * Start the server process
  * @returns The child process instance
  */
-function startServer(entryPoint: string, options: DevOptions): import('child_process').ChildProcess {
+function startServer(
+	entryPoint: string,
+	options: DevOptions,
+): import("child_process").ChildProcess {
 	// Determine the package manager
 	const packageManager = getPackageManager();
 
@@ -188,7 +191,7 @@ function startServer(entryPoint: string, options: DevOptions): import('child_pro
  * Set up file watching for hot reload
  */
 function setupFileWatching(
-	initialServerProcess: import('child_process').ChildProcess,
+	initialServerProcess: import("child_process").ChildProcess,
 	entryPoint: string,
 	options: DevOptions,
 ): void {
