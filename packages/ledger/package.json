@@ -1,0 +1,32 @@
+{
+  "name": "ledger",
+  "module": "src/main.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/cli.ts dev",
+    "build": "bun run src/cli.ts build",
+    "preview": "bun run src/cli.ts preview"
+  },
+  "dependencies": {
+    "@mantine/core": "^8.1.1",
+    "@mantine/hooks": "^8.1.1",
+    "@mantine/code-highlight": "^8.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0",
+    "marked": "^11.1.0",
+    "highlight.js": "^11.9.0",
+    "glob": "^10.3.10",
+    "yaml": "^2.3.4",
+    "verb": "latest"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@types/marked": "^5.0.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

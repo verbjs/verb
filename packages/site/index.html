@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verb - Web framework built on Web Standards</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header/Navigation -->
+    <nav class="navbar is-transparent" role="navigation" aria-label="main navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="/">
+                    <h1 class="title is-4">Verb</h1>
+                </a>
+                <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasic">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
+            </div>
+            <div id="navbarBasic" class="navbar-menu">
+                <div class="navbar-end">
+                    <a class="navbar-item" href="#features">Features</a>
+                    <a class="navbar-item" href="https://github.com/yourusername/verb" target="_blank">GitHub</a>
+                    <a class="navbar-item" href="/docs">Documentation</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero is-medium">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns is-vcentered">
+                    <div class="column is-6">
+                        <h1 class="title is-1 has-text-weight-bold">Verb</h1>
+                        <h2 class="subtitle is-3 mb-5">Web application framework</h2>
+                        <p class="subtitle is-5 mb-6">Fast, lightweight, built on Web Standards. Support for any JavaScript runtime.</p>
+                        <div class="buttons">
+                            <a href="/docs/getting-started" class="button is-primary is-medium">Get Started</a>
+                            <a href="https://github.com/yourusername/verb" class="button is-light is-medium">GitHub</a>
+                        </div>
+                    </div>
+                    <div class="column is-6">
+                        <div class="code-container">
+                            <pre><code>import { Verb } from 'verb'
+
+const app = new Verb()
+
+app.get('/', (c) => c.text('Hello Verb!'))
+
+export default app</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+        <div class="container">
+            <div class="columns is-multiline">
+                <!-- Feature 1 -->
+                <div class="column is-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">🚀</div>
+                        <h3 class="title is-4">Ultrafast & Lightweight</h3>
+                        <p>The router is optimized for speed. The core package is lightweight. Using only Web Standard APIs.</p>
+                    </div>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="column is-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">🌍</div>
+                        <h3 class="title is-4">Multi-runtime</h3>
+                        <p>Works on Cloudflare, Fastly, Deno, Bun, AWS, or Node.js. The same code runs on all platforms.</p>
+                    </div>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="column is-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔋</div>
+                        <h3 class="title is-4">Batteries Included</h3>
+                        <p>Verb has built-in middleware, custom middleware, third-party middleware, and helpers. Batteries included.</p>
+                    </div>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="column is-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">😃</div>
+                        <h3 class="title is-4">Delightful DX</h3>
+                        <p>Super clean APIs. First-class TypeScript support. Now, we've got "Types".</p>
+                    </div>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="column is-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3 class="title is-4">High Performance</h3>
+                        <p>Designed for high-performance applications with minimal overhead and maximum efficiency.</p>
+                    </div>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="column is-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">🛠️</div>
+                        <h3 class="title is-4">Extensible</h3>
+                        <p>Easily extend functionality with plugins and middleware to suit your specific needs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-4">
+                    <h2 class="title is-4">Verb</h2>
+                    <p>A modern web framework for building fast and scalable applications.</p>
+                </div>
+                <div class="column is-2 is-offset-1">
+                    <h3 class="title is-6">Documentation</h3>
+                    <ul>
+                        <li><a href="/docs/getting-started">Getting Started</a></li>
+                        <li><a href="/docs/guides">Guides</a></li>
+                        <li><a href="/docs/api">API Reference</a></li>
+                    </ul>
+                </div>
+                <div class="column is-2">
+                    <h3 class="title is-6">Community</h3>
+                    <ul>
+                        <li><a href="https://github.com/yourusername/verb">GitHub</a></li>
+                        <li><a href="https://discord.gg/verb">Discord</a></li>
+                        <li><a href="https://twitter.com/verbframework">Twitter</a></li>
+                    </ul>
+                </div>
+                <div class="column is-2">
+                    <h3 class="title is-6">More</h3>
+                    <ul>
+                        <li><a href="/blog">Blog</a></li>
+                        <li><a href="/examples">Examples</a></li>
+                        <li><a href="/showcase">Showcase</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="content has-text-centered mt-6">
+                <p>© 2023 Verb. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

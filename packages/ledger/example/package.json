@@ -1,0 +1,9 @@
+{
+  "name": "ledger-example",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run ../src/cli.ts dev",
+    "build": "bun run ../src/cli.ts build",
+    "preview": "bun run ../src/cli.ts preview"
+  }
+}
