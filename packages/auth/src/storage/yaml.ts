@@ -43,7 +43,7 @@ export class YAMLStorageAdapter implements StorageAdapter {
     try {
       const yamlContent = await readFile(this.filePath, "utf8");
       const parsed = YAML.parse(yamlContent) || { users: [], sessions: [] };
-      
+
       this.data = {
         users: (parsed.users || []).map(this.deserializeUser),
         sessions: (parsed.sessions || []).map(this.deserializeSession),
@@ -135,7 +135,7 @@ export class YAMLStorageAdapter implements StorageAdapter {
   async getUserByProvider(provider: string, providerId: string): Promise<User | null> {
     return (
       this.data.users.find(
-        (user) => user.provider === provider && user.providerId === providerId
+        (user) => user.provider === provider && user.providerId === providerId,
       ) || null
     );
   }
@@ -163,10 +163,10 @@ export class YAMLStorageAdapter implements StorageAdapter {
   async deleteUser(id: string): Promise<boolean> {
     const initialLength = this.data.users.length;
     this.data.users = this.data.users.filter((user) => user.id !== id);
-    
+
     // Also delete associated sessions
     this.data.sessions = this.data.sessions.filter((session) => session.userId !== id);
-    
+
     if (this.data.users.length < initialLength) {
       await this.saveData();
       return true;
@@ -195,7 +195,7 @@ export class YAMLStorageAdapter implements StorageAdapter {
 
     return (
       this.data.sessions.find(
-        (session) => session.token === token && session.expiresAt > new Date()
+        (session) => session.token === token && session.expiresAt > new Date(),
       ) || null
     );
   }
@@ -222,7 +222,7 @@ export class YAMLStorageAdapter implements StorageAdapter {
   async deleteSession(id: string): Promise<boolean> {
     const initialLength = this.data.sessions.length;
     this.data.sessions = this.data.sessions.filter((session) => session.id !== id);
-    
+
     if (this.data.sessions.length < initialLength) {
       await this.saveData();
       return true;
@@ -233,7 +233,7 @@ export class YAMLStorageAdapter implements StorageAdapter {
   async deleteUserSessions(userId: string): Promise<number> {
     const initialLength = this.data.sessions.length;
     this.data.sessions = this.data.sessions.filter((session) => session.userId !== userId);
-    
+
     const deletedCount = initialLength - this.data.sessions.length;
     if (deletedCount > 0) {
       await this.saveData();
@@ -244,11 +244,9 @@ export class YAMLStorageAdapter implements StorageAdapter {
   async cleanupExpiredSessions(): Promise<number> {
     const now = new Date();
     const initialLength = this.data.sessions.length;
-    
-    this.data.sessions = this.data.sessions.filter(
-      (session) => session.expiresAt > now
-    );
-    
+
+    this.data.sessions = this.data.sessions.filter((session) => session.expiresAt > now);
+
     const deletedCount = initialLength - this.data.sessions.length;
     if (deletedCount > 0) {
       await this.saveData();

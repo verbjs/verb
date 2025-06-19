@@ -115,7 +115,10 @@ async function createTemplate(name?: string, options: any = {}): Promise<void> {
 /**
  * Prompt for template options
  */
-async function promptForTemplateOptions(name?: string, options: any = {}): Promise<TemplateOptions> {
+async function promptForTemplateOptions(
+  name?: string,
+  options: any = {},
+): Promise<TemplateOptions> {
   if (options.yes && name) {
     return {
       name,
@@ -211,10 +214,10 @@ async function promptForTemplateOptions(name?: string, options: any = {}): Promi
   // Process main features into individual flags
   const mainFeatures = answers.mainFeatures || [];
   const features = ["Basic Verb server"];
-  
+
   if (mainFeatures.includes("auth")) answers.includeAuth = true;
   if (mainFeatures.includes("react")) answers.includeReact = true;
-  
+
   if (answers.includeAuth) features.push("Authentication system");
   if (answers.includeReact) features.push("React SSR");
   if (answers.includeOAuth2) features.push("OAuth2 integration");
@@ -309,7 +312,7 @@ async function generateManifest(templateDir: string, options: TemplateOptions): 
   }
 
   const environment: { required?: string[]; optional?: string[] } = {};
-  
+
   if (options.includeAuth) {
     environment.required = ["SESSION_SECRET"];
     if (options.includeOAuth2) {
@@ -340,7 +343,7 @@ async function generateManifest(templateDir: string, options: TemplateOptions): 
     if (options.includeOAuth2) {
       routes.auth.push(
         { path: "/auth/google", description: "Google OAuth2 login", method: "GET" },
-        { path: "/auth/github", description: "GitHub OAuth2 login", method: "GET" }
+        { path: "/auth/github", description: "GitHub OAuth2 login", method: "GET" },
       );
     }
 
@@ -373,7 +376,9 @@ async function generateManifest(templateDir: string, options: TemplateOptions): 
     setup: {
       steps: [
         "Copy environment variables from .env.example",
-        ...(options.includeAuth && options.includeOAuth2 ? ["Configure OAuth2 providers (optional)"] : []),
+        ...(options.includeAuth && options.includeOAuth2
+          ? ["Configure OAuth2 providers (optional)"]
+          : []),
         "Run bun install",
         "Start development server with bun run dev",
       ],
@@ -440,10 +445,7 @@ async function generatePackageJson(templateDir: string, options: TemplateOptions
     },
   };
 
-  await fs.writeFile(
-    path.join(templateDir, "package.json"),
-    JSON.stringify(packageJson, null, 2)
-  );
+  await fs.writeFile(path.join(templateDir, "package.json"), JSON.stringify(packageJson, null, 2));
 }
 
 /**
@@ -468,10 +470,7 @@ async function generateTsConfig(templateDir: string): Promise<void> {
     exclude: ["node_modules", "dist"],
   };
 
-  await fs.writeFile(
-    path.join(templateDir, "tsconfig.json"),
-    JSON.stringify(tsconfig, null, 2)
-  );
+  await fs.writeFile(path.join(templateDir, "tsconfig.json"), JSON.stringify(tsconfig, null, 2));
 }
 
 /**
@@ -484,7 +483,7 @@ async function generateSourceCode(templateDir: string, options: TemplateOptions)
 
   if (options.includeAuth) {
     imports += '\nimport { createAuthPlugin } from "@verb/auth";';
-    
+
     setup = `
 // Configure authentication
 const authPlugin = createAuthPlugin({
@@ -498,7 +497,9 @@ const authPlugin = createAuthPlugin({
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     sameSite: "lax"
-  },${options.includeOAuth2 ? `
+  },${
+    options.includeOAuth2
+      ? `
   providers: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -510,7 +511,9 @@ const authPlugin = createAuthPlugin({
       clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
       redirectUri: "http://localhost:3000/auth/github/callback"
     }
-  },` : ""}
+  },`
+      : ""
+  }
   registration: {
     enabled: true,
     requireEmailVerification: false
@@ -524,7 +527,9 @@ app.post("/auth/login", authPlugin.handlers.login);
 app.post("/auth/register", authPlugin.handlers.register);
 app.post("/auth/logout", authPlugin.handlers.logout);
 app.get("/auth/me", authPlugin.middleware.requireAuth, authPlugin.handlers.me);
-${options.includeOAuth2 ? `
+${
+  options.includeOAuth2
+    ? `
 // OAuth2 routes (if configured)
 if (process.env.GOOGLE_CLIENT_ID) {
   app.get("/auth/google", authPlugin.handlers.oauth2("google"));
@@ -534,7 +539,9 @@ if (process.env.GOOGLE_CLIENT_ID) {
 if (process.env.GITHUB_CLIENT_ID) {
   app.get("/auth/github", authPlugin.handlers.oauth2("github"));
   app.get("/auth/github/callback", authPlugin.handlers.oauth2Callback("github"));
-}` : ""}
+}`
+    : ""
+}
 
 // Protected routes
 app.get("/dashboard", authPlugin.middleware.requireAuth, (req) => {
@@ -577,16 +584,20 @@ app.get("/", () => {
       <div class="feature">
         <h3>Features:</h3>
         <ul>
-          ${options.features.map(feature => `<li>${feature}</li>`).join('\\n          ')}
+          ${options.features.map((feature) => `<li>${feature}</li>`).join("\\n          ")}
         </ul>
       </div>
       
       <div class="feature">
         <h3>API Endpoints:</h3>
         <ul>
-          <li><a href="/health">GET /health</a> - Health check</li>${options.includeAuth ? `
+          <li><a href="/health">GET /health</a> - Health check</li>${
+            options.includeAuth
+              ? `
           <li><a href="/auth/me">GET /auth/me</a> - Current user (protected)</li>
-          <li><a href="/dashboard">GET /dashboard</a> - Dashboard (protected)</li>` : ""}
+          <li><a href="/dashboard">GET /dashboard</a> - Dashboard (protected)</li>`
+              : ""
+          }
         </ul>
       </div>
       
@@ -609,10 +620,14 @@ ${routes}
 console.log("🚀 ${options.displayName} running at http://localhost:3000");
 console.log("📋 Available routes:");
 console.log("  GET  /           - Welcome page");
-console.log("  GET  /health     - Health check");${options.includeAuth ? `
+console.log("  GET  /health     - Health check");${
+    options.includeAuth
+      ? `
 console.log("  POST /auth/login - User login");
 console.log("  POST /auth/register - User registration");
-console.log("  GET  /dashboard  - User dashboard (protected)");` : ""}
+console.log("  GET  /dashboard  - User dashboard (protected)");`
+      : ""
+  }
 `;
 
   await fs.writeFile(path.join(templateDir, "src/index.ts"), indexContent);
@@ -628,7 +643,7 @@ ${options.description}
 
 ## Features
 
-${options.features.map(feature => `- ${feature}`).join('\n')}
+${options.features.map((feature) => `- ${feature}`).join("\n")}
 
 ## Quick Start
 
@@ -655,36 +670,52 @@ ${options.features.map(feature => `- ${feature}`).join('\n')}
 ### Public Routes
 - \`GET /\` - Welcome page
 - \`GET /health\` - Health check endpoint
-${options.includeAuth ? `
+${
+  options.includeAuth
+    ? `
 ### Authentication Routes
 - \`POST /auth/login\` - User login
 - \`POST /auth/register\` - User registration
 - \`POST /auth/logout\` - User logout
 - \`GET /auth/me\` - Get current user info (protected)
-${options.includeOAuth2 ? `
+${
+  options.includeOAuth2
+    ? `
 ### OAuth2 Routes (if configured)
 - \`GET /auth/google\` - Google OAuth2 login
 - \`GET /auth/google/callback\` - Google OAuth2 callback
 - \`GET /auth/github\` - GitHub OAuth2 login
-- \`GET /auth/github/callback\` - GitHub OAuth2 callback` : ""}
+- \`GET /auth/github/callback\` - GitHub OAuth2 callback`
+    : ""
+}
 
 ### Protected Routes
-- \`GET /dashboard\` - User dashboard (requires authentication)` : ""}
+- \`GET /dashboard\` - User dashboard (requires authentication)`
+    : ""
+}
 
 ## Configuration
-${options.includeAuth ? `
+${
+  options.includeAuth
+    ? `
 ### Authentication
 This template uses \`@verb/auth\` for authentication. Configure the following environment variables:
 
 - \`SESSION_SECRET\` - Secret for session encryption (required)
-${options.includeOAuth2 ? `
+${
+  options.includeOAuth2
+    ? `
 ### OAuth2 Providers (Optional)
 - \`GOOGLE_CLIENT_ID\` and \`GOOGLE_CLIENT_SECRET\` - Google OAuth2
 - \`GITHUB_CLIENT_ID\` and \`GITHUB_CLIENT_SECRET\` - GitHub OAuth2
 
-See the OAuth2 setup section in the manifest.yaml for detailed instructions.` : ""}` : `
+See the OAuth2 setup section in the manifest.yaml for detailed instructions.`
+    : ""
+}`
+    : `
 ### Environment Variables
-See \`.env.example\` for available configuration options.`}
+See \`.env.example\` for available configuration options.`
+}
 
 ## Development
 
@@ -802,7 +833,7 @@ async function validateTemplate(templatePath: string): Promise<void> {
     try {
       const manifestContent = await fs.readFile(manifestPath, "utf8");
       const manifest = YAML.parse(manifestContent);
-      
+
       const requiredFields = ["name", "displayName", "description"];
       for (const field of requiredFields) {
         if (manifest[field]) {
@@ -832,7 +863,7 @@ async function validateTemplate(templatePath: string): Promise<void> {
  */
 async function showTemplateInfo(templateName: string): Promise<void> {
   console.log(chalk.cyan(`📋 Template Information: ${templateName}\n`));
-  
+
   // For now, show placeholder. In future, this would load from templates directory
   if (templateName === "auth-demo") {
     console.log(chalk.bold("Authentication Demo"));

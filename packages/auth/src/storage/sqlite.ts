@@ -125,7 +125,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       if (key === "id" || key === "createdAt") return;
 
       const columnName = this.camelToSnake(key);
-      
+
       if (key === "emailVerified") {
         updateFields.push(`${columnName} = ?`);
         updateValues.push(value ? 1 : 0);
@@ -178,7 +178,9 @@ export class SQLiteStorageAdapter implements StorageAdapter {
   }
 
   async getSession(token: string): Promise<Session | null> {
-    const stmt = this.db.prepare("SELECT * FROM sessions WHERE token = ? AND expires_at > CURRENT_TIMESTAMP");
+    const stmt = this.db.prepare(
+      "SELECT * FROM sessions WHERE token = ? AND expires_at > CURRENT_TIMESTAMP",
+    );
     const row = stmt.get(token);
     return row ? this.rowToSession(row) : null;
   }
@@ -197,7 +199,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       if (key === "id" || key === "createdAt") return;
 
       const columnName = this.camelToSnake(key);
-      
+
       if (key === "expiresAt") {
         updateFields.push(`${columnName} = ?`);
         updateValues.push((value as Date).toISOString());

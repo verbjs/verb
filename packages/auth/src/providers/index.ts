@@ -40,11 +40,11 @@ export class OAuth2UserInfoNormalizer {
   static normalize(provider: string, userInfo: any): OAuth2UserInfo {
     switch (provider) {
       case "google":
-        return this.normalizeGoogle(userInfo);
+        return OAuth2UserInfoNormalizer.normalizeGoogle(userInfo);
       case "github":
-        return this.normalizeGitHub(userInfo);
+        return OAuth2UserInfoNormalizer.normalizeGitHub(userInfo);
       case "discord":
-        return this.normalizeDiscord(userInfo);
+        return OAuth2UserInfoNormalizer.normalizeDiscord(userInfo);
       default:
         throw new Error(`Unsupported OAuth2 provider: ${provider}`);
     }
@@ -93,7 +93,7 @@ export function createOAuth2Provider(
     clientSecret: string;
     redirectUri: string;
     scope?: string[];
-  }
+  },
 ): OAuth2Provider {
   const baseProvider = OAUTH2_PROVIDERS[name];
   if (!baseProvider) {

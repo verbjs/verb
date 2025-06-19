@@ -146,7 +146,7 @@ export class PostgreSQLStorageAdapter implements StorageAdapter {
       if (key === "id" || key === "createdAt" || key === "updatedAt") return;
 
       const columnName = this.camelToSnake(key);
-      
+
       if (key === "metadata") {
         updateData[columnName] = value ? JSON.stringify(value) : null;
       } else if (value !== undefined) {
@@ -207,7 +207,7 @@ export class PostgreSQLStorageAdapter implements StorageAdapter {
       if (key === "id" || key === "createdAt") return;
 
       const columnName = this.camelToSnake(key);
-      
+
       if (key === "metadata") {
         updateData[columnName] = value ? JSON.stringify(value) : null;
       } else if (value !== undefined) {

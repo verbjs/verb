@@ -3,7 +3,7 @@ build
 dist
 .turbo
 PUBLISHING.md
-
+.vscode
 # Logs
 
 logs

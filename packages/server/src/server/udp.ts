@@ -17,11 +17,7 @@ export interface UDPHandler {
   /** Called when a UDP message is received */
   message?: (message: Buffer, rinfo: RemoteInfo) => void;
   /** Called when the UDP socket is bound and ready */
-  listening?: (address: {
-    address: string;
-    port: number;
-    family: string;
-  }) => void;
+  listening?: (address: { address: string; port: number; family: string }) => void;
   /** Called when an error occurs */
   error?: (error: Error) => void;
   /** Called when the socket is closed */
