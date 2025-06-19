@@ -13,7 +13,7 @@ export class AuthMiddleware {
   /**
    * Middleware that requires authentication
    */
-  requireAuth = async (req: AuthRequest): Promise<Response | void> => {
+  requireAuth = async (req: AuthRequest): Promise<Response | undefined> => {
     const authResult = await this.authenticate(req);
     
     if (!authResult.user) {
@@ -126,7 +126,7 @@ export class AuthMiddleware {
       const token = authHeader.substring(7); // Remove "Bearer " prefix
       
       // Verify JWT
-      const payload = AuthUtils.verifyJWT(token, this.config.jwt!.secret);
+      const payload = AuthUtils.verifyJWT(token, this.config.jwt?.secret);
       
       if (!payload.userId) {
         return { user: null, session: null };
@@ -238,10 +238,10 @@ export class AuthMiddleware {
 
         return AuthUtils.generateJWT(
           payload,
-          this.config.jwt!.secret,
+          this.config.jwt?.secret,
           {
-            expiresIn: this.config.jwt!.expiresIn,
-            algorithm: this.config.jwt!.algorithm as any,
+            expiresIn: this.config.jwt?.expiresIn,
+            algorithm: this.config.jwt?.algorithm as any,
           }
         );
       },
@@ -250,7 +250,7 @@ export class AuthMiddleware {
        * Verify and decode a JWT token
        */
       verifyToken: (token: string): any => {
-        return AuthUtils.verifyJWT(token, this.config.jwt!.secret);
+        return AuthUtils.verifyJWT(token, this.config.jwt?.secret);
       },
 
       /**
@@ -268,7 +268,7 @@ export class AuthMiddleware {
   requireRole = (requiredRoles: string | string[]) => {
     const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
     
-    return async (req: AuthRequest): Promise<Response | void> => {
+    return async (req: AuthRequest): Promise<Response | undefined> => {
       // First ensure user is authenticated
       const authResponse = await this.requireAuth(req);
       if (authResponse) {
@@ -300,7 +300,7 @@ export class AuthMiddleware {
   /**
    * Email verification middleware
    */
-  requireEmailVerified = async (req: AuthRequest): Promise<Response | void> => {
+  requireEmailVerified = async (req: AuthRequest): Promise<Response | undefined> => {
     // First ensure user is authenticated
     const authResponse = await this.requireAuth(req);
     if (authResponse) {
@@ -329,7 +329,7 @@ export class AuthMiddleware {
   rateLimit = (maxRequests: number, windowMs: number) => {
     const requests = new Map<string, { count: number; resetTime: number }>();
 
-    return async (req: AuthRequest): Promise<Response | void> => {
+    return async (req: AuthRequest): Promise<Response | undefined> => {
       const clientId = req.user?.id || req.headers.get("X-Forwarded-For") || "anonymous";
       const now = Date.now();
       

@@ -215,16 +215,34 @@ async function promptForTemplateOptions(
   const mainFeatures = answers.mainFeatures || [];
   const features = ["Basic Verb server"];
 
-  if (mainFeatures.includes("auth")) answers.includeAuth = true;
-  if (mainFeatures.includes("react")) answers.includeReact = true;
+  if (mainFeatures.includes("auth")) {
+    answers.includeAuth = true;
+  }
+  if (mainFeatures.includes("react")) {
+    answers.includeReact = true;
+  }
 
-  if (answers.includeAuth) features.push("Authentication system");
-  if (answers.includeReact) features.push("React SSR");
-  if (answers.includeOAuth2) features.push("OAuth2 integration");
-  if (mainFeatures.includes("api")) features.push("REST API endpoints");
-  if (mainFeatures.includes("static")) features.push("Static file serving");
-  if (mainFeatures.includes("websockets")) features.push("WebSocket support");
-  if (mainFeatures.includes("database")) features.push("Database integration");
+  if (answers.includeAuth) {
+    features.push("Authentication system");
+  }
+  if (answers.includeReact) {
+    features.push("React SSR");
+  }
+  if (answers.includeOAuth2) {
+    features.push("OAuth2 integration");
+  }
+  if (mainFeatures.includes("api")) {
+    features.push("REST API endpoints");
+  }
+  if (mainFeatures.includes("static")) {
+    features.push("Static file serving");
+  }
+  if (mainFeatures.includes("websockets")) {
+    features.push("WebSocket support");
+  }
+  if (mainFeatures.includes("database")) {
+    features.push("Database integration");
+  }
 
   return {
     ...answers,
@@ -601,7 +619,7 @@ app.get("/", () => {
         </ul>
       </div>
       
-      ${options.includeAuth ? `<p><strong>Note:</strong> Authentication endpoints are available. See README.md for setup instructions.</p>` : ""}
+      ${options.includeAuth ? "<p><strong>Note:</strong> Authentication endpoints are available. See README.md for setup instructions.</p>" : ""}
     </body>
     </html>
   \`, {

@@ -33,57 +33,55 @@ export const OAUTH2_PROVIDERS: Record<string, OAuth2Provider> = {
   },
 };
 
-export class OAuth2UserInfoNormalizer {
-  /**
-   * Normalize user info from different OAuth2 providers
-   */
-  static normalize(provider: string, userInfo: any): OAuth2UserInfo {
-    switch (provider) {
-      case "google":
-        return OAuth2UserInfoNormalizer.normalizeGoogle(userInfo);
-      case "github":
-        return OAuth2UserInfoNormalizer.normalizeGitHub(userInfo);
-      case "discord":
-        return OAuth2UserInfoNormalizer.normalizeDiscord(userInfo);
-      default:
-        throw new Error(`Unsupported OAuth2 provider: ${provider}`);
-    }
+/**
+ * Normalize user info from different OAuth2 providers
+ */
+export function normalizeOAuth2UserInfo(provider: string, userInfo: any): OAuth2UserInfo {
+  switch (provider) {
+    case "google":
+      return normalizeGoogleUserInfo(userInfo);
+    case "github":
+      return normalizeGitHubUserInfo(userInfo);
+    case "discord":
+      return normalizeDiscordUserInfo(userInfo);
+    default:
+      throw new Error(`Unsupported OAuth2 provider: ${provider}`);
   }
+}
 
-  private static normalizeGoogle(userInfo: any): OAuth2UserInfo {
-    return {
-      id: userInfo.id,
-      email: userInfo.email,
-      name: userInfo.name,
-      username: userInfo.email?.split("@")[0],
-      avatar: userInfo.picture,
-      verified: userInfo.verified_email || false,
-    };
-  }
+function normalizeGoogleUserInfo(userInfo: any): OAuth2UserInfo {
+  return {
+    id: userInfo.id,
+    email: userInfo.email,
+    name: userInfo.name,
+    username: userInfo.email?.split("@")[0],
+    avatar: userInfo.picture,
+    verified: userInfo.verified_email || false,
+  };
+}
 
-  private static normalizeGitHub(userInfo: any): OAuth2UserInfo {
-    return {
-      id: userInfo.id?.toString(),
-      email: userInfo.email,
-      name: userInfo.name,
-      username: userInfo.login,
-      avatar: userInfo.avatar_url,
-      verified: true, // GitHub emails are considered verified
-    };
-  }
+function normalizeGitHubUserInfo(userInfo: any): OAuth2UserInfo {
+  return {
+    id: userInfo.id?.toString(),
+    email: userInfo.email,
+    name: userInfo.name,
+    username: userInfo.login,
+    avatar: userInfo.avatar_url,
+    verified: true, // GitHub emails are considered verified
+  };
+}
 
-  private static normalizeDiscord(userInfo: any): OAuth2UserInfo {
-    return {
-      id: userInfo.id,
-      email: userInfo.email,
-      name: userInfo.global_name || userInfo.username,
-      username: userInfo.username,
-      avatar: userInfo.avatar
-        ? `https://cdn.discordapp.com/avatars/${userInfo.id}/${userInfo.avatar}.png`
-        : undefined,
-      verified: userInfo.verified || false,
-    };
-  }
+function normalizeDiscordUserInfo(userInfo: any): OAuth2UserInfo {
+  return {
+    id: userInfo.id,
+    email: userInfo.email,
+    name: userInfo.global_name || userInfo.username,
+    username: userInfo.username,
+    avatar: userInfo.avatar
+      ? `https://cdn.discordapp.com/avatars/${userInfo.id}/${userInfo.avatar}.png`
+      : undefined,
+    verified: userInfo.verified || false,
+  };
 }
 
 export function createOAuth2Provider(

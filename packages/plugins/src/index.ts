@@ -22,7 +22,7 @@ export {
   YAMLStorageAdapter,
   createStorageAdapter,
   OAUTH2_PROVIDERS,
-  OAuth2UserInfoNormalizer,
+  normalizeOAuth2UserInfo,
   createOAuth2Provider,
   type User,
   type Session,

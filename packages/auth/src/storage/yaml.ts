@@ -1,6 +1,6 @@
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { existsSync, mkdirSync } from "fs";
-import { dirname } from "path";
+import { readFile, writeFile } from "node:fs/promises";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import YAML from "yaml";
 import type { StorageAdapter, User, Session, StorageConfig } from "../types.js";
 

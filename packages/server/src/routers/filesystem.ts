@@ -4,7 +4,7 @@
  */
 
 import { type Dirent, readdirSync, statSync } from "node:fs";
-import { extname, join, relative, sep } from "node:path";
+import { extname, join, relative } from "node:path";
 import type { Handler, Method, Middleware } from "../types.ts";
 
 /**

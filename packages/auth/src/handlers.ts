@@ -7,7 +7,7 @@ import type {
   OAuth2Provider,
 } from "./types.js";
 import { AuthUtils } from "./utils.js";
-import { OAuth2UserInfoNormalizer, createOAuth2Provider } from "./providers/index.js";
+import { normalizeOAuth2UserInfo, createOAuth2Provider } from "./providers/index.js";
 
 export class AuthHandlers {
   private config: AuthConfig;
@@ -318,7 +318,7 @@ export class AuthHandlers {
   /**
    * OAuth2 login redirect
    */
-  oauth2 = (providerName: string) => async (req: Request): Promise<Response> => {
+  oauth2 = (providerName: string) => async (_req: Request): Promise<Response> => {
     try {
       const provider = this.providers.get(providerName);
       if (!provider) {
@@ -418,7 +418,7 @@ export class AuthHandlers {
       );
 
       // Normalize user info
-      const normalizedUserInfo = OAuth2UserInfoNormalizer.normalize(providerName, userInfo);
+      const normalizedUserInfo = normalizeOAuth2UserInfo(providerName, userInfo);
 
       // Check if user exists
       let user = await this.storage.getUserByProvider(

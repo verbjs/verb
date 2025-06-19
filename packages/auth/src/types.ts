@@ -141,7 +141,7 @@ export interface StorageAdapter {
 }
 
 export interface AuthMiddleware {
-  requireAuth: (req: AuthRequest) => Promise<Response | void>;
+  requireAuth: (req: AuthRequest) => Promise<Response | undefined>;
   optionalAuth: (req: AuthRequest) => Promise<void>;
 }
 

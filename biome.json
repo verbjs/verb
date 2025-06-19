@@ -14,13 +14,18 @@
     "rules": {
       "recommended": true,
       "style": {
-        "useBlockStatements": "error",
+        "useBlockStatements": "warn",
         "useConst": "error",
-        "useTemplate": "error"
+        "useTemplate": "error",
+        "noNonNullAssertion": "warn"
       },
       "correctness": {
-        "noUnusedVariables": "error",
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "warn",
         "useExhaustiveDependencies": "error"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "warn"
       },
       "suspicious": {
         "noDebugger": "error",

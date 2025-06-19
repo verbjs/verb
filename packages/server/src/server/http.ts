@@ -5,14 +5,13 @@ import type { Handler, Method, Middleware } from "../types.ts";
 import {
   type RouterConfig,
   RouterType,
-  type UniversalRouter,
   createUniversalRouter,
   defaultRouterConfig,
 } from "../routers/index.ts";
 
 import { getCached, setCached } from "../cache.ts";
 
-import { type MountableApp, mountApp } from "../mount.ts";
+import type { MountableApp } from "../mount.ts";
 import { type Plugin, PluginManager, type PluginRegistrationOptions } from "../plugin.ts";
 import { notFound } from "../response.ts";
 

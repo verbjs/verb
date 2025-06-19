@@ -1,4 +1,4 @@
-import { error } from "./response.ts";
+
 import type { Middleware } from "./types.ts";
 
 /**

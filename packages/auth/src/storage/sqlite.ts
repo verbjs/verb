@@ -90,7 +90,11 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       userData.metadata ? JSON.stringify(userData.metadata) : null,
     ]);
 
-    return this.getUserById(id)!;
+    const user = this.getUserById(id);
+    if (!user) {
+      throw new Error(`Failed to create user with id: ${id}`);
+    }
+    return user;
   }
 
   async getUserById(id: string): Promise<User | null> {
@@ -122,7 +126,9 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     const updateValues: any[] = [];
 
     Object.entries(updates).forEach(([key, value]) => {
-      if (key === "id" || key === "createdAt") return;
+      if (key === "id" || key === "createdAt") {
+        return;
+      }
 
       const columnName = this.camelToSnake(key);
 
@@ -147,7 +153,11 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     `);
 
     stmt.run(updateValues);
-    return this.getUserById(id)!;
+    const user = this.getUserById(id);
+    if (!user) {
+      throw new Error(`Failed to update user with id: ${id}`);
+    }
+    return user;
   }
 
   async deleteUser(id: string): Promise<boolean> {
@@ -174,7 +184,11 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       sessionData.metadata ? JSON.stringify(sessionData.metadata) : null,
     ]);
 
-    return this.getSessionById(id)!;
+    const session = this.getSessionById(id);
+    if (!session) {
+      throw new Error(`Failed to create session with id: ${id}`);
+    }
+    return session;
   }
 
   async getSession(token: string): Promise<Session | null> {
@@ -196,7 +210,9 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     const updateValues: any[] = [];
 
     Object.entries(updates).forEach(([key, value]) => {
-      if (key === "id" || key === "createdAt") return;
+      if (key === "id" || key === "createdAt") {
+        return;
+      }
 
       const columnName = this.camelToSnake(key);
 
@@ -219,7 +235,11 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     `);
 
     stmt.run(updateValues);
-    return this.getSessionById(id)!;
+    const session = this.getSessionById(id);
+    if (!session) {
+      throw new Error(`Failed to update session with id: ${id}`);
+    }
+    return session;
   }
 
   async deleteSession(id: string): Promise<boolean> {

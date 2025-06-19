@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { randomBytes } from "crypto";
+import { randomBytes } from "node:crypto";
 
 export class AuthUtils {
   /**
@@ -162,7 +162,7 @@ export class AuthUtils {
    * Parse cookies from request headers
    */
   static parseCookies(cookieHeader?: string): Record<string, string> {
-    if (!cookieHeader) return {};
+    if (!cookieHeader) { return {}; }
 
     return cookieHeader
       .split(";")
@@ -194,7 +194,7 @@ export class AuthUtils {
    * Generate a random state parameter for OAuth2
    */
   static generateOAuth2State(): string {
-    return this.generateToken(16);
+    return AuthUtils.generateToken(16);
   }
 
   /**

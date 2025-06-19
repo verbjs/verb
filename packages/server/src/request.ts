@@ -1,9 +1,6 @@
 // Optimized request parsing with minimal object allocations
 
 import {
-  type MultipartData,
-  type MultipartOptions,
-  isMultipartRequest,
   parseMultipart,
 } from "./upload.ts";
 

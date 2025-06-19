@@ -5,7 +5,6 @@ import type { Handler, Method, Middleware } from "../types.ts";
 import {
   type RouterConfig,
   RouterType,
-  type UniversalRouter,
   createUniversalRouter,
   defaultRouterConfig,
 } from "../routers/index.ts";

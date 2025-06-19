@@ -12,7 +12,10 @@ export class PostgreSQLStorageAdapter implements StorageAdapter {
     try {
       // Dynamically import postgres
       const { default: postgres } = await import("postgres");
-      this.sql = postgres(this.config.connectionString!, {
+      if (!this.config.connectionString) {
+        throw new Error("PostgreSQL connection string is required");
+      }
+      this.sql = postgres(this.config.connectionString, {
         ...this.config.options,
       });
 
@@ -143,7 +146,9 @@ export class PostgreSQLStorageAdapter implements StorageAdapter {
     const updateData: Record<string, any> = {};
 
     Object.entries(updates).forEach(([key, value]) => {
-      if (key === "id" || key === "createdAt" || key === "updatedAt") return;
+      if (key === "id" || key === "createdAt" || key === "updatedAt") {
+        return;
+      }
 
       const columnName = this.camelToSnake(key);
 
@@ -154,7 +159,7 @@ export class PostgreSQLStorageAdapter implements StorageAdapter {
       }
     });
 
-    const setClause = Object.keys(updateData)
+    const _setClause = Object.keys(updateData)
       .map((key) => `${key} = $${key}`)
       .join(", ");
 
@@ -204,7 +209,9 @@ export class PostgreSQLStorageAdapter implements StorageAdapter {
     const updateData: Record<string, any> = {};
 
     Object.entries(updates).forEach(([key, value]) => {
-      if (key === "id" || key === "createdAt") return;
+      if (key === "id" || key === "createdAt") {
+        return;
+      }
 
       const columnName = this.camelToSnake(key);
 

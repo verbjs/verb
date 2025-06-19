@@ -1,5 +1,4 @@
 import { createPlugin, type Plugin, type PluginContext } from "@verb/server";
-import { html } from "@verb/server";
 
 // Import React and ReactDOMServer
 // Note: These would need to be added as dependencies
