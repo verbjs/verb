@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # Update Bun dependencies
+  # Update Bun dependencies (via package.json)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -16,6 +16,11 @@ updates:
       prefix: "deps"
       prefix-development: "deps-dev"
       include: "scope"
+    ignore:
+      # Ignore Node.js specific packages since we use Bun
+      - dependency-name: "node"
+      - dependency-name: "npm"
+      - dependency-name: "yarn"
 
   # Update GitHub Actions
   - package-ecosystem: "github-actions"

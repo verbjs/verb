@@ -1,9 +1,16 @@
+# Verb - Bun-based TypeScript Framework
+# This project uses Bun runtime (not Node.js)
+
 Procfile
 build
 dist
 .turbo
 PUBLISHING.md
 .vscode
+
+# Bun-specific ignores
+bun.lockb
+
 # Logs
 
 logs

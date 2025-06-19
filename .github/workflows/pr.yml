@@ -24,7 +24,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --no-cache
 
       - name: Run linting (auto-fix)
         run: bun run lint
@@ -66,7 +66,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --no-cache
 
       - name: Build packages
         run: bun run build

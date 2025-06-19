@@ -1,5 +1,6 @@
 name: CI
 
+# Bun-first CI pipeline - No Node.js required
 on:
   push:
     branches: [main]
@@ -24,7 +25,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --no-cache
 
       - name: Run Biome linting
         run: bun run lint:check
@@ -45,7 +46,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --no-cache
 
       - name: Run tests
         run: bun test
@@ -66,7 +67,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --no-cache
 
       - name: Build all packages
         run: bun run build
@@ -87,7 +88,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --no-cache
 
       - name: Type check packages
         run: |
