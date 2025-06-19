@@ -2,6 +2,7 @@ Procfile
 build
 dist
 .turbo
+PUBLISHING.md
 
 # Logs
 

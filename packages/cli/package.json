@@ -2,21 +2,30 @@
   "name": "@verb/cli",
   "version": "0.0.1",
   "description": "Command-line interface for Verb library",
-  "module": "src/main.ts",
+  "main": "dist/main.js",
+  "module": "dist/main.js",
+  "types": "dist/main.d.ts",
   "type": "module",
   "bin": {
     "verb": "./dist/main.js"
   },
   "files": [
     "dist",
-    "templates",
     "README.md"
   ],
   "scripts": {
     "dev": "bun run --watch src/main.ts",
-    "build": "bun build src/main.ts --outdir dist --target node",
-    "prepublish": "bun run build",
+    "build": "bun build src/main.ts --outdir dist --target node --minify && bun run build:types",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "prepublishOnly": "bun run build",
     "test": "bun test"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/main.d.ts",
+      "import": "./dist/main.js",
+      "require": "./dist/main.js"
+    }
   },
   "keywords": [
     "verb",

@@ -2,12 +2,27 @@
   "name": "@verb/plugins",
   "version": "0.0.1",
   "description": "Official plugin registry for the Verb library",
-  "module": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target bun",
+    "build": "bun build src/index.ts --outdir dist --target bun --minify && bun run build:types",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
     "dev": "bun run --watch src/index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "prepublishOnly": "bun run build"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
   },
   "keywords": [
     "verb",

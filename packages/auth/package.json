@@ -4,12 +4,26 @@
   "description": "Authentication plugin for Verb library",
   "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target bun --minify",
+    "build": "bun build src/index.ts --outdir dist --target bun --minify && bun run build:types",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
     "dev": "bun build src/index.ts --outdir dist --target bun --watch",
     "test": "bun test",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run build"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
   },
   "keywords": [
     "verb",
