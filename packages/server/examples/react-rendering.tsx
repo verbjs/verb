@@ -34,7 +34,7 @@ const Layout = ({ children, title }: { children: React.ReactNode; title: string 
           {children}
         </main>
         <footer>
-          <p>&copy; {new Date().getFullYear()} Verb Framework</p>
+          <p>&copy; {new Date().getFullYear()} Verb Library</p>
         </footer>
       </body>
     </html>

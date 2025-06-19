@@ -1,5 +1,5 @@
 import React from "react";
-import type { RenderOptions } from "./plugins/react/renderer.ts";
+import type { RenderOptions } from "@verb/plugins";
 
 /**
  * Renders a React component to an HTTP response
@@ -10,7 +10,7 @@ import type { RenderOptions } from "./plugins/react/renderer.ts";
  * ```tsx
  * import { reactComponent } from "verb/react";
  * import { Welcome } from "./components/Welcome";
- * 
+ *
  * app.get("/", (req) => {
  *   return reactComponent(<Welcome name="World" />, {
  *     title: "Welcome Page",
@@ -23,17 +23,17 @@ import type { RenderOptions } from "./plugins/react/renderer.ts";
  */
 export const reactComponent = (
   component: React.ReactElement,
-  options: RenderOptions = {}
+  options: RenderOptions = {},
 ): Response => {
   // Get the render function from the plugin service
   const renderService = getReactRenderService();
-  
+
   if (!renderService) {
     throw new Error(
-      "React renderer service not found. Make sure to register the React renderer plugin."
+      "React renderer service not found. Make sure to register the React renderer plugin.",
     );
   }
-  
+
   return renderService(component, options);
 };
 
@@ -45,16 +45,16 @@ export const reactComponent = (
  */
 export const renderToString = (
   component: React.ReactElement,
-  options: RenderOptions = {}
+  options: RenderOptions = {},
 ): string => {
   const renderService = getReactStringRenderService();
-  
+
   if (!renderService) {
     throw new Error(
-      "React string renderer service not found. Make sure to register the React renderer plugin."
+      "React string renderer service not found. Make sure to register the React renderer plugin.",
     );
   }
-  
+
   return renderService(component, options);
 };
 
@@ -66,48 +66,54 @@ export const renderToString = (
  */
 export const renderToStream = (
   component: React.ReactElement,
-  options: RenderOptions = {}
+  options: RenderOptions = {},
 ): ReadableStream => {
   const renderService = getReactStreamRenderService();
-  
+
   if (!renderService) {
     throw new Error(
-      "React stream renderer service not found. Make sure to register the React renderer plugin."
+      "React stream renderer service not found. Make sure to register the React renderer plugin.",
     );
   }
-  
+
   return renderService(component, options);
 };
 
 // Helper to get the React render service
-function getReactRenderService(): ((component: React.ReactElement, options: RenderOptions) => Response) | null {
+function getReactRenderService():
+  | ((component: React.ReactElement, options: RenderOptions) => Response)
+  | null {
   if (typeof globalThis !== "undefined" && (globalThis as any).reactComponent) {
     return (globalThis as any).reactComponent;
   }
-  
+
   // Try to get from plugin system if available
   if (typeof globalThis !== "undefined" && (globalThis as any).verbPlugins) {
     return (globalThis as any).verbPlugins.getService("react:render");
   }
-  
+
   return null;
 }
 
 // Helper to get the React string render service
-function getReactStringRenderService(): ((component: React.ReactElement, options: RenderOptions) => string) | null {
+function getReactStringRenderService():
+  | ((component: React.ReactElement, options: RenderOptions) => string)
+  | null {
   if (typeof globalThis !== "undefined" && (globalThis as any).verbPlugins) {
     return (globalThis as any).verbPlugins.getService("react:renderToString");
   }
-  
+
   return null;
 }
 
 // Helper to get the React stream render service
-function getReactStreamRenderService(): ((component: React.ReactElement, options: RenderOptions) => ReadableStream) | null {
+function getReactStreamRenderService():
+  | ((component: React.ReactElement, options: RenderOptions) => ReadableStream)
+  | null {
   if (typeof globalThis !== "undefined" && (globalThis as any).verbPlugins) {
     return (globalThis as any).verbPlugins.getService("react:renderToStream");
   }
-  
+
   return null;
 }
 

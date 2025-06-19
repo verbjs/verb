@@ -4,12 +4,12 @@ import chalk from "chalk";
 import { registerCommands } from "./commands";
 
 // CLI version - should match the package version
-const VERSION = "0.1.0";
+const VERSION = "0.0.1";
 
 async function main() {
   const program = new Command();
 
-  program.name("vrb").description("Verb CLI - A toolkit for Verb framework").version(VERSION);
+  program.name("verb").description("Verb CLI - A toolkit for Verb library").version(VERSION);
 
   // Register all commands
   registerCommands(program);
@@ -25,13 +25,13 @@ async function main() {
     console.log(chalk.cyan("Examples:"));
     console.log("");
     console.log(chalk.gray("  # Create a new Verb project"));
-    console.log("  $ vrb init my-app");
+    console.log("  $ verb init my-app");
     console.log("");
     console.log(chalk.gray("  # Generate a static site"));
-    console.log("  $ vrb site generate");
+    console.log("  $ verb site generate");
     console.log("");
     console.log(chalk.gray("  # Start development server"));
-    console.log("  $ vrb dev");
+    console.log("  $ verb dev");
     console.log("");
   });
 
@@ -44,7 +44,7 @@ async function main() {
       console.log(`  ${chalk.green(cmd.name())}\t${cmd.description()}`);
     });
     console.log("");
-    console.log(`Run ${chalk.cyan("vrb --help")} for more information.`);
+    console.log(`Run ${chalk.cyan("verb --help")} for more information.`);
     process.exit(1);
   });
 

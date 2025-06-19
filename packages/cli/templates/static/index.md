@@ -33,4 +33,4 @@ vrb site generate --serve
 
 ## Learn More
 
-Check out the [Verb documentation](https://github.com/wess/verb) to learn more about the framework.
+Check out the [Verb documentation](https://github.com/wess/verb) to learn more about the library.

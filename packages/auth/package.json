@@ -1,0 +1,47 @@
+{
+  "name": "@verb/auth",
+  "version": "0.0.1",
+  "description": "Authentication plugin for Verb library",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target bun --minify",
+    "dev": "bun build src/index.ts --outdir dist --target bun --watch",
+    "test": "bun test",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "verb",
+    "authentication",
+    "oauth2",
+    "auth",
+    "session",
+    "sqlite",
+    "postgresql",
+    "yaml"
+  ],
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "better-sqlite3": "^9.2.2",
+    "postgres": "^3.4.3"
+  },
+  "peerDependenciesMeta": {
+    "better-sqlite3": {
+      "optional": true
+    },
+    "postgres": {
+      "optional": true
+    }
+  }
+}

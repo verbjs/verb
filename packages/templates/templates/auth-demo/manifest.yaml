@@ -1,0 +1,109 @@
+name: auth-demo
+displayName: Authentication Demo
+description: A Verb application demonstrating authentication with public and protected routes
+version: 1.0.0
+
+tags:
+  - auth
+  - demo
+  - sqlite
+  - oauth2
+
+features:
+  - Local authentication (username/password)
+  - OAuth2 providers (Google, GitHub)
+  - Protected routes
+  - Session management
+  - SQLite storage
+
+dependencies:
+  verb: "github:wess/verb"
+  "@verb/auth": "workspace:*"
+
+devDependencies:
+  "@types/bun": latest
+  typescript: "^5.0.0"
+  better-sqlite3: "^9.2.2"
+
+environment:
+  required:
+    - SESSION_SECRET
+  optional:
+    - GOOGLE_CLIENT_ID
+    - GOOGLE_CLIENT_SECRET
+    - GITHUB_CLIENT_ID
+    - GITHUB_CLIENT_SECRET
+    - NODE_ENV
+
+scripts:
+  dev: "bun run --watch src/index.ts"
+  start: "bun run src/index.ts"
+  build: "bun build src/index.ts --outdir dist"
+  test: "bun test"
+
+routes:
+  public:
+    - path: "/"
+      description: "Welcome page with auth demo interface"
+    - path: "/health"
+      description: "Health check endpoint"
+  
+  auth:
+    - path: "/auth/register"
+      method: POST
+      description: "User registration"
+    - path: "/auth/login"
+      method: POST
+      description: "User login"
+    - path: "/auth/logout"
+      method: POST
+      description: "User logout"
+    - path: "/auth/me"
+      method: GET
+      description: "Get current user info"
+      protected: true
+    - path: "/auth/google"
+      method: GET
+      description: "Google OAuth2 login"
+      condition: "GOOGLE_CLIENT_ID configured"
+    - path: "/auth/github"
+      method: GET
+      description: "GitHub OAuth2 login"
+      condition: "GITHUB_CLIENT_ID configured"
+  
+  protected:
+    - path: "/hello"
+      method: GET
+      description: "Protected hello world page"
+      auth: required
+
+setup:
+  steps:
+    - Copy environment variables from .env.example
+    - Configure OAuth2 providers (optional)
+    - Run bun install
+    - Start development server
+
+oauth2:
+  google:
+    setup:
+      - Go to Google Cloud Console
+      - Create OAuth2 credentials
+      - Add redirect URI: http://localhost:3000/auth/google/callback
+      - Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+  
+  github:
+    setup:
+      - Go to GitHub Developer Settings
+      - Create new OAuth App
+      - Set callback URL: http://localhost:3000/auth/github/callback
+      - Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET
+
+production:
+  considerations:
+    - Set strong SESSION_SECRET
+    - Use HTTPS (set secure: true in session config)
+    - Configure proper OAuth2 redirect URIs
+    - Consider PostgreSQL for production database
+    - Enable email verification
+    - Set up error logging

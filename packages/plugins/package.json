@@ -1,0 +1,42 @@
+{
+  "name": "@verb/plugins",
+  "version": "0.0.1",
+  "description": "Official plugin registry for the Verb library",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "dev": "bun run --watch src/index.ts",
+    "test": "bun test"
+  },
+  "keywords": [
+    "verb",
+    "plugins",
+    "library",
+    "web",
+    "server",
+    "react",
+    "ssr"
+  ],
+  "author": "Wess Cope",
+  "license": "MIT",
+  "dependencies": {
+    "@verb/server": "workspace:*",
+    "@verb/auth": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/bun": "latest"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ]
+}

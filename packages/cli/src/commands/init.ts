@@ -7,230 +7,216 @@ import fs from "fs-extra";
 import { execSync } from "node:child_process";
 
 interface CommandOptions {
-	yes?: boolean;
-	template?: "basic" | "api" | "fullstack";
-	packageManager?: "bun" | "npm" | "yarn" | "pnpm";
-	[key: string]: unknown;
+  yes?: boolean;
+  template?: "basic" | "api" | "fullstack";
+  packageManager?: "bun" | "npm" | "yarn" | "pnpm";
+  [key: string]: unknown;
 }
 
 interface ProjectOptions {
-	name: string;
-	description: string;
-	template: "basic" | "api" | "fullstack";
-	packageManager: "bun" | "npm" | "yarn" | "pnpm";
-	features: string[];
+  name: string;
+  description: string;
+  template: "basic" | "api" | "fullstack";
+  packageManager: "bun" | "npm" | "yarn" | "pnpm";
+  features: string[];
 }
 
 /**
  * Register the init command
  */
 export function initCommand(program: Command): void {
-	program
-		.command("init")
-		.description("Initialize a new Verb project")
-		.argument("[name]", "Project name")
-		.option(
-			"-t, --template <template>",
-			"Project template (basic, api, fullstack, static)",
-			"basic",
-		)
-		.option("-y, --yes", "Skip prompts and use defaults")
-		.option(
-			"--package-manager <manager>",
-			"Package manager to use (bun, npm, yarn, pnpm)",
-			"bun",
-		)
-		.action(async (name, options) => {
-			console.log(chalk.cyan("🚀 Creating a new Verb project\n"));
+  program
+    .command("init")
+    .description("Initialize a new Verb project")
+    .argument("[name]", "Project name")
+    .option(
+      "-t, --template <template>",
+      "Project template (basic, api, fullstack, static)",
+      "basic",
+    )
+    .option("-y, --yes", "Skip prompts and use defaults")
+    .option("--package-manager <manager>", "Package manager to use (bun, npm, yarn, pnpm)", "bun")
+    .action(async (name, options) => {
+      console.log(chalk.cyan("🚀 Creating a new Verb project\n"));
 
-			// If no name provided or interactive mode, prompt for details
-			const projectOptions = await promptForOptions(name, options);
+      // If no name provided or interactive mode, prompt for details
+      const projectOptions = await promptForOptions(name, options);
 
-			// Create the project
-			await createProject(projectOptions);
+      // Create the project
+      await createProject(projectOptions);
 
-			console.log(chalk.green("\n✅ Project created successfully!"));
-			console.log("\nNext steps:");
-			console.log(chalk.gray(`  cd ${projectOptions.name}`));
-			console.log(chalk.gray(`  ${projectOptions.packageManager} run dev`));
-			console.log("\nHappy coding! 🎉");
-		});
+      console.log(chalk.green("\n✅ Project created successfully!"));
+      console.log("\nNext steps:");
+      console.log(chalk.gray(`  cd ${projectOptions.name}`));
+      console.log(chalk.gray(`  ${projectOptions.packageManager} run dev`));
+      console.log("\nHappy coding! 🎉");
+    });
 }
 
 /**
  * Prompt for project options if not provided
  */
-async function promptForOptions(
-	name?: string,
-	options?: CommandOptions,
-): Promise<ProjectOptions> {
-	// Skip prompts if --yes flag is used and name is provided
-	if (options?.yes && name) {
-		return {
-			name,
-			description: `A Verb project named ${name}`,
-			template: options.template || "basic",
-			packageManager: options.packageManager || "bun",
-			features: ["routing", "static-files"],
-		};
-	}
+async function promptForOptions(name?: string, options?: CommandOptions): Promise<ProjectOptions> {
+  // Skip prompts if --yes flag is used and name is provided
+  if (options?.yes && name) {
+    return {
+      name,
+      description: `A Verb project named ${name}`,
+      template: options.template || "basic",
+      packageManager: options.packageManager || "bun",
+      features: ["routing", "static-files"],
+    };
+  }
 
-	const answers = await inquirer.prompt([
-		{
-			type: "input",
-			name: "name",
-			message: "Project name:",
-			default: name || "verb-app",
-			validate: (input) => {
-				if (/^[a-z0-9-_]+$/i.test(input)) {
-					return true;
-				}
-				return "Project name may only include letters, numbers, underscores and hyphens";
-			},
-		},
-		{
-			type: "input",
-			name: "description",
-			message: "Project description:",
-			default: (answers: { name?: string }) =>
-				`A Verb project named ${answers.name || name || "verb-app"}`,
-		},
-		{
-			type: "list",
-			name: "template",
-			message: "Select a project template:",
-			default: options?.template || "basic",
-			choices: [
-				{ name: "Basic (Minimal setup)", value: "basic" },
-				{ name: "API (REST API focused)", value: "api" },
-				{ name: "Full-stack (API + React frontend)", value: "fullstack" },
-				{ name: "Static (Static site generator)", value: "static" },
-			],
-		},
-		{
-			type: "list",
-			name: "packageManager",
-			message: "Select a package manager:",
-			default: options?.packageManager || "bun",
-			choices: [
-				{ name: "Bun", value: "bun" },
-				{ name: "npm", value: "npm" },
-				{ name: "Yarn", value: "yarn" },
-				{ name: "pnpm", value: "pnpm" },
-			],
-		},
-		{
-			type: "checkbox",
-			name: "features",
-			message: "Select additional features:",
-			choices: [
-				{
-					name: "TypeScript configuration",
-					value: "typescript",
-					checked: true,
-				},
-				{ name: "ESLint + Prettier", value: "linting" },
-				{ name: "Testing setup", value: "testing" },
-				{ name: "HTTP/2 support", value: "http2" },
-				{ name: "React integration", value: "react" },
-				{ name: "Schema validation", value: "validation" },
-				{ name: "Session management", value: "sessions" },
-				{ name: "Rate limiting", value: "rate-limiting" },
-				{ name: "Compression", value: "compression" },
-				{ name: "Static file serving", value: "static-files" },
-			],
-		},
-	]);
+  const answers = await inquirer.prompt([
+    {
+      type: "input",
+      name: "name",
+      message: "Project name:",
+      default: name || "verb-app",
+      validate: (input) => {
+        if (/^[a-z0-9-_]+$/i.test(input)) {
+          return true;
+        }
+        return "Project name may only include letters, numbers, underscores and hyphens";
+      },
+    },
+    {
+      type: "input",
+      name: "description",
+      message: "Project description:",
+      default: (answers: { name?: string }) =>
+        `A Verb project named ${answers.name || name || "verb-app"}`,
+    },
+    {
+      type: "list",
+      name: "template",
+      message: "Select a project template:",
+      default: options?.template || "basic",
+      choices: [
+        { name: "Basic (Minimal setup)", value: "basic" },
+        { name: "API (REST API focused)", value: "api" },
+        { name: "Full-stack (API + React frontend)", value: "fullstack" },
+        { name: "Static (Static site generator)", value: "static" },
+      ],
+    },
+    {
+      type: "list",
+      name: "packageManager",
+      message: "Select a package manager:",
+      default: options?.packageManager || "bun",
+      choices: [
+        { name: "Bun", value: "bun" },
+        { name: "npm", value: "npm" },
+        { name: "Yarn", value: "yarn" },
+        { name: "pnpm", value: "pnpm" },
+      ],
+    },
+    {
+      type: "checkbox",
+      name: "features",
+      message: "Select additional features:",
+      choices: [
+        {
+          name: "TypeScript configuration",
+          value: "typescript",
+          checked: true,
+        },
+        { name: "ESLint + Prettier", value: "linting" },
+        { name: "Testing setup", value: "testing" },
+        { name: "HTTP/2 support", value: "http2" },
+        { name: "React integration", value: "react" },
+        { name: "Schema validation", value: "validation" },
+        { name: "Session management", value: "sessions" },
+        { name: "Rate limiting", value: "rate-limiting" },
+        { name: "Compression", value: "compression" },
+        { name: "Static file serving", value: "static-files" },
+      ],
+    },
+  ]);
 
-	return answers as ProjectOptions;
+  return answers as ProjectOptions;
 }
 
 /**
  * Create a new project with the given options
  */
 async function createProject(options: ProjectOptions): Promise<void> {
-	const spinner = ora("Creating project directory").start();
+  const spinner = ora("Creating project directory").start();
 
-	try {
-		// Create project directory
-		const projectDir = path.resolve(process.cwd(), options.name);
+  try {
+    // Create project directory
+    const projectDir = path.resolve(process.cwd(), options.name);
 
-		// Check if directory exists
-		if (fs.existsSync(projectDir)) {
-			spinner.fail(`Directory ${options.name} already exists`);
-			const { overwrite } = await inquirer.prompt([
-				{
-					type: "confirm",
-					name: "overwrite",
-					message: "Directory already exists. Overwrite?",
-					default: false,
-				},
-			]);
+    // Check if directory exists
+    if (fs.existsSync(projectDir)) {
+      spinner.fail(`Directory ${options.name} already exists`);
+      const { overwrite } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "overwrite",
+          message: "Directory already exists. Overwrite?",
+          default: false,
+        },
+      ]);
 
-			if (!overwrite) {
-				console.log(chalk.yellow("Project creation cancelled"));
-				process.exit(0);
-			}
+      if (!overwrite) {
+        console.log(chalk.yellow("Project creation cancelled"));
+        process.exit(0);
+      }
 
-			// Remove existing directory
-			fs.removeSync(projectDir);
-		}
+      // Remove existing directory
+      fs.removeSync(projectDir);
+    }
 
-		// Create directory
-		fs.mkdirSync(projectDir, { recursive: true });
-		spinner.succeed("Created project directory");
+    // Create directory
+    fs.mkdirSync(projectDir, { recursive: true });
+    spinner.succeed("Created project directory");
 
-		// Copy template files
-		spinner.text = "Copying template files";
-		spinner.start();
-		await copyTemplateFiles(options, projectDir);
-		spinner.succeed("Copied template files");
+    // Copy template files
+    spinner.text = "Copying template files";
+    spinner.start();
+    await copyTemplateFiles(options, projectDir);
+    spinner.succeed("Copied template files");
 
-		// Initialize package.json
-		spinner.text = "Creating package.json";
-		spinner.start();
-		await createPackageJson(options, projectDir);
-		spinner.succeed("Created package.json");
+    // Initialize package.json
+    spinner.text = "Creating package.json";
+    spinner.start();
+    await createPackageJson(options, projectDir);
+    spinner.succeed("Created package.json");
 
-		// Install dependencies
-		spinner.text = "Installing dependencies";
-		spinner.start();
-		await installDependencies(options, projectDir);
-		spinner.succeed("Installed dependencies");
+    // Install dependencies
+    spinner.text = "Installing dependencies";
+    spinner.start();
+    await installDependencies(options, projectDir);
+    spinner.succeed("Installed dependencies");
 
-		// Create additional files based on selected features
-		spinner.text = "Setting up project features";
-		spinner.start();
-		await setupFeatures(options, projectDir);
-		spinner.succeed("Set up project features");
-	} catch (error) {
-		spinner.fail(`Failed to create project: ${error.message}`);
-		throw error;
-	}
+    // Create additional files based on selected features
+    spinner.text = "Setting up project features";
+    spinner.start();
+    await setupFeatures(options, projectDir);
+    spinner.succeed("Set up project features");
+  } catch (error) {
+    spinner.fail(`Failed to create project: ${error.message}`);
+    throw error;
+  }
 }
 
 /**
  * Copy template files to the project directory
  */
-async function copyTemplateFiles(
-	options: ProjectOptions,
-	projectDir: string,
-): Promise<void> {
-	// Template directory path
-	const _templateDir = path.resolve(
-		__dirname,
-		"../../templates",
-		options.template,
-	);
+async function copyTemplateFiles(options: ProjectOptions, projectDir: string): Promise<void> {
+  // Template directory path
+  const _templateDir = path.resolve(__dirname, "../../templates", options.template);
 
-	// For now, we'll create basic files directly
-	// In a real implementation, you would copy from template directories
+  // For now, we'll create basic files directly
+  // In a real implementation, you would copy from template directories
 
-	// Create src directory
-	fs.mkdirSync(path.join(projectDir, "src"), { recursive: true });
+  // Create src directory
+  fs.mkdirSync(path.join(projectDir, "src"), { recursive: true });
 
-	// Create a basic index.ts file
-	const indexContent = `import { createServer } from "verb";
+  // Create a basic index.ts file
+  const indexContent = `import { createServer } from "verb";
 
 const app = createServer({ port: 3000 });
 
@@ -239,10 +225,10 @@ app.get("/", () => new Response("Hello from Verb!"));
 console.log("Server running at http://localhost:3000");
 `;
 
-	fs.writeFileSync(path.join(projectDir, "src/index.ts"), indexContent);
+  fs.writeFileSync(path.join(projectDir, "src/index.ts"), indexContent);
 
-	// Create README.md
-	const readmeContent = `# ${options.name}
+  // Create README.md
+  const readmeContent = `# ${options.name}
 
 ${options.description}
 
@@ -270,13 +256,13 @@ ${options.name}/
 \`\`\`
 `;
 
-	fs.writeFileSync(path.join(projectDir, "README.md"), readmeContent);
+  fs.writeFileSync(path.join(projectDir, "README.md"), readmeContent);
 
-	// Create public directory for static files
-	fs.mkdirSync(path.join(projectDir, "public"), { recursive: true });
+  // Create public directory for static files
+  fs.mkdirSync(path.join(projectDir, "public"), { recursive: true });
 
-	// Create a simple HTML file for static serving
-	const htmlContent = `<!DOCTYPE html>
+  // Create a simple HTML file for static serving
+  const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -297,172 +283,152 @@ ${options.name}/
 </head>
 <body>
   <h1>Welcome to ${options.name}</h1>
-  <p>This is a Verb project created with the vrb CLI.</p>
+  <p>This is a Verb project created with the verb CLI.</p>
   <p><a href="/api">Check the API</a></p>
 </body>
 </html>`;
 
-	fs.writeFileSync(path.join(projectDir, "public/index.html"), htmlContent);
+  fs.writeFileSync(path.join(projectDir, "public/index.html"), htmlContent);
 }
 
 /**
  * Create package.json file
  */
-async function createPackageJson(
-	options: ProjectOptions,
-	projectDir: string,
-): Promise<void> {
-	const packageJson = {
-		name: options.name,
-		version: "0.1.0",
-		description: options.description,
-		type: "module",
-		scripts: {
-			dev: "bun run --watch src/index.ts",
-			start: "bun run src/index.ts",
-			build: "bun build src/index.ts --outdir dist",
-			test: options.features.includes("testing")
-				? "bun test"
-				: 'echo "No tests configured"',
-		},
-		dependencies: {
-			verb: "github:wess/verb",
-		},
-		devDependencies: {
-			"@types/bun": "latest",
-			typescript: "^5.0.0",
-		},
-	};
+async function createPackageJson(options: ProjectOptions, projectDir: string): Promise<void> {
+  const packageJson = {
+    name: options.name,
+    version: "0.1.0",
+    description: options.description,
+    type: "module",
+    scripts: {
+      dev: "bun run --watch src/index.ts",
+      start: "bun run src/index.ts",
+      build: "bun build src/index.ts --outdir dist",
+      test: options.features.includes("testing") ? "bun test" : 'echo "No tests configured"',
+    },
+    dependencies: {
+      verb: "github:wess/verb",
+    },
+    devDependencies: {
+      "@types/bun": "latest",
+      typescript: "^5.0.0",
+    },
+  };
 
-	fs.writeFileSync(
-		path.join(projectDir, "package.json"),
-		JSON.stringify(packageJson, null, 2),
-	);
+  fs.writeFileSync(path.join(projectDir, "package.json"), JSON.stringify(packageJson, null, 2));
 }
 
 /**
  * Install dependencies
  */
-async function installDependencies(
-	options: ProjectOptions,
-	projectDir: string,
-): Promise<void> {
-	try {
-		// Change to project directory
-		process.chdir(projectDir);
+async function installDependencies(options: ProjectOptions, projectDir: string): Promise<void> {
+  try {
+    // Change to project directory
+    process.chdir(projectDir);
 
-		// Install dependencies
-		const command = getInstallCommand(options.packageManager);
-		execSync(command, { stdio: "ignore" });
-	} catch (error) {
-		console.error(`Failed to install dependencies: ${error.message}`);
-		console.log(chalk.yellow("You can install them manually by running:"));
-		console.log(chalk.gray(`  cd ${options.name}`));
-		console.log(chalk.gray(`  ${options.packageManager} install`));
-	}
+    // Install dependencies
+    const command = getInstallCommand(options.packageManager);
+    execSync(command, { stdio: "ignore" });
+  } catch (error) {
+    console.error(`Failed to install dependencies: ${error.message}`);
+    console.log(chalk.yellow("You can install them manually by running:"));
+    console.log(chalk.gray(`  cd ${options.name}`));
+    console.log(chalk.gray(`  ${options.packageManager} install`));
+  }
 }
 
 /**
  * Get the install command for the selected package manager
  */
 function getInstallCommand(packageManager: string): string {
-	switch (packageManager) {
-		case "npm":
-			return "npm install";
-		case "yarn":
-			return "yarn";
-		case "pnpm":
-			return "pnpm install";
-		default:
-			return "bun install";
-	}
+  switch (packageManager) {
+    case "npm":
+      return "npm install";
+    case "yarn":
+      return "yarn";
+    case "pnpm":
+      return "pnpm install";
+    default:
+      return "bun install";
+  }
 }
 
 /**
  * Set up additional features based on user selection
  */
-async function setupFeatures(
-	options: ProjectOptions,
-	projectDir: string,
-): Promise<void> {
-	// TypeScript configuration
-	if (options.features.includes("typescript")) {
-		const tsConfig = {
-			compilerOptions: {
-				target: "ESNext",
-				module: "ESNext",
-				moduleResolution: "node",
-				esModuleInterop: true,
-				strict: true,
-				skipLibCheck: true,
-				outDir: "dist",
-				rootDir: "src",
-			},
-			include: ["src/**/*"],
-			exclude: ["node_modules", "dist"],
-		};
+async function setupFeatures(options: ProjectOptions, projectDir: string): Promise<void> {
+  // TypeScript configuration
+  if (options.features.includes("typescript")) {
+    const tsConfig = {
+      compilerOptions: {
+        target: "ESNext",
+        module: "ESNext",
+        moduleResolution: "node",
+        esModuleInterop: true,
+        strict: true,
+        skipLibCheck: true,
+        outDir: "dist",
+        rootDir: "src",
+      },
+      include: ["src/**/*"],
+      exclude: ["node_modules", "dist"],
+    };
 
-		fs.writeFileSync(
-			path.join(projectDir, "tsconfig.json"),
-			JSON.stringify(tsConfig, null, 2),
-		);
-	}
+    fs.writeFileSync(path.join(projectDir, "tsconfig.json"), JSON.stringify(tsConfig, null, 2));
+  }
 
-	// ESLint + Prettier
-	if (options.features.includes("linting")) {
-		// Add dev dependencies to package.json
-		const packageJsonPath = path.join(projectDir, "package.json");
-		const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  // ESLint + Prettier
+  if (options.features.includes("linting")) {
+    // Add dev dependencies to package.json
+    const packageJsonPath = path.join(projectDir, "package.json");
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-		packageJson.devDependencies = {
-			...packageJson.devDependencies,
-			eslint: "^8.0.0",
-			prettier: "^3.0.0",
-		};
+    packageJson.devDependencies = {
+      ...packageJson.devDependencies,
+      eslint: "^8.0.0",
+      prettier: "^3.0.0",
+    };
 
-		fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-		// Create .eslintrc.json
-		const eslintConfig = {
-			env: {
-				node: true,
-				es2022: true,
-			},
-			extends: ["eslint:recommended"],
-			parserOptions: {
-				ecmaVersion: "latest",
-				sourceType: "module",
-			},
-			rules: {},
-		};
+    // Create .eslintrc.json
+    const eslintConfig = {
+      env: {
+        node: true,
+        es2022: true,
+      },
+      extends: ["eslint:recommended"],
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
+      rules: {},
+    };
 
-		fs.writeFileSync(
-			path.join(projectDir, ".eslintrc.json"),
-			JSON.stringify(eslintConfig, null, 2),
-		);
+    fs.writeFileSync(
+      path.join(projectDir, ".eslintrc.json"),
+      JSON.stringify(eslintConfig, null, 2),
+    );
 
-		// Create .prettierrc
-		const prettierConfig = {
-			semi: true,
-			singleQuote: true,
-			printWidth: 100,
-			tabWidth: 2,
-			trailingComma: "es5",
-		};
+    // Create .prettierrc
+    const prettierConfig = {
+      semi: true,
+      singleQuote: true,
+      printWidth: 100,
+      tabWidth: 2,
+      trailingComma: "es5",
+    };
 
-		fs.writeFileSync(
-			path.join(projectDir, ".prettierrc"),
-			JSON.stringify(prettierConfig, null, 2),
-		);
-	}
+    fs.writeFileSync(path.join(projectDir, ".prettierrc"), JSON.stringify(prettierConfig, null, 2));
+  }
 
-	// Testing setup
-	if (options.features.includes("testing")) {
-		// Create tests directory
-		fs.mkdirSync(path.join(projectDir, "tests"), { recursive: true });
+  // Testing setup
+  if (options.features.includes("testing")) {
+    // Create tests directory
+    fs.mkdirSync(path.join(projectDir, "tests"), { recursive: true });
 
-		// Create a sample test file
-		const testContent = `import { describe, test, expect } from "bun:test";
+    // Create a sample test file
+    const testContent = `import { describe, test, expect } from "bun:test";
 import { createServer } from "verb";
 
 describe("Server", () => {
@@ -482,38 +448,35 @@ describe("Server", () => {
 });
 `;
 
-		fs.writeFileSync(
-			path.join(projectDir, "tests/server.test.ts"),
-			testContent,
-		);
-	}
+    fs.writeFileSync(path.join(projectDir, "tests/server.test.ts"), testContent);
+  }
 
-	// Create specific files for each template
-	switch (options.template) {
-		case "api":
-			createApiTemplate(projectDir);
-			break;
-		case "fullstack":
-			createFullstackTemplate(projectDir);
-			break;
-		case "static":
-			createStaticTemplate(projectDir);
-			break;
-		default:
-			// Basic template is already created
-			break;
-	}
+  // Create specific files for each template
+  switch (options.template) {
+    case "api":
+      createApiTemplate(projectDir);
+      break;
+    case "fullstack":
+      createFullstackTemplate(projectDir);
+      break;
+    case "static":
+      createStaticTemplate(projectDir);
+      break;
+    default:
+      // Basic template is already created
+      break;
+  }
 }
 
 /**
  * Create API template specific files
  */
 function createApiTemplate(projectDir: string): void {
-	// Create routes directory
-	fs.mkdirSync(path.join(projectDir, "src/routes"), { recursive: true });
+  // Create routes directory
+  fs.mkdirSync(path.join(projectDir, "src/routes"), { recursive: true });
 
-	// Create a sample API route
-	const usersRouteContent = `import { json, error } from "verb";
+  // Create a sample API route
+  const usersRouteContent = `import { json, error } from "verb";
 
 // In-memory store (use a real database in production)
 const users = new Map();
@@ -560,13 +523,10 @@ export function registerUserRoutes(app) {
 }
 `;
 
-	fs.writeFileSync(
-		path.join(projectDir, "src/routes/users.ts"),
-		usersRouteContent,
-	);
+  fs.writeFileSync(path.join(projectDir, "src/routes/users.ts"), usersRouteContent);
 
-	// Update the main index.ts file
-	const indexContent = `import { createServer, json } from "verb";
+  // Update the main index.ts file
+  const indexContent = `import { createServer, json } from "verb";
 import { registerUserRoutes } from "./routes/users.ts";
 
 const app = createServer({ port: 3000 });
@@ -589,21 +549,21 @@ app.get("/", () => json({
 console.log("API server running at http://localhost:3000");
 `;
 
-	fs.writeFileSync(path.join(projectDir, "src/index.ts"), indexContent);
+  fs.writeFileSync(path.join(projectDir, "src/index.ts"), indexContent);
 }
 
 /**
  * Create Fullstack template specific files
  */
 function createFullstackTemplate(projectDir: string): void {
-	// Create client directory for React frontend
-	fs.mkdirSync(path.join(projectDir, "src/client"), { recursive: true });
+  // Create client directory for React frontend
+  fs.mkdirSync(path.join(projectDir, "src/client"), { recursive: true });
 
-	// Create server directory for backend
-	fs.mkdirSync(path.join(projectDir, "src/server"), { recursive: true });
+  // Create server directory for backend
+  fs.mkdirSync(path.join(projectDir, "src/server"), { recursive: true });
 
-	// Create a sample React component
-	const appComponentContent = `import React from 'react';
+  // Create a sample React component
+  const appComponentContent = `import React from 'react';
 
 export function App() {
   const [users, setUsers] = React.useState([]);
@@ -645,14 +605,11 @@ export function App() {
 }
 `;
 
-	fs.writeFileSync(
-		path.join(projectDir, "src/client/App.tsx"),
-		appComponentContent,
-	);
+  fs.writeFileSync(path.join(projectDir, "src/client/App.tsx"), appComponentContent);
 
-	// Create server index file
-	const serverIndexContent = `import { createServer, json, error } from "verb";
-import { createReactRendererPlugin } from "verb/plugins/react";
+  // Create server index file
+  const serverIndexContent = `import { createServer, json, error } from "verb";
+import { createReactRendererPlugin } from "@verb/plugins";
 
 const app = createServer({ port: 3000 });
 
@@ -705,49 +662,46 @@ app.get("/*", async (req) => {
 console.log("Fullstack server running at http://localhost:3000");
 `;
 
-	fs.writeFileSync(
-		path.join(projectDir, "src/server/index.ts"),
-		serverIndexContent,
-	);
+  fs.writeFileSync(path.join(projectDir, "src/server/index.ts"), serverIndexContent);
 
-	// Update the main index.ts file
-	const indexContent = `// Entry point for the fullstack application
+  // Update the main index.ts file
+  const indexContent = `// Entry point for the fullstack application
 import "./server/index.ts";
 `;
 
-	fs.writeFileSync(path.join(projectDir, "src/index.ts"), indexContent);
+  fs.writeFileSync(path.join(projectDir, "src/index.ts"), indexContent);
 
-	// Update package.json to include React dependencies
-	const packageJsonPath = path.join(projectDir, "package.json");
-	const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  // Update package.json to include React dependencies
+  const packageJsonPath = path.join(projectDir, "package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-	packageJson.dependencies = {
-		...packageJson.dependencies,
-		react: "^18.2.0",
-		"react-dom": "^18.2.0",
-	};
+  packageJson.dependencies = {
+    ...packageJson.dependencies,
+    react: "^18.2.0",
+    "react-dom": "^18.2.0",
+  };
 
-	packageJson.devDependencies = {
-		...packageJson.devDependencies,
-		"@types/react": "^18.2.0",
-		"@types/react-dom": "^18.2.0",
-	};
+  packageJson.devDependencies = {
+    ...packageJson.devDependencies,
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+  };
 
-	fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 }
 
 /**
  * Create Static template specific files
  */
 function createStaticTemplate(projectDir: string): void {
-	// Create content directory for markdown files
-	fs.mkdirSync(path.join(projectDir, "content"), { recursive: true });
+  // Create content directory for markdown files
+  fs.mkdirSync(path.join(projectDir, "content"), { recursive: true });
 
-	// Create layouts directory for templates
-	fs.mkdirSync(path.join(projectDir, "layouts"), { recursive: true });
+  // Create layouts directory for templates
+  fs.mkdirSync(path.join(projectDir, "layouts"), { recursive: true });
 
-	// Create a sample markdown file
-	const indexMarkdownContent = `---
+  // Create a sample markdown file
+  const indexMarkdownContent = `---
 title: Welcome to My Static Site
 description: A static site built with Verb
 ---
@@ -764,13 +718,10 @@ This is a static site built with Verb's static site generator.
 - Responsive design
 `;
 
-	fs.writeFileSync(
-		path.join(projectDir, "content/index.md"),
-		indexMarkdownContent,
-	);
+  fs.writeFileSync(path.join(projectDir, "content/index.md"), indexMarkdownContent);
 
-	// Create another sample page
-	const aboutMarkdownContent = `---
+  // Create another sample page
+  const aboutMarkdownContent = `---
 title: About
 description: About this static site
 ---
@@ -784,13 +735,10 @@ This is a static site built with Verb's static site generator.
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget aliquam ultricies, nunc nisl aliquet nunc, quis aliquam nisl nunc eu nisl.
 `;
 
-	fs.writeFileSync(
-		path.join(projectDir, "content/about.md"),
-		aboutMarkdownContent,
-	);
+  fs.writeFileSync(path.join(projectDir, "content/about.md"), aboutMarkdownContent);
 
-	// Create a default layout
-	const defaultLayoutContent = `<!DOCTYPE html>
+  // Create a default layout
+  const defaultLayoutContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -828,13 +776,10 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eg
 </body>
 </html>`;
 
-	fs.writeFileSync(
-		path.join(projectDir, "layouts/default.html"),
-		defaultLayoutContent,
-	);
+  fs.writeFileSync(path.join(projectDir, "layouts/default.html"), defaultLayoutContent);
 
-	// Create a config file for the static site generator
-	const configContent = `export default {
+  // Create a config file for the static site generator
+  const configContent = `export default {
   site: {
     title: 'My Static Site',
     description: 'A static site built with Verb',
@@ -854,10 +799,10 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eg
 };
 `;
 
-	fs.writeFileSync(path.join(projectDir, "site.config.ts"), configContent);
+  fs.writeFileSync(path.join(projectDir, "site.config.ts"), configContent);
 
-	// Update the main index.ts file
-	const indexContent = `import { createServer } from "verb";
+  // Update the main index.ts file
+  const indexContent = `import { createServer } from "verb";
 import { staticFiles } from "verb";
 import { buildSite } from "./build.ts";
 
@@ -873,10 +818,10 @@ app.get("/*", staticFiles("./dist"));
 console.log("Static site server running at http://localhost:3000");
 `;
 
-	fs.writeFileSync(path.join(projectDir, "src/index.ts"), indexContent);
+  fs.writeFileSync(path.join(projectDir, "src/index.ts"), indexContent);
 
-	// Create a simple build script
-	const buildScriptContent = `import fs from 'fs-extra';
+  // Create a simple build script
+  const buildScriptContent = `import fs from 'fs-extra';
 import path from 'path';
 import config from '../site.config.ts';
 
@@ -994,18 +939,18 @@ export async function buildSite() {
 }
 `;
 
-	fs.writeFileSync(path.join(projectDir, "src/build.ts"), buildScriptContent);
+  fs.writeFileSync(path.join(projectDir, "src/build.ts"), buildScriptContent);
 
-	// Update package.json to include static site generator scripts
-	const packageJsonPath = path.join(projectDir, "package.json");
-	const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  // Update package.json to include static site generator scripts
+  const packageJsonPath = path.join(projectDir, "package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-	packageJson.scripts = {
-		...packageJson.scripts,
-		build: "bun run src/build.ts",
-		dev: "bun run src/index.ts",
-		"build:watch": "bun run --watch src/build.ts",
-	};
+  packageJson.scripts = {
+    ...packageJson.scripts,
+    build: "bun run src/build.ts",
+    dev: "bun run src/index.ts",
+    "build:watch": "bun run --watch src/build.ts",
+  };
 
-	fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 }

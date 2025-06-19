@@ -52,8 +52,8 @@ describe('CLI Main', () => {
     const commandInstance = Command();
     
     // Verify the CLI is initialized with the correct name, description, and version
-    expect(commandInstance.name).toHaveBeenCalledWith('vrb');
-    expect(commandInstance.description).toHaveBeenCalledWith('Verb CLI - A toolkit for Verb framework');
+    expect(commandInstance.name).toHaveBeenCalledWith('verb');
+    expect(commandInstance.description).toHaveBeenCalledWith('Verb CLI - A toolkit for Verb library');
     expect(commandInstance.version).toHaveBeenCalled();
   });
   

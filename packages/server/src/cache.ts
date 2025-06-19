@@ -41,17 +41,17 @@ export const createOptimizedCache = (maxSize = 1000) => {
         entry.hits++;
         entry.lastUsed = Date.now();
         hits++;
-        
+
         // Move to end of Map to maintain LRU order (most recently used at the end)
         cache.delete(key);
         cache.set(key, entry);
-        
+
         return entry;
       }
       misses++;
       return undefined;
     },
-    
+
     /**
      * Set an entry in the cache
      * Evicts oldest entry if cache is at capacity
@@ -61,9 +61,11 @@ export const createOptimizedCache = (maxSize = 1000) => {
       if (cache.size >= maxSize) {
         // With Map, the first entry is the oldest in insertion order
         const oldestKey = cache.keys().next().value;
-        if (oldestKey) cache.delete(oldestKey);
+        if (oldestKey) {
+          cache.delete(oldestKey);
+        }
       }
-      
+
       cache.set(key, {
         handler,
         params: params || EMPTY_PARAMS,
@@ -71,7 +73,7 @@ export const createOptimizedCache = (maxSize = 1000) => {
         lastUsed: Date.now(),
       });
     },
-    
+
     /**
      * Clear all entries from the cache
      */
@@ -80,7 +82,7 @@ export const createOptimizedCache = (maxSize = 1000) => {
       hits = 0;
       misses = 0;
     },
-    
+
     /**
      * Get cache statistics
      */
@@ -127,7 +129,7 @@ export class OptimizedCache {
   private misses = 0;
 
   constructor(maxSize = 1000) {
-    console.warn('OptimizedCache class is deprecated. Use createOptimizedCache() instead.');
+    console.warn("OptimizedCache class is deprecated. Use createOptimizedCache() instead.");
     this.maxSize = maxSize;
   }
 
@@ -137,11 +139,11 @@ export class OptimizedCache {
       entry.hits++;
       entry.lastUsed = Date.now();
       this.hits++;
-      
+
       // Move to end of Map to maintain LRU order
       this.cache.delete(key);
       this.cache.set(key, entry);
-      
+
       return entry;
     }
 
@@ -153,7 +155,9 @@ export class OptimizedCache {
     if (this.cache.size >= this.maxSize) {
       // With Map, the first entry is the oldest in insertion order
       const oldestKey = this.cache.keys().next().value;
-      if (oldestKey) this.cache.delete(oldestKey);
+      if (oldestKey) {
+        this.cache.delete(oldestKey);
+      }
     }
 
     this.cache.set(key, {

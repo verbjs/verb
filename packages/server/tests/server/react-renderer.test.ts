@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
 import { createTestApp } from "./setup.ts";
-import { createReactRendererPlugin, clearRenderCache } from "../../src/plugins/react/renderer.ts";
+import { createReactRendererPlugin, clearRenderCache } from "@verb/plugins";
 import { React } from "../../src/react.ts";
 
 // Create a mock ReactDOMServer

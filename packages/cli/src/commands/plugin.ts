@@ -7,235 +7,221 @@ import fs from "fs-extra";
 import { execSync } from "node:child_process";
 
 interface CommandOptions {
-	yes?: boolean;
-	[key: string]: unknown;
+  yes?: boolean;
+  [key: string]: unknown;
 }
 
 interface PluginOptions {
-	name: string;
-	description: string;
-	author: string;
-	version: string;
+  name: string;
+  description: string;
+  author: string;
+  version: string;
 }
 
 /**
  * Register the plugin command
  */
 export function pluginCommand(program: Command): void {
-	const plugin = program
-		.command("plugin")
-		.description("Plugin management commands");
+  const plugin = program.command("plugin").description("Plugin management commands");
 
-	// Create a new plugin
-	plugin
-		.command("create")
-		.description("Create a new Verb plugin")
-		.argument("[name]", "Plugin name")
-		.option("-y, --yes", "Skip prompts and use defaults")
-		.action(async (name, options) => {
-			await createPlugin(name, options);
-		});
+  // Create a new plugin
+  plugin
+    .command("create")
+    .description("Create a new Verb plugin")
+    .argument("[name]", "Plugin name")
+    .option("-y, --yes", "Skip prompts and use defaults")
+    .action(async (name, options) => {
+      await createPlugin(name, options);
+    });
 
-	// List installed plugins
-	plugin
-		.command("list")
-		.description("List installed plugins")
-		.action(async () => {
-			await listPlugins();
-		});
+  // List installed plugins
+  plugin
+    .command("list")
+    .description("List installed plugins")
+    .action(async () => {
+      await listPlugins();
+    });
 
-	// Install a plugin
-	plugin
-		.command("install")
-		.description("Install a plugin")
-		.argument("<plugin>", "Plugin name or GitHub repository")
-		.option("-g, --global", "Install globally")
-		.action(async (plugin, options) => {
-			await installPlugin(plugin, options);
-		});
+  // Install a plugin
+  plugin
+    .command("install")
+    .description("Install a plugin")
+    .argument("<plugin>", "Plugin name or GitHub repository")
+    .option("-g, --global", "Install globally")
+    .action(async (plugin, options) => {
+      await installPlugin(plugin, options);
+    });
 
-	// Remove a plugin
-	plugin
-		.command("remove")
-		.description("Remove a plugin")
-		.argument("<plugin>", "Plugin name")
-		.option("-g, --global", "Remove from global plugins")
-		.action(async (plugin, options) => {
-			await removePlugin(plugin, options);
-		});
+  // Remove a plugin
+  plugin
+    .command("remove")
+    .description("Remove a plugin")
+    .argument("<plugin>", "Plugin name")
+    .option("-g, --global", "Remove from global plugins")
+    .action(async (plugin, options) => {
+      await removePlugin(plugin, options);
+    });
 }
 
 /**
  * Create a new plugin
  */
-async function createPlugin(
-	name?: string,
-	options?: CommandOptions,
-): Promise<void> {
-	console.log(chalk.cyan("🔌 Creating a new Verb plugin\n"));
+async function createPlugin(name?: string, options?: CommandOptions): Promise<void> {
+  console.log(chalk.cyan("🔌 Creating a new Verb plugin\n"));
 
-	// If no name provided or interactive mode, prompt for details
-	const pluginOptions = await promptForPluginOptions(name, options);
+  // If no name provided or interactive mode, prompt for details
+  const pluginOptions = await promptForPluginOptions(name, options);
 
-	// Create the plugin
-	await generatePlugin(pluginOptions);
+  // Create the plugin
+  await generatePlugin(pluginOptions);
 
-	console.log(chalk.green("\n✅ Plugin created successfully!"));
-	console.log("\nNext steps:");
-	console.log(chalk.gray(`  cd ${pluginOptions.name}`));
-	console.log(chalk.gray("  bun run dev"));
-	console.log("\nTo use your plugin in a Verb project:");
-	console.log(
-		chalk.gray(`  bun add ${path.resolve(process.cwd(), pluginOptions.name)}`),
-	);
-	console.log(chalk.gray("  // In your Verb app:"));
-	console.log(
-		chalk.gray(
-			`  import { ${toCamelCase(pluginOptions.name)} } from '${pluginOptions.name}';`,
-		),
-	);
-	console.log(
-		chalk.gray(`  app.register(${toCamelCase(pluginOptions.name)}());`),
-	);
+  console.log(chalk.green("\n✅ Plugin created successfully!"));
+  console.log("\nNext steps:");
+  console.log(chalk.gray(`  cd ${pluginOptions.name}`));
+  console.log(chalk.gray("  bun run dev"));
+  console.log("\nTo use your plugin in a Verb project:");
+  console.log(chalk.gray(`  bun add ${path.resolve(process.cwd(), pluginOptions.name)}`));
+  console.log(chalk.gray("  // In your Verb app:"));
+  console.log(
+    chalk.gray(`  import { ${toCamelCase(pluginOptions.name)} } from '${pluginOptions.name}';`),
+  );
+  console.log(chalk.gray(`  app.register(${toCamelCase(pluginOptions.name)}());`));
 }
 
 /**
  * Prompt for plugin options
  */
 async function promptForPluginOptions(
-	name?: string,
-	options?: CommandOptions,
+  name?: string,
+  options?: CommandOptions,
 ): Promise<PluginOptions> {
-	// Skip prompts if --yes flag is used and name is provided
-	if (options?.yes && name) {
-		return {
-			name: name,
-			description: `A Verb plugin named ${name}`,
-			author: "Anonymous",
-			version: "0.1.0",
-		};
-	}
+  // Skip prompts if --yes flag is used and name is provided
+  if (options?.yes && name) {
+    return {
+      name: name,
+      description: `A Verb plugin named ${name}`,
+      author: "Anonymous",
+      version: "0.1.0",
+    };
+  }
 
-	const answers = await inquirer.prompt([
-		{
-			type: "input",
-			name: "name",
-			message: "Plugin name:",
-			default: name || "verb-plugin",
-			validate: (input) => {
-				if (/^[a-z0-9-_]+$/i.test(input)) {
-					return true;
-				}
-				return "Plugin name may only include letters, numbers, underscores and hyphens";
-			},
-		},
-		{
-			type: "input",
-			name: "description",
-			message: "Plugin description:",
-			default: (answers: { name?: string }) =>
-				`A Verb plugin named ${answers.name || name || "verb-plugin"}`,
-		},
-		{
-			type: "input",
-			name: "author",
-			message: "Author:",
-			default: "Anonymous",
-		},
-		{
-			type: "input",
-			name: "version",
-			message: "Version:",
-			default: "0.1.0",
-			validate: (input) => {
-				if (/^\d+\.\d+\.\d+$/.test(input)) {
-					return true;
-				}
-				return "Version must be in semver format (e.g., 1.0.0)";
-			},
-		},
-	]);
+  const answers = await inquirer.prompt([
+    {
+      type: "input",
+      name: "name",
+      message: "Plugin name:",
+      default: name || "verb-plugin",
+      validate: (input) => {
+        if (/^[a-z0-9-_]+$/i.test(input)) {
+          return true;
+        }
+        return "Plugin name may only include letters, numbers, underscores and hyphens";
+      },
+    },
+    {
+      type: "input",
+      name: "description",
+      message: "Plugin description:",
+      default: (answers: { name?: string }) =>
+        `A Verb plugin named ${answers.name || name || "verb-plugin"}`,
+    },
+    {
+      type: "input",
+      name: "author",
+      message: "Author:",
+      default: "Anonymous",
+    },
+    {
+      type: "input",
+      name: "version",
+      message: "Version:",
+      default: "0.1.0",
+      validate: (input) => {
+        if (/^\d+\.\d+\.\d+$/.test(input)) {
+          return true;
+        }
+        return "Version must be in semver format (e.g., 1.0.0)";
+      },
+    },
+  ]);
 
-	return answers as PluginOptions;
+  return answers as PluginOptions;
 }
 
 /**
  * Generate a plugin
  */
 async function generatePlugin(options: PluginOptions): Promise<void> {
-	const spinner = ora("Creating plugin directory").start();
+  const spinner = ora("Creating plugin directory").start();
 
-	try {
-		// Create plugin directory
-		const pluginDir = path.resolve(process.cwd(), options.name);
+  try {
+    // Create plugin directory
+    const pluginDir = path.resolve(process.cwd(), options.name);
 
-		// Check if directory exists
-		if (fs.existsSync(pluginDir)) {
-			spinner.fail(`Directory ${options.name} already exists`);
-			const { overwrite } = await inquirer.prompt([
-				{
-					type: "confirm",
-					name: "overwrite",
-					message: "Directory already exists. Overwrite?",
-					default: false,
-				},
-			]);
+    // Check if directory exists
+    if (fs.existsSync(pluginDir)) {
+      spinner.fail(`Directory ${options.name} already exists`);
+      const { overwrite } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "overwrite",
+          message: "Directory already exists. Overwrite?",
+          default: false,
+        },
+      ]);
 
-			if (!overwrite) {
-				console.log(chalk.yellow("Plugin creation cancelled"));
-				process.exit(0);
-			}
+      if (!overwrite) {
+        console.log(chalk.yellow("Plugin creation cancelled"));
+        process.exit(0);
+      }
 
-			// Remove existing directory
-			fs.removeSync(pluginDir);
-		}
+      // Remove existing directory
+      fs.removeSync(pluginDir);
+    }
 
-		// Create directory
-		fs.mkdirSync(pluginDir, { recursive: true });
-		spinner.succeed("Created plugin directory");
+    // Create directory
+    fs.mkdirSync(pluginDir, { recursive: true });
+    spinner.succeed("Created plugin directory");
 
-		// Create plugin files
-		spinner.text = "Creating plugin files";
-		spinner.start();
-		await createPluginFiles(options, pluginDir);
-		spinner.succeed("Created plugin files");
+    // Create plugin files
+    spinner.text = "Creating plugin files";
+    spinner.start();
+    await createPluginFiles(options, pluginDir);
+    spinner.succeed("Created plugin files");
 
-		// Initialize package.json
-		spinner.text = "Creating package.json";
-		spinner.start();
-		await createPluginPackageJson(options, pluginDir);
-		spinner.succeed("Created package.json");
+    // Initialize package.json
+    spinner.text = "Creating package.json";
+    spinner.start();
+    await createPluginPackageJson(options, pluginDir);
+    spinner.succeed("Created package.json");
 
-		// Install dependencies
-		spinner.text = "Installing dependencies";
-		spinner.start();
-		await installDependencies(pluginDir);
-		spinner.succeed("Installed dependencies");
-	} catch (error) {
-		spinner.fail(`Failed to create plugin: ${error.message}`);
-		throw error;
-	}
+    // Install dependencies
+    spinner.text = "Installing dependencies";
+    spinner.start();
+    await installDependencies(pluginDir);
+    spinner.succeed("Installed dependencies");
+  } catch (error) {
+    spinner.fail(`Failed to create plugin: ${error.message}`);
+    throw error;
+  }
 }
 
 /**
  * Create plugin files
  */
-async function createPluginFiles(
-	options: PluginOptions,
-	pluginDir: string,
-): Promise<void> {
-	// Create src directory
-	fs.mkdirSync(path.join(pluginDir, "src"), { recursive: true });
-	fs.mkdirSync(path.join(pluginDir, "tests"), { recursive: true });
+async function createPluginFiles(options: PluginOptions, pluginDir: string): Promise<void> {
+  // Create src directory
+  fs.mkdirSync(path.join(pluginDir, "src"), { recursive: true });
+  fs.mkdirSync(path.join(pluginDir, "tests"), { recursive: true });
 
-	// Create index.ts
-	const indexContent = `export { ${toCamelCase(options.name)} } from './plugin';
+  // Create index.ts
+  const indexContent = `export { ${toCamelCase(options.name)} } from './plugin';
 `;
 
-	fs.writeFileSync(path.join(pluginDir, "src/index.ts"), indexContent);
+  fs.writeFileSync(path.join(pluginDir, "src/index.ts"), indexContent);
 
-	// Create plugin.ts
-	const pluginContent = `import { createPlugin, type Plugin, type PluginContext } from 'verb';
+  // Create plugin.ts
+  const pluginContent = `import { createPlugin, type Plugin, type PluginContext } from 'verb';
 
 export interface ${toPascalCase(options.name)}Options {
   // Define your plugin options here
@@ -292,10 +278,10 @@ export function ${toCamelCase(options.name)}(options?: Partial<${toPascalCase(op
 }
 `;
 
-	fs.writeFileSync(path.join(pluginDir, "src/plugin.ts"), pluginContent);
+  fs.writeFileSync(path.join(pluginDir, "src/plugin.ts"), pluginContent);
 
-	// Create README.md
-	const readmeContent = `# ${options.name}
+  // Create README.md
+  const readmeContent = `# ${options.name}
 
 ${options.description}
 
@@ -341,10 +327,10 @@ app.listen(3000);
 MIT
 `;
 
-	fs.writeFileSync(path.join(pluginDir, "README.md"), readmeContent);
+  fs.writeFileSync(path.join(pluginDir, "README.md"), readmeContent);
 
-	// Create tsconfig.json
-	const tsconfigContent = `{
+  // Create tsconfig.json
+  const tsconfigContent = `{
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -361,10 +347,10 @@ MIT
 }
 `;
 
-	fs.writeFileSync(path.join(pluginDir, "tsconfig.json"), tsconfigContent);
+  fs.writeFileSync(path.join(pluginDir, "tsconfig.json"), tsconfigContent);
 
-	// Create test file
-	const testContent = `import { describe, test, expect, mock } from 'bun:test';
+  // Create test file
+  const testContent = `import { describe, test, expect, mock } from 'bun:test';
 import { ${toCamelCase(options.name)} } from '../src/plugin';
 
 describe('${options.name} Plugin', () => {
@@ -402,236 +388,211 @@ describe('${options.name} Plugin', () => {
 });
 `;
 
-	fs.writeFileSync(path.join(pluginDir, "tests/plugin.test.ts"), testContent);
+  fs.writeFileSync(path.join(pluginDir, "tests/plugin.test.ts"), testContent);
 }
 
 /**
  * Create package.json for the plugin
  */
-async function createPluginPackageJson(
-	options: PluginOptions,
-	pluginDir: string,
-): Promise<void> {
-	const packageJson = {
-		name: options.name,
-		version: options.version,
-		description: options.description,
-		author: options.author,
-		license: "MIT",
-		type: "module",
-		main: "dist/index.js",
-		types: "dist/index.d.ts",
-		files: ["dist", "README.md"],
-		scripts: {
-			dev: "bun run --watch src/index.ts",
-			build: "tsc",
-			test: "bun test",
-			prepublish: "bun run build",
-		},
-		peerDependencies: {
-			verb: "*",
-		},
-		devDependencies: {
-			typescript: "^5.0.0",
-			"@types/bun": "latest",
-		},
-	};
+async function createPluginPackageJson(options: PluginOptions, pluginDir: string): Promise<void> {
+  const packageJson = {
+    name: options.name,
+    version: options.version,
+    description: options.description,
+    author: options.author,
+    license: "MIT",
+    type: "module",
+    main: "dist/index.js",
+    types: "dist/index.d.ts",
+    files: ["dist", "README.md"],
+    scripts: {
+      dev: "bun run --watch src/index.ts",
+      build: "tsc",
+      test: "bun test",
+      prepublish: "bun run build",
+    },
+    peerDependencies: {
+      verb: "*",
+    },
+    devDependencies: {
+      typescript: "^5.0.0",
+      "@types/bun": "latest",
+    },
+  };
 
-	fs.writeFileSync(
-		path.join(pluginDir, "package.json"),
-		JSON.stringify(packageJson, null, 2),
-	);
+  fs.writeFileSync(path.join(pluginDir, "package.json"), JSON.stringify(packageJson, null, 2));
 }
 
 /**
  * Install dependencies
  */
 async function installDependencies(pluginDir: string): Promise<void> {
-	try {
-		// Change to plugin directory
-		process.chdir(pluginDir);
+  try {
+    // Change to plugin directory
+    process.chdir(pluginDir);
 
-		// Install dependencies
-		execSync("bun install", { stdio: "ignore" });
-	} catch (error) {
-		console.error(`Failed to install dependencies: ${error.message}`);
-		console.log(chalk.yellow("You can install them manually by running:"));
-		console.log(chalk.gray(`  cd ${path.basename(pluginDir)}`));
-		console.log(chalk.gray("  bun install"));
-	}
+    // Install dependencies
+    execSync("bun install", { stdio: "ignore" });
+  } catch (error) {
+    console.error(`Failed to install dependencies: ${error.message}`);
+    console.log(chalk.yellow("You can install them manually by running:"));
+    console.log(chalk.gray(`  cd ${path.basename(pluginDir)}`));
+    console.log(chalk.gray("  bun install"));
+  }
 }
 
 /**
  * List installed plugins
  */
 async function listPlugins(): Promise<void> {
-	console.log(chalk.cyan("📋 Installed Verb plugins\n"));
+  console.log(chalk.cyan("📋 Installed Verb plugins\n"));
 
-	const spinner = ora("Scanning for plugins").start();
+  const spinner = ora("Scanning for plugins").start();
 
-	try {
-		// Check if we're in a Verb project
-		if (!isVerbProject()) {
-			spinner.warn("Not a Verb project");
-			console.log("Run this command in a Verb project directory");
-			return;
-		}
+  try {
+    // Check if we're in a Verb project
+    if (!isVerbProject()) {
+      spinner.warn("Not a Verb project");
+      console.log("Run this command in a Verb project directory");
+      return;
+    }
 
-		// Read package.json
-		const packageJsonPath = path.resolve(process.cwd(), "package.json");
-		const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+    // Read package.json
+    const packageJsonPath = path.resolve(process.cwd(), "package.json");
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-		// Get dependencies
-		const dependencies = {
-			...packageJson.dependencies,
-			...packageJson.devDependencies,
-		};
+    // Get dependencies
+    const dependencies = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    };
 
-		// Filter for Verb plugins
-		const plugins = [];
+    // Filter for Verb plugins
+    const plugins = [];
 
-		for (const [name, version] of Object.entries(dependencies)) {
-			// Check if it's a Verb plugin
-			if (
-				name.startsWith("verb-plugin-") ||
-				(name.includes("verb") && name.includes("plugin"))
-			) {
-				plugins.push({ name, version });
-			}
-		}
+    for (const [name, version] of Object.entries(dependencies)) {
+      // Check if it's a Verb plugin
+      if (name.startsWith("verb-plugin-") || (name.includes("verb") && name.includes("plugin"))) {
+        plugins.push({ name, version });
+      }
+    }
 
-		spinner.succeed(`Found ${plugins.length} plugins`);
+    spinner.succeed(`Found ${plugins.length} plugins`);
 
-		if (plugins.length === 0) {
-			console.log(chalk.yellow("No Verb plugins found"));
-			console.log("Install plugins with:");
-			console.log(chalk.gray("  vrb plugin install <plugin-name>"));
-			return;
-		}
+    if (plugins.length === 0) {
+      console.log(chalk.yellow("No Verb plugins found"));
+      console.log("Install plugins with:");
+      console.log(chalk.gray("  verb plugin install <plugin-name>"));
+      return;
+    }
 
-		// Display plugins
-		console.log(chalk.bold("\nInstalled plugins:"));
-		for (const plugin of plugins) {
-			console.log(
-				`  ${chalk.green(plugin.name)} ${chalk.gray(`(${plugin.version})`)}`,
-			);
-		}
-	} catch (error) {
-		spinner.fail(`Failed to list plugins: ${error.message}`);
-	}
+    // Display plugins
+    console.log(chalk.bold("\nInstalled plugins:"));
+    for (const plugin of plugins) {
+      console.log(`  ${chalk.green(plugin.name)} ${chalk.gray(`(${plugin.version})`)}`);
+    }
+  } catch (error) {
+    spinner.fail(`Failed to list plugins: ${error.message}`);
+  }
 }
 
 /**
  * Install a plugin
  */
-async function installPlugin(
-	plugin: string,
-	options?: CommandOptions,
-): Promise<void> {
-	console.log(chalk.cyan(`📦 Installing plugin: ${plugin}\n`));
+async function installPlugin(plugin: string, options?: CommandOptions): Promise<void> {
+  console.log(chalk.cyan(`📦 Installing plugin: ${plugin}\n`));
 
-	const spinner = ora("Installing plugin").start();
+  const spinner = ora("Installing plugin").start();
 
-	try {
-		// Check if we're in a Verb project (unless global)
-		if (!options?.global && !isVerbProject()) {
-			spinner.fail("Not a Verb project");
-			console.log(
-				"Run this command in a Verb project directory or use --global flag",
-			);
-			return;
-		}
+  try {
+    // Check if we're in a Verb project (unless global)
+    if (!options?.global && !isVerbProject()) {
+      spinner.fail("Not a Verb project");
+      console.log("Run this command in a Verb project directory or use --global flag");
+      return;
+    }
 
-		// Determine the package name
-		let packageName = plugin;
+    // Determine the package name
+    let packageName = plugin;
 
-		// If it's a GitHub repository, use the full URL
-		if (plugin.includes("/")) {
-			if (!plugin.startsWith("http") && !plugin.startsWith("git")) {
-				packageName = `github:${plugin}`;
-			}
-		}
+    // If it's a GitHub repository, use the full URL
+    if (plugin.includes("/")) {
+      if (!plugin.startsWith("http") && !plugin.startsWith("git")) {
+        packageName = `github:${plugin}`;
+      }
+    }
 
-		// Install the plugin
-		const command = options?.global
-			? `bun add -g ${packageName}`
-			: `bun add ${packageName}`;
+    // Install the plugin
+    const command = options?.global ? `bun add -g ${packageName}` : `bun add ${packageName}`;
 
-		execSync(command, { stdio: "inherit" });
+    execSync(command, { stdio: "inherit" });
 
-		spinner.succeed(`Plugin ${plugin} installed successfully`);
-	} catch (error) {
-		spinner.fail(`Failed to install plugin: ${error.message}`);
-	}
+    spinner.succeed(`Plugin ${plugin} installed successfully`);
+  } catch (error) {
+    spinner.fail(`Failed to install plugin: ${error.message}`);
+  }
 }
 
 /**
  * Remove a plugin
  */
-async function removePlugin(
-	plugin: string,
-	options?: CommandOptions,
-): Promise<void> {
-	console.log(chalk.cyan(`🗑️  Removing plugin: ${plugin}\n`));
+async function removePlugin(plugin: string, options?: CommandOptions): Promise<void> {
+  console.log(chalk.cyan(`🗑️  Removing plugin: ${plugin}\n`));
 
-	const spinner = ora("Removing plugin").start();
+  const spinner = ora("Removing plugin").start();
 
-	try {
-		// Check if we're in a Verb project (unless global)
-		if (!options?.global && !isVerbProject()) {
-			spinner.fail("Not a Verb project");
-			console.log(
-				"Run this command in a Verb project directory or use --global flag",
-			);
-			return;
-		}
+  try {
+    // Check if we're in a Verb project (unless global)
+    if (!options?.global && !isVerbProject()) {
+      spinner.fail("Not a Verb project");
+      console.log("Run this command in a Verb project directory or use --global flag");
+      return;
+    }
 
-		// Remove the plugin
-		const command = options?.global
-			? `bun remove -g ${plugin}`
-			: `bun remove ${plugin}`;
+    // Remove the plugin
+    const command = options?.global ? `bun remove -g ${plugin}` : `bun remove ${plugin}`;
 
-		execSync(command, { stdio: "inherit" });
+    execSync(command, { stdio: "inherit" });
 
-		spinner.succeed(`Plugin ${plugin} removed successfully`);
-	} catch (error) {
-		spinner.fail(`Failed to remove plugin: ${error.message}`);
-	}
+    spinner.succeed(`Plugin ${plugin} removed successfully`);
+  } catch (error) {
+    spinner.fail(`Failed to remove plugin: ${error.message}`);
+  }
 }
 
 /**
  * Check if the current directory is a Verb project
  */
 function isVerbProject(): boolean {
-	try {
-		const packageJsonPath = path.resolve(process.cwd(), "package.json");
-		if (!fs.existsSync(packageJsonPath)) {
-			return false;
-		}
+  try {
+    const packageJsonPath = path.resolve(process.cwd(), "package.json");
+    if (!fs.existsSync(packageJsonPath)) {
+      return false;
+    }
 
-		const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-		// Check if verb is a dependency
-		return packageJson.dependencies?.verb || packageJson.devDependencies?.verb;
-	} catch (_error) {
-		return false;
-	}
+    // Check if verb is a dependency
+    return packageJson.dependencies?.verb || packageJson.devDependencies?.verb;
+  } catch (_error) {
+    return false;
+  }
 }
 
 /**
  * Convert a string to camelCase
  */
 function toCamelCase(str: string): string {
-	return str
-		.replace(/[-_](.)/g, (_, c) => c.toUpperCase())
-		.replace(/^([A-Z])/, (_, c) => c.toLowerCase())
-		.replace(/[^\w]/g, "");
+  return str
+    .replace(/[-_](.)/g, (_, c) => c.toUpperCase())
+    .replace(/^([A-Z])/, (_, c) => c.toLowerCase())
+    .replace(/[^\w]/g, "");
 }
 
 /**
  * Convert a string to PascalCase
  */
 function toPascalCase(str: string): string {
-	const camelCase = toCamelCase(str);
-	return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
+  const camelCase = toCamelCase(str);
+  return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
 }

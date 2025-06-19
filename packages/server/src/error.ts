@@ -42,6 +42,7 @@ export type ErrorHandler = (error: Error, req: Request) => Response | Promise<Re
 export interface ErrorHandlerOptions {
   includeStack?: boolean;
   logErrors?: boolean;
+  suppressTestLogs?: boolean; // Explicitly suppress logs during tests
   customHandlers?: Map<string, ErrorHandler>;
   fallbackHandler?: ErrorHandler;
 }
@@ -232,17 +233,33 @@ export const handleError = async (
 export const errorHandler = (options: ErrorHandlerOptions = {}) => {
   const {
     logErrors = true,
+    suppressTestLogs = true, // Default to suppressing logs in tests
     customHandlers = new Map(),
     fallbackHandler = defaultErrorHandler,
   } = options;
 
   const boundary = createErrorBoundary(customHandlers, fallbackHandler);
 
+  // Check if we're in a test environment
+  const isTestEnvironment =
+    typeof globalThis !== "undefined" &&
+    (process?.env?.NODE_ENV === "test" ||
+      process?.env?.BUN_ENV === "test" ||
+      // Detect Bun test runner specifically
+      (typeof Bun !== "undefined" &&
+        (typeof expect !== "undefined" ||
+          typeof describe !== "undefined" ||
+          process.argv.some((arg) => arg.includes("bun:test") || arg.includes("test")))));
+
+  // Determine if we should suppress logs
+  const shouldSuppressLogs = suppressTestLogs && isTestEnvironment;
+
   return async (req: Request, next: () => Response | Promise<Response>): Promise<Response> => {
     try {
       return await next();
     } catch (error) {
-      if (logErrors) {
+      // Only log errors if logging is enabled and not suppressed
+      if (logErrors && !shouldSuppressLogs) {
         console.error("Error in request:", {
           url: req.url,
           method: req.method,

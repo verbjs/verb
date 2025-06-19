@@ -3,7 +3,7 @@
   <h1>Verb</h1>
 </div>
 
-A blazingly fast HTTP server framework for TypeScript and Bun, designed to outperform other servers with zero compromises on developer experience.
+A blazingly fast HTTP server library for TypeScript and Bun, designed to outperform other servers with zero compromises on developer experience.
 
 ## ⚡ Key Features
 

@@ -1,5 +1,5 @@
-import { createPlugin, type Plugin, type PluginContext } from "../../plugin.ts";
-import { html } from "../../response.ts";
+import { createPlugin, type Plugin, type PluginContext } from "@verb/server";
+import { html } from "@verb/server";
 
 // Import React and ReactDOMServer
 // Note: These would need to be added as dependencies
@@ -51,21 +51,31 @@ export interface RenderOptions {
 }
 
 // Default HTML template
-const DEFAULT_TEMPLATE = (content: string, options: RenderOptions): string => `
+const DEFAULT_TEMPLATE = (content: string, options: RenderOptions): string =>
+  `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   ${options.title ? `<title>${options.title}</title>` : ""}
-  ${options.meta?.map(meta => `<meta ${Object.entries(meta).map(([k, v]) => `${k}="${v}"`).join(" ")}>`).join("\n  ") || ""}
-  ${options.styles?.map(href => `<link rel="stylesheet" href="${href}">`).join("\n  ") || ""}
+  ${
+    options.meta
+      ?.map(
+        (meta) =>
+          `<meta ${Object.entries(meta)
+            .map(([k, v]) => `${k}="${v}"`)
+            .join(" ")}>`,
+      )
+      .join("\n  ") || ""
+  }
+  ${options.styles?.map((href) => `<link rel="stylesheet" href="${href}">`).join("\n  ") || ""}
   ${options.inlineStyles ? `<style>${options.inlineStyles}</style>` : ""}
 </head>
 <body>
   <div id="root">${content}</div>
   ${options.hydrate && options.props ? `<script>window.__INITIAL_PROPS__ = ${JSON.stringify(options.props)};</script>` : ""}
-  ${options.scripts?.map(src => `<script src="${src}"></script>`).join("\n  ") || ""}
+  ${options.scripts?.map((src) => `<script src="${src}"></script>`).join("\n  ") || ""}
   ${options.inlineScripts ? `<script>${options.inlineScripts}</script>` : ""}
 </body>
 </html>
@@ -90,7 +100,7 @@ const renderCache = new Map<string, string>();
 // React renderer plugin
 export const createReactRendererPlugin = (config?: Partial<ReactRendererConfig>): Plugin => {
   const mergedConfig = { ...defaultConfig, ...config };
-  
+
   return createPlugin(
     {
       name: "react-renderer",
@@ -103,27 +113,28 @@ export const createReactRendererPlugin = (config?: Partial<ReactRendererConfig>)
         context.log("React renderer is disabled, skipping initialization");
         return;
       }
-      
+
       // Render React component to string
       const renderToString = (
         component: React.ReactElement,
-        options: RenderOptions = {}
+        options: RenderOptions = {},
       ): string => {
         const mergedOptions = { ...mergedConfig.defaultOptions, ...options };
-        
+
         // Generate cache key if caching is enabled
         let cacheKey: string | undefined;
         if (mergedConfig.cache && !mergedOptions.stream) {
-          cacheKey = mergedOptions.cacheKey || 
+          cacheKey =
+            mergedOptions.cacheKey ||
             `react:${component.type.name}:${JSON.stringify(component.props)}:${JSON.stringify(mergedOptions)}`;
-          
+
           // Check cache
           const cached = renderCache.get(cacheKey);
           if (cached) {
             return cached;
           }
         }
-        
+
         // Render component to string
         let content: string;
         try {
@@ -132,13 +143,14 @@ export const createReactRendererPlugin = (config?: Partial<ReactRendererConfig>)
           context.log(`Error rendering React component: ${error.message}`);
           content = `<div class="react-error">Error rendering component: ${error.message}</div>`;
         }
-        
+
         // Apply template
         const template = mergedOptions.template || mergedConfig.defaultTemplate;
-        const html = typeof template === 'function' 
-          ? template(content, mergedOptions)
-          : template.replace('{{content}}', content);
-        
+        const html =
+          typeof template === "function"
+            ? template(content, mergedOptions)
+            : template.replace("{{content}}", content);
+
         // Cache result if caching is enabled
         if (mergedConfig.cache && cacheKey && !mergedOptions.stream) {
           if (renderCache.size >= mergedConfig.maxCacheSize) {
@@ -148,88 +160,87 @@ export const createReactRendererPlugin = (config?: Partial<ReactRendererConfig>)
           }
           renderCache.set(cacheKey, html);
         }
-        
+
         return html;
       };
-      
+
       // Render React component to stream
       const renderToStream = (
         component: React.ReactElement,
-        options: RenderOptions = {}
+        options: RenderOptions = {},
       ): ReadableStream => {
         const _mergedOptions = { ...mergedConfig.defaultOptions, ...options };
-        
+
         try {
           // Create a stream from ReactDOMServer
           const nodeStream = ReactDOMServer.renderToNodeStream(component);
-          
+
           // Convert Node.js stream to Web stream
           return new ReadableStream({
             start(controller) {
-              nodeStream.on('data', chunk => {
+              nodeStream.on("data", (chunk) => {
                 controller.enqueue(chunk);
               });
-              
-              nodeStream.on('end', () => {
+
+              nodeStream.on("end", () => {
                 controller.close();
               });
-              
-              nodeStream.on('error', err => {
+
+              nodeStream.on("error", (err) => {
                 controller.error(err);
               });
-            }
+            },
           });
         } catch (error) {
           context.log(`Error creating React stream: ${error.message}`);
-          
+
           // Return error stream
           const encoder = new TextEncoder();
           return new ReadableStream({
             start(controller) {
-              controller.enqueue(encoder.encode(
-                `<div class="react-error">Error rendering component: ${error.message}</div>`
-              ));
+              controller.enqueue(
+                encoder.encode(
+                  `<div class="react-error">Error rendering component: ${error.message}</div>`,
+                ),
+              );
               controller.close();
-            }
+            },
           });
         }
       };
-      
+
       // Create response from React component
-      const react = (
-        component: React.ReactElement,
-        options: RenderOptions = {}
-      ): Response => {
+      const react = (component: React.ReactElement, options: RenderOptions = {}): Response => {
         const mergedOptions = { ...mergedConfig.defaultOptions, ...options };
         const status = mergedOptions.status || 200;
         const headers = {
           "Content-Type": "text/html",
           ...mergedOptions.headers,
         };
-        
+
         // Use streaming if requested
         if (mergedOptions.stream) {
           const stream = renderToStream(component, mergedOptions);
           return new Response(stream, { status, headers });
         }
-        
+
         // Otherwise use string rendering
         const content = renderToString(component, mergedOptions);
         return new Response(content, { status, headers });
       };
-      
+
       // Register services
       context.registerService("react:renderToString", renderToString);
       context.registerService("react:renderToStream", renderToStream);
       context.registerService("react:render", react);
-      
+
       // Add to global response helpers
       if (typeof globalThis !== "undefined") {
         (globalThis as any).reactComponent = react;
       }
-      
+
       context.log("React renderer initialized successfully");
-    }
+    },
   );
 };
 

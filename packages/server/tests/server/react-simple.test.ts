@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { createTestApp } from "./setup.ts";
-import { createReactRendererPlugin } from "../../src/plugins/react/renderer.ts";
+import { createReactRendererPlugin } from "@verb/plugins";
 
 describe("React Renderer Plugin", () => {
   let app: any;

@@ -99,7 +99,10 @@ export const createMockHttp2Server = (options: MockHttp2ServerOptions = {}): Moc
     enablePush = true,
   } = options;
 
-  const router = createUniversalRouter(routerConfig.type ?? RouterType.MANUAL, routerConfig.options);
+  const router = createUniversalRouter(
+    routerConfig.type ?? RouterType.MANUAL,
+    routerConfig.options,
+  );
 
   const state: MockHttp2ServerState = {
     router,

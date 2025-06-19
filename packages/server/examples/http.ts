@@ -2,7 +2,7 @@
  * HTTP Server Example with Verb
  * 
  * This example demonstrates how to create a standard HTTP server
- * and utilize all the core features of the Verb framework.
+ * and utilize all the core features of the Verb library.
  */
 
 import { 
@@ -85,7 +85,7 @@ app.get("/", () => {
     </head>
     <body>
       <h1>🚀 Welcome to Verb HTTP Server!</h1>
-      <p>This example demonstrates all the core features of the Verb framework.</p>
+      <p>This example demonstrates all the core features of the Verb library.</p>
       
       <h2>Available Endpoints:</h2>
       

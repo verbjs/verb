@@ -284,15 +284,12 @@ export type {
   PluginBuilderState,
 } from "./plugin.ts";
 
-// React renderer exports
+// React renderer exports - now available in @verb/plugins
 export {
   createReactRendererPlugin,
-} from "./plugins/react/renderer.ts";
-
-export type {
-  ReactRendererConfig,
-  RenderOptions,
-} from "./plugins/react/renderer.ts";
+  type ReactRendererConfig,
+  type RenderOptions,
+} from "@verb/plugins";
 
 export {
   reactComponent,

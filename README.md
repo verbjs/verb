@@ -1,13 +1,14 @@
-# Verb Framework
+# Verb Library
 
-A modern, high-performance web framework for Bun.
+A modern, high-performance web library for Bun.
 
 ## Packages
 
 This monorepo contains the following packages:
 
-- **@verb/server**: The core server framework
+- **@verb/server**: The core server library
 - **@verb/cli**: Command-line interface for Verb
+- **@verb/plugins**: Official plugin registry for Verb
 - **@verb/site**: Official website and documentation
 
 ## Development
@@ -37,6 +38,7 @@ bun run build
 # Build specific packages
 bun run build:server
 bun run build:cli
+bun run build:plugins
 bun run build:site
 ```
 

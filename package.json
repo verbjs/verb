@@ -6,23 +6,29 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "bun run build:cli && bun run build:server && bun run build:site",
+    "build": "bun run build:cli && bun run build:server && bun run build:plugins && bun run build:auth && bun run build:templates && bun run build:site",
     "build:cli": "cd packages/cli && bun run build",
     "build:server": "cd packages/server && bun run build",
-    "build:site": "cd packages/site && bun run build",
-    "dev:site": "cd packages/site && bun run dev",
+    "build:plugins": "cd packages/plugins && bun run build",
+    "build:auth": "cd packages/auth && bun run build",
+    "build:templates": "cd packages/templates && bun run build",
+    "build:site": "cd site && bun run build",
+    "dev:site": "cd site && bun run dev",
     "cli": "bun packages/cli/src/main.ts",
-    "site:generate": "bun run cli site generate --input packages/site/content --output packages/site/dist",
-    "site:serve": "bun run cli site generate --input packages/site/content --output packages/site/dist --serve --watch",
+    "site:generate": "bun run cli site generate --input site/content --output site/dist",
+    "site:serve": "bun run cli site generate --input site/content --output site/dist --serve --watch",
     "clean": "rm -rf packages/*/dist",
-    "clean:site": "rm -rf packages/site/dist",
+    "clean:auth": "cd packages/auth && bun run clean",
+    "clean:site": "rm -rf site/dist",
     "clean:test": "find . -name 'test-*' -type f -delete",
     "test": "bun test",
     "test:clean": "bun test && bun run clean:test",
+    "validate:templates": "cd packages/templates && bun run validate",
     "lint": "biome lint --fix ./packages/**/src/**/*.ts",
     "format": "biome format --write ./packages/**/src/**/*.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.0.0",
     "@types/bun": "latest"
   },
   "peerDependencies": {

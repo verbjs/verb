@@ -1,21 +1,21 @@
-# vrb - Verb CLI
+# verb - Verb CLI
 
-Command-line interface for the Verb framework, providing project scaffolding, development tools, and a static site generator.
+Command-line interface for the Verb library, providing project scaffolding, development tools, and a static site generator.
 
 ## Installation
 
 ```bash
 # Install globally
-bun add -g vrb
+bun add -g verb
 
 # Or use directly with npx
-bunx vrb
+bunx verb
 ```
 
 ## Usage
 
 ```bash
-vrb [command] [options]
+verb [command] [options]
 ```
 
 ## Commands
@@ -26,13 +26,13 @@ Create a new Verb project:
 
 ```bash
 # Create a new project
-vrb init my-app
+verb init my-app
 
 # Create a project with a specific template
-vrb init my-api --template api
+verb init my-api --template api
 
 # Skip prompts and use defaults
-vrb init my-app -y
+verb init my-app -y
 ```
 
 ### Development Server
@@ -41,13 +41,13 @@ Start a development server with hot reload:
 
 ```bash
 # Start the development server
-vrb dev
+verb dev
 
 # Specify port and host
-vrb dev --port 8080 --host 0.0.0.0
+verb dev --port 8080 --host 0.0.0.0
 
 # Open in browser
-vrb dev --open
+verb dev --open
 ```
 
 ### Static Site Generator
@@ -56,19 +56,19 @@ Generate and manage static sites:
 
 ```bash
 # Create a new static site
-vrb site new my-site
+verb site new my-site
 
 # Initialize a static site in the current directory
-vrb site init
+verb site init
 
 # Generate a static site
-vrb site generate
+verb site generate
 
 # Generate and serve the site
-vrb site generate --serve
+verb site generate --serve
 
 # Watch for changes and rebuild
-vrb site generate --watch --serve
+verb site generate --watch --serve
 ```
 
 ### Plugin Management
@@ -77,19 +77,19 @@ Create and manage Verb plugins:
 
 ```bash
 # Create a new plugin
-vrb plugin create my-plugin
+verb plugin create my-plugin
 
 # List installed plugins
-vrb plugin list
+verb plugin list
 
 # Install a plugin
-vrb plugin install verb-plugin-example
+verb plugin install verb-plugin-example
 
 # Install from GitHub
-vrb plugin install username/verb-plugin-example
+verb plugin install username/verb-plugin-example
 
 # Remove a plugin
-vrb plugin remove verb-plugin-example
+verb plugin remove verb-plugin-example
 ```
 
 ## Options
