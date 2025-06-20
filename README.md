@@ -16,7 +16,6 @@ This monorepo contains the following packages:
 ### Prerequisites
 
 - [Bun](https://bun.sh/) v1.0 or higher
-- [Node.js](https://nodejs.org/) v18 or higher (optional)
 
 ### Setup
 
