@@ -27,8 +27,8 @@ export class AuthMiddleware {
     }
 
     // Attach user and session to request
-    req.user = authResult.user;
-    req.session = authResult.session;
+    req.user = authResult.user || undefined;
+    req.session = authResult.session || undefined;
   };
 
   /**
@@ -38,8 +38,8 @@ export class AuthMiddleware {
     const authResult = await this.authenticate(req);
     
     // Attach user and session to request if available
-    req.user = authResult.user;
-    req.session = authResult.session;
+    req.user = authResult.user || undefined;
+    req.session = authResult.session || undefined;
   };
 
   /**

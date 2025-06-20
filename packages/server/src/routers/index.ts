@@ -10,7 +10,17 @@ import {
   addFilesystemMiddleware,
   findFilesystemRoute,
   handleFilesystemRequest,
+  type FilesystemRouterState,
+  type FilesystemRouterOptions,
 } from "./filesystem.ts";
+
+// Import types for internal use
+import type {
+  Router,
+  Middleware,
+  Method,
+  RouteMatch,
+} from "../types.ts";
 
 // Re-export manual router (original router)
 export {

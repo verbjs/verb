@@ -7,16 +7,12 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target bun --minify && bun run build:types",
-    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "build": "rm -rf dist && bun build src/index.ts --outdir dist --target bun --minify && bun run build:types",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist --skipLibCheck",
     "dev": "bun run --watch src/index.ts",
     "test": "bun test",
     "prepublishOnly": "bun run build"
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -24,6 +20,11 @@
       "require": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "keywords": [
     "verb",
     "plugins",
@@ -36,8 +37,7 @@
   "author": "Wess Cope",
   "license": "MIT",
   "dependencies": {
-    "@verb/server": "workspace:*",
-    "@verb/auth": "workspace:*"
+    "@verb/server": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18.2.0",
@@ -48,10 +48,5 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/bun": "latest"
-  },
-  "files": [
-    "dist",
-    "src",
-    "README.md"
-  ]
+  }
 }

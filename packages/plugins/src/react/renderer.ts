@@ -125,7 +125,7 @@ export const createReactRendererPlugin = (config?: Partial<ReactRendererConfig>)
         if (mergedConfig.cache && !mergedOptions.stream) {
           cacheKey =
             mergedOptions.cacheKey ||
-            `react:${component.type.name}:${JSON.stringify(component.props)}:${JSON.stringify(mergedOptions)}`;
+            `react:${typeof component.type === 'string' ? component.type : (component.type as any).name || 'Component'}:${JSON.stringify(component.props)}:${JSON.stringify(mergedOptions)}`;
 
           // Check cache
           const cached = renderCache.get(cacheKey);
@@ -139,8 +139,8 @@ export const createReactRendererPlugin = (config?: Partial<ReactRendererConfig>)
         try {
           content = ReactDOMServer.renderToString(component);
         } catch (error) {
-          context.log(`Error rendering React component: ${error.message}`);
-          content = `<div class="react-error">Error rendering component: ${error.message}</div>`;
+          context.log(`Error rendering React component: ${(error as Error).message}`);
+          content = `<div class="react-error">Error rendering component: ${(error as Error).message}</div>`;
         }
 
         // Apply template
@@ -148,14 +148,16 @@ export const createReactRendererPlugin = (config?: Partial<ReactRendererConfig>)
         const html =
           typeof template === "function"
             ? template(content, mergedOptions)
-            : template.replace("{{content}}", content);
+            : (template as string).replace("{{content}}", content);
 
         // Cache result if caching is enabled
         if (mergedConfig.cache && cacheKey && !mergedOptions.stream) {
           if (renderCache.size >= mergedConfig.maxCacheSize) {
             // Clear oldest entry if cache is full
             const firstKey = renderCache.keys().next().value;
-            renderCache.delete(firstKey);
+            if (firstKey) {
+              renderCache.delete(firstKey);
+            }
           }
           renderCache.set(cacheKey, html);
         }
@@ -191,7 +193,7 @@ export const createReactRendererPlugin = (config?: Partial<ReactRendererConfig>)
             },
           });
         } catch (error) {
-          context.log(`Error creating React stream: ${error.message}`);
+          context.log(`Error creating React stream: ${(error as Error).message}`);
 
           // Return error stream
           const encoder = new TextEncoder();
@@ -199,7 +201,7 @@ export const createReactRendererPlugin = (config?: Partial<ReactRendererConfig>)
             start(controller) {
               controller.enqueue(
                 encoder.encode(
-                  `<div class="react-error">Error rendering component: ${error.message}</div>`,
+                  `<div class="react-error">Error rendering component: ${(error as Error).message}</div>`,
                 ),
               );
               controller.close();

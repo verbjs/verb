@@ -1,20 +1,18 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { randomBytes } from "node:crypto";
 
 export class AuthUtils {
   /**
-   * Hash a password using bcrypt
+   * Hash a password using Bun's built-in password hashing
    */
-  static async hashPassword(password: string, saltRounds = 12): Promise<string> {
-    return bcrypt.hash(password, saltRounds);
+  static async hashPassword(password: string): Promise<string> {
+    return await Bun.password.hash(password);
   }
 
   /**
    * Verify a password against a hash
    */
   static async verifyPassword(password: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(password, hash);
+    return await Bun.password.verify(password, hash);
   }
 
   /**
@@ -25,27 +23,110 @@ export class AuthUtils {
   }
 
   /**
-   * Generate a JWT token
+   * Generate a JWT token using native crypto
    */
-  static generateJWT(
+  static async generateJWT(
     payload: any,
     secret: string,
-    options: jwt.SignOptions = {}
-  ): string {
-    const defaultOptions: jwt.SignOptions = {
+    options: { expiresIn?: string; algorithm?: string } = {}
+  ): Promise<string> {
+    const defaultOptions = {
       expiresIn: "24h",
       algorithm: "HS256",
     };
+    const mergedOptions = { ...defaultOptions, ...options };
 
-    return jwt.sign(payload, secret, { ...defaultOptions, ...options });
+    // Create header and payload
+    const header = {
+      typ: "JWT",
+      alg: mergedOptions.algorithm,
+    };
+
+    const now = Math.floor(Date.now() / 1000);
+    const exp = mergedOptions.expiresIn === "24h" ? now + 24 * 60 * 60 : now + 3600;
+
+    const jwtPayload = {
+      ...payload,
+      iat: now,
+      exp,
+    };
+
+    // Base64url encode
+    const encode = (obj: any) => 
+      btoa(JSON.stringify(obj))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+
+    const encodedHeader = encode(header);
+    const encodedPayload = encode(jwtPayload);
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+    // Sign with HMAC SHA256
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signingInput));
+    const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+
+    return `${signingInput}.${encodedSignature}`;
   }
 
   /**
-   * Verify and decode a JWT token
+   * Verify and decode a JWT token using native crypto
    */
-  static verifyJWT(token: string, secret: string): any {
+  static async verifyJWT(token: string, secret: string): Promise<any> {
     try {
-      return jwt.verify(token, secret);
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        throw new Error('Invalid JWT format');
+      }
+
+      const [encodedHeader, encodedPayload, encodedSignature] = parts;
+
+      // Decode base64url
+      const decode = (str: string) => {
+        const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+        const pad = base64.length % 4;
+        const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
+        return JSON.parse(atob(padded));
+      };
+
+      const header = decode(encodedHeader);
+      const payload = decode(encodedPayload);
+
+      // Verify signature
+      const signingInput = `${encodedHeader}.${encodedPayload}`;
+      const key = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify']
+      );
+
+      const signature = Uint8Array.from(atob(encodedSignature.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+      const isValid = await crypto.subtle.verify('HMAC', key, signature, new TextEncoder().encode(signingInput));
+
+      if (!isValid) {
+        throw new Error('Invalid signature');
+      }
+
+      // Check expiration
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < now) {
+        throw new Error('Token expired');
+      }
+
+      return payload;
     } catch (error) {
       throw new Error(`Invalid JWT token: ${error.message}`);
     }

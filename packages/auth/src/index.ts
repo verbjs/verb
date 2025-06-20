@@ -6,8 +6,8 @@ import { createStorageAdapter } from "./storage/index.js";
 
 export * from "./types.js";
 export * from "./utils.js";
-export * from "./handlers.js";
-export * from "./middleware.js";
+export { AuthHandlers as AuthHandlersClass } from "./handlers.js";
+export { AuthMiddleware as AuthMiddlewareClass } from "./middleware.js";
 export * from "./storage/index.js";
 export * from "./providers/index.js";
 
@@ -55,20 +55,20 @@ export function createAuthPlugin(config: AuthConfig): AuthPlugin {
     hashPassword: AuthUtils.hashPassword,
     verifyPassword: AuthUtils.verifyPassword,
     generateToken: AuthUtils.generateToken,
-    generateJWT: (payload: any) => {
+    generateJWT: async (payload: any) => {
       if (!config.jwt) {
         throw new Error("JWT configuration not provided");
       }
-      return AuthUtils.generateJWT(payload, config.jwt.secret, {
+      return await AuthUtils.generateJWT(payload, config.jwt.secret, {
         expiresIn: config.jwt.expiresIn,
         algorithm: config.jwt.algorithm as any,
       });
     },
-    verifyJWT: (token: string) => {
+    verifyJWT: async (token: string) => {
       if (!config.jwt) {
         throw new Error("JWT configuration not provided");
       }
-      return AuthUtils.verifyJWT(token, config.jwt.secret);
+      return await AuthUtils.verifyJWT(token, config.jwt.secret);
     },
   };
 

@@ -164,6 +164,6 @@ export interface AuthPlugin {
   hashPassword: (password: string) => Promise<string>;
   verifyPassword: (password: string, hash: string) => Promise<boolean>;
   generateToken: () => string;
-  generateJWT: (payload: any) => string;
-  verifyJWT: (token: string) => any;
+  generateJWT: (payload: any) => Promise<string>;
+  verifyJWT: (token: string) => Promise<any>;
 }

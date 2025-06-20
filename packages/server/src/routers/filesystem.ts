@@ -26,7 +26,7 @@ interface FileRoute {
 /**
  * Filesystem router configuration
  */
-interface FilesystemRouterOptions {
+export interface FilesystemRouterOptions {
   /** Root directory to scan for routes (default: "./routes") */
   routesDir?: string;
   /** File extensions to consider as routes (default: [".ts", ".js"]) */
@@ -42,7 +42,7 @@ interface FilesystemRouterOptions {
 /**
  * Filesystem router state
  */
-interface FilesystemRouterState {
+export interface FilesystemRouterState {
   /** Registered routes */
   routes: Map<string, FileRoute[]>;
   /** Middleware stack */

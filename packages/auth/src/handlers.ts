@@ -27,7 +27,7 @@ export class AuthHandlers {
           const provider = createOAuth2Provider(name, providerConfig);
           this.providers.set(name, provider);
         } catch (error) {
-          console.warn(`Failed to initialize OAuth2 provider ${name}: ${error.message}`);
+          console.warn(`Failed to initialize OAuth2 provider ${name}: ${(error as Error).message}`);
         }
       }
     }

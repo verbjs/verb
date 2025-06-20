@@ -120,7 +120,7 @@ export const createInternalServerError = (
  * Check if an error is a VerbError
  */
 export const isVerbError = (error: unknown): error is VerbErrorData =>
-  error && typeof error === "object" && error.name === "VerbError";
+  error && typeof error === "object" && (error as any).name === "VerbError";
 
 /**
  * Convert Error to VerbError
@@ -247,8 +247,8 @@ export const errorHandler = (options: ErrorHandlerOptions = {}) => {
       process?.env?.BUN_ENV === "test" ||
       // Detect Bun test runner specifically
       (typeof Bun !== "undefined" &&
-        (typeof expect !== "undefined" ||
-          typeof describe !== "undefined" ||
+        (typeof (globalThis as any).expect !== "undefined" ||
+          typeof (globalThis as any).describe !== "undefined" ||
           process.argv.some((arg) => arg.includes("bun:test") || arg.includes("test")))));
 
   // Determine if we should suppress logs

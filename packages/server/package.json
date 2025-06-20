@@ -7,8 +7,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target bun --minify && bun run build:types",
-    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "build": "rm -rf dist && bun build src/index.ts --outdir dist --target bun --minify && bun run build:types",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist --skipLibCheck",
     "dev": "bun run --watch src/index.ts",
     "test": "bun test",
     "prepublishOnly": "bun run build"
