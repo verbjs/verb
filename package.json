@@ -1,8 +1,12 @@
 {
   "name": "verb",
+  "version": "1.0.0",
+  "description": "A fast, modern server framework for Bun with Express.js compatibility",
+  "main": "src/index.ts",
   "module": "src/index.ts",
+  "types": "src/index.ts",
   "type": "module",
-  "private": true,
+  "private": false,
   "scripts": {
     "dev": "bun run --hot src/main.ts",
     "lint": "biome lint --fix src/*.ts",

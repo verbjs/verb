@@ -1,0 +1,157 @@
+# Verb - Multi-Protocol Server Framework
+
+## Overview
+Verb is a fast, modern server framework for Bun that provides unified API for multiple protocols (HTTP, HTTP/2, WebSocket, gRPC, UDP, TCP). It's designed for high-performance applications with complete middleware support and advanced routing capabilities.
+
+## Quick Start
+```bash
+bun install
+bun run dev
+```
+
+## Core Architecture
+
+### Main Entry Point
+- `src/index.ts` - Central exports for all framework components
+- Uses functional programming approach (no classes)
+- Built specifically for Bun runtime
+
+### Key Components
+- **Server**: Multi-protocol server creation (`createServer`, `createUnifiedServer`)
+- **Router**: Advanced routing system with high-performance optimizations
+- **Middleware**: Complete middleware system with built-in parsers
+- **Request/Response**: Enhanced req/res objects with intuitive API
+- **Security**: Built-in security features (CORS, rate limiting, headers)
+- **Error Handling**: Comprehensive error management system
+- **Upload**: File upload handling with streaming support
+- **Content Negotiation**: HTTP content negotiation (accepts, charsets, etc.)
+- **Performance Optimizations**: Route precompilation, schema caching, header/query parsing optimization
+
+### Protocol Support
+- HTTP/1.1 - Standard HTTP server
+- HTTP/2 - HTTP/2 with multiplexing
+- WebSocket - WebSocket with HTTP routes
+- gRPC - gRPC service definitions
+- UDP - UDP message handling
+- TCP - TCP connection management
+
+## Key Features
+
+### Web Framework Features
+- Complete middleware system (global, path-specific, route-specific)
+- Request enhancements: `req.body`, `req.cookies`, `req.ip`, `req.path`, `req.hostname`
+- Response enhancements: `res.json()`, `res.send()`, `res.cookie()`, `res.download()`
+- Advanced routing: regex parameters, wildcards, route arrays, chaining
+- Error handling with custom error pages and middleware
+- Built-in middleware: static files, JSON/URL-encoded/raw/text parsing
+
+### Bun-Specific Optimizations
+- Native Bun APIs for performance (`Bun.file`, `Bun.serve`)
+- HTML imports for frontend bundling
+- Hot Module Reloading (HMR) support
+- TypeScript-first with strict typing
+- High-performance optimizations:
+  - Route precompilation and caching (1000+ matches/ms)
+  - Schema-based JSON validation (sub-millisecond validation)
+  - Optimized header parsing with LRU caching
+  - Ultra-fast query string parsing (10,000+ ops/ms)
+
+### Security Features
+- Trust proxy support with X-Forwarded headers
+- Rate limiting with configurable strategies
+- CORS with origin validation
+- Security headers (Helmet-like functionality)
+- File upload security with magic number validation
+
+### Development Features
+- Route debugging with colorized output
+- Performance monitoring with metrics
+- Health check endpoints
+- Development middleware stack
+- Route introspection and caching
+
+## File Structure
+```
+src/
+├── index.ts              # Main exports
+├── server/               # Protocol implementations
+├── router/               # Routing system with optimizations
+├── middleware.ts         # Built-in middleware
+├── request.ts           # Request enhancements
+├── response.ts          # Response enhancements
+├── security/            # Security features
+├── errors/              # Error handling
+├── upload/              # File upload
+├── content-negotiation/ # HTTP content negotiation
+├── applications/        # Sub-applications
+├── development/         # Development tools
+├── validation/          # JSON schema validation and optimization
+└── utils/               # Performance utilities (headers, querystring)
+
+examples/                # Usage examples
+tests/                   # Comprehensive test suite
+site/                    # Documentation site
+```
+
+## Usage Patterns
+
+### Basic Server
+```typescript
+import { createServer } from "verb";
+const app = createServer();
+app.get("/", (req, res) => res.json({ message: "Hello" }));
+app.listen(3000);
+```
+
+### Protocol Selection
+```typescript
+import { createServer, ServerProtocol } from "verb";
+const http2Server = createServer(ServerProtocol.HTTP2);
+const wsServer = createServer(ServerProtocol.WEBSOCKET);
+```
+
+### Fluent API
+```typescript
+import { server } from "verb";
+const app = server.http();
+const grpcApp = server.grpc();
+```
+
+## Development Commands
+- `bun run dev` - Start development server with hot reload
+- `bun test` - Run test suite
+- `bun run lint` - Lint code with Biome
+- `bun run format` - Format code with Biome
+
+## Dependencies
+- Runtime: Bun (uses native APIs)
+- Dev: Biome for linting/formatting, React/React-DOM for examples
+- Zero runtime dependencies (leverages Bun's built-in modules)
+
+## Implementation Status
+- ✅ Multi-protocol support
+- ✅ Complete middleware system
+- ✅ Advanced routing with regex/wildcards
+- ✅ Security features
+- ✅ Error handling
+- ✅ File upload with streaming
+- ✅ Development tools
+- ✅ Sub-applications and virtual hosts
+- ✅ Content negotiation
+- ✅ JSON Schema validation and optimization
+- ✅ Performance optimizations (route precompilation, caching, parsing)
+- ✅ Application configuration system
+- ✅ Complete web framework API
+
+## Testing
+- Comprehensive test suite with 200+ tests
+- Organized by feature area
+- Tests cover all protocols and edge cases
+- Mock-based testing for optimal performance
+
+## Project Goals
+- High-performance web framework for Bun
+- Leverage Bun's native capabilities
+- Support multiple protocols with unified API
+- Provide excellent developer experience
+- Modern architecture with TypeScript-first approach

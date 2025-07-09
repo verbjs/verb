@@ -116,4 +116,10 @@ export type ServerInstance = {
   withOptions: (options: ListenOptions) => void;
   listen: (port?: number, hostname?: string) => any;
   createFetchHandler: () => (req: globalThis.Request) => Promise<globalThis.Response>;
+  // Application configuration
+  set: (key: string, value: any) => void;
+  getSetting: (key: string) => any;
+  locals: Record<string, any>;
+  mountpath: string;
+  path: () => string;
 };

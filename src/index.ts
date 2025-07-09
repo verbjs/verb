@@ -22,3 +22,5 @@ export * from "./content-negotiation";
 export * from "./applications";
 export * from "./router/advanced";
 export * from "./development";
+export * from "./validation";
+export * from "./middleware/json-optimized";

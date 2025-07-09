@@ -16,12 +16,27 @@ import type {
 import { parseFormData } from "../upload";
 import { parseQuery } from "../utils";
 
-export const createHttpServer = (): ServerInstance => {
+export const createHttpServer = (mountPath = "/"): ServerInstance => {
   const router = createRouter();
   const globalMiddlewares: Middleware[] = [];
   const pathMiddlewares: Map<string, Middleware[]> = new Map();
   let htmlRoutes: RouteConfig | null = null;
   let serverOptions: ListenOptions | null = null;
+  
+  // Application configuration
+  const settings = new Map<string, any>();
+  const locals: Record<string, any> = {};
+  const mountpath = mountPath;
+  
+  // Set default environment settings
+  const env = process.env.VERB_ENV || process.env.BUN_ENV || process.env.NODE_ENV || "development";
+  settings.set("env", env);
+  settings.set("trust proxy", env === "production");
+  settings.set("case sensitive routing", false);
+  settings.set("strict routing", false);
+  settings.set("view cache", env === "production");
+  settings.set("views", process.cwd() + "/views");
+  settings.set("jsonp callback name", "callback");
 
   const addRoute = (method: Method, path: string, middlewares: Middleware[], handler: Handler) => {
     router.addRoute(method, path, middlewares, handler);
@@ -113,6 +128,19 @@ export const createHttpServer = (): ServerInstance => {
 
   const withOptions = (options: ListenOptions) => {
     serverOptions = options;
+  };
+
+  // Application configuration methods
+  const set = (key: string, value: any) => {
+    settings.set(key, value);
+  };
+
+  const getSetting = (key: string) => {
+    return settings.get(key);
+  };
+
+  const path = () => {
+    return mountpath;
   };
 
   const logRoutes = () => {
@@ -361,7 +389,7 @@ export const createHttpServer = (): ServerInstance => {
     return server;
   };
 
-  return {
+  const serverInstance = {
     get,
     post,
     put,
@@ -378,5 +406,13 @@ export const createHttpServer = (): ServerInstance => {
     createFetchHandler,
     // Expose router for introspection
     router,
+    // Application configuration
+    set,
+    getSetting,
+    locals,
+    mountpath,
+    path,
   };
+
+  return serverInstance;
 };
