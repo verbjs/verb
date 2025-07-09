@@ -12,7 +12,7 @@ export enum ServerProtocol {
   UDP = "udp",
   DTLS = "dtls",
   TCP = "tcp",
-  TLS = "tls"
+  TLS = "tls",
 }
 
 export type VerbRequest = globalThis.Request & {
@@ -98,8 +98,25 @@ export type ListenOptions = {
   showRoutes?: boolean;
 };
 
+// Bun routes format types
+export type BunRouteHandler = (
+  req: globalThis.Request,
+) => globalThis.Response | Promise<globalThis.Response>;
+
+export type BunRouteMethodHandlers = {
+  [method in Method]?: BunRouteHandler;
+} & {
+  [method: string]: BunRouteHandler; // Allow custom HTTP methods
+};
+
+export type BunRouteValue =
+  | globalThis.Response // Direct response
+  | BunRouteHandler // Single handler function
+  | BunRouteMethodHandlers // Object with HTTP methods
+  | any; // HTMLBundle or other Bun-specific types
+
 export type RouteConfig = {
-  [path: string]: any; // HTML imports or handlers
+  [path: string]: BunRouteValue;
 };
 
 export type ServerInstance = {

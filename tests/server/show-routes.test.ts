@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { test, expect, mock } from "bun:test";
 import { createServer } from "../../src/index";
 
 test("showRoutes option logs routes when enabled", async () => {
@@ -9,12 +9,15 @@ test("showRoutes option logs routes when enabled", async () => {
   app.get('/users/:id', (req, res) => res.send('User'));
   app.post('/users', (req, res) => res.send('Create'));
   
-  // Capture console output
+  // Mock console.log to capture output
+  const mockLog = mock(() => {});
   const originalLog = console.log;
-  let logOutput = '';
-  console.log = (...args) => {
-    logOutput += args.join(' ') + '\n';
-  };
+  console.log = mockLog;
+  
+  // Mock Bun.serve to avoid real server
+  const mockServe = mock(() => ({ stop: () => {} }));
+  const originalServe = Bun.serve;
+  Bun.serve = mockServe;
   
   try {
     // Configure with showRoutes enabled
@@ -24,22 +27,30 @@ test("showRoutes option logs routes when enabled", async () => {
     });
     
     // Start server (should trigger route logging)
-    const server = app.listen();
-    
-    // Wait a moment for logging
-    await new Promise(resolve => setTimeout(resolve, 10));
+    app.listen();
     
     // Check that routes were logged
+    const logCalls = mockLog.mock.calls.map(call => call.join(' '));
+    const logOutput = logCalls.join('\n');
+    
     expect(logOutput).toContain('📋 HTTP Server Routes:');
     expect(logOutput).toContain('Traditional Routes:');
     expect(logOutput).toContain('GET     /');
     expect(logOutput).toContain('GET     /users/:id (params: id)');
     expect(logOutput).toContain('POST    /users');
     
-    server.stop();
+    // Verify Bun.serve was called with correct config
+    expect(mockServe).toHaveBeenCalledWith(
+      expect.objectContaining({
+        port: 3337,
+        hostname: "localhost",
+        fetch: expect.any(Function)
+      })
+    );
   } finally {
-    // Restore console.log
+    // Restore mocks
     console.log = originalLog;
+    Bun.serve = originalServe;
   }
 });
 
@@ -48,12 +59,15 @@ test("showRoutes disabled by default", async () => {
   
   app.get('/test', (req, res) => res.send('Test'));
   
-  // Capture console output
+  // Mock console.log to capture output
+  const mockLog = mock(() => {});
   const originalLog = console.log;
-  let logOutput = '';
-  console.log = (...args) => {
-    logOutput += args.join(' ') + '\n';
-  };
+  console.log = mockLog;
+  
+  // Mock Bun.serve to avoid real server
+  const mockServe = mock(() => ({ stop: () => {} }));
+  const originalServe = Bun.serve;
+  Bun.serve = mockServe;
   
   try {
     // Configure without showRoutes (should default to false)
@@ -61,15 +75,16 @@ test("showRoutes disabled by default", async () => {
       port: 3338
     });
     
-    const server = app.listen();
-    await new Promise(resolve => setTimeout(resolve, 10));
+    app.listen();
     
     // Should NOT contain route logging
-    expect(logOutput).not.toContain('📋 Registered Routes:');
+    const logCalls = mockLog.mock.calls.map(call => call.join(' '));
+    const logOutput = logCalls.join('\n');
+    expect(logOutput).not.toContain('📋 HTTP Server Routes:');
     
-    server.stop();
   } finally {
     console.log = originalLog;
+    Bun.serve = originalServe;
   }
 });
 
@@ -78,11 +93,15 @@ test("showRoutes shows 'No routes registered' when no routes", async () => {
   
   // Don't add any routes
   
+  // Mock console.log to capture output
+  const mockLog = mock(() => {});
   const originalLog = console.log;
-  let logOutput = '';
-  console.log = (...args) => {
-    logOutput += args.join(' ') + '\n';
-  };
+  console.log = mockLog;
+  
+  // Mock Bun.serve to avoid real server
+  const mockServe = mock(() => ({ stop: () => {} }));
+  const originalServe = Bun.serve;
+  Bun.serve = mockServe;
   
   try {
     app.withOptions({
@@ -90,15 +109,17 @@ test("showRoutes shows 'No routes registered' when no routes", async () => {
       showRoutes: true
     });
     
-    const server = app.listen();
-    await new Promise(resolve => setTimeout(resolve, 10));
+    app.listen();
+    
+    const logCalls = mockLog.mock.calls.map(call => call.join(' '));
+    const logOutput = logCalls.join('\n');
     
     expect(logOutput).toContain('📋 HTTP Server Routes:');
     expect(logOutput).toContain('No routes registered');
     
-    server.stop();
   } finally {
     console.log = originalLog;
+    Bun.serve = originalServe;
   }
 });
 
@@ -116,11 +137,15 @@ test("showRoutes works with HTML routes", async () => {
     }
   });
   
+  // Mock console.log to capture output
+  const mockLog = mock(() => {});
   const originalLog = console.log;
-  let logOutput = '';
-  console.log = (...args) => {
-    logOutput += args.join(' ') + '\n';
-  };
+  console.log = mockLog;
+  
+  // Mock Bun.serve to avoid real server
+  const mockServe = mock(() => ({ stop: () => {} }));
+  const originalServe = Bun.serve;
+  Bun.serve = mockServe;
   
   try {
     app.withOptions({
@@ -128,8 +153,10 @@ test("showRoutes works with HTML routes", async () => {
       showRoutes: true
     });
     
-    const server = app.listen();
-    await new Promise(resolve => setTimeout(resolve, 10));
+    app.listen();
+    
+    const logCalls = mockLog.mock.calls.map(call => call.join(' '));
+    const logOutput = logCalls.join('\n');
     
     expect(logOutput).toContain('📋 HTTP Server Routes:');
     expect(logOutput).toContain('Traditional Routes:');
@@ -138,8 +165,22 @@ test("showRoutes works with HTML routes", async () => {
     expect(logOutput).toContain('GET     / (HTML import)');
     expect(logOutput).toContain('GET     /api/hello (HTML route)');
     
-    server.stop();
+    // Verify Bun.serve was called with routes config
+    expect(mockServe).toHaveBeenCalledWith(
+      expect.objectContaining({
+        port: 3340,
+        hostname: "localhost",
+        routes: expect.objectContaining({
+          '/': expect.any(Response),
+          '/api/hello': expect.objectContaining({
+            GET: expect.any(Function)
+          })
+        })
+      })
+    );
+    
   } finally {
     console.log = originalLog;
+    Bun.serve = originalServe;
   }
 });
