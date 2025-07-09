@@ -1,10 +1,11 @@
 export { 
   createServer, 
   createUnifiedServer, 
-  ProtocolGateway, 
   createProtocolGateway,
+  createProtocolGatewayWithState,
   server,
   ServerProtocol,
+  type ProtocolGateway,
   type UnifiedServerInstance 
 } from "./server";
 export * from "./types";

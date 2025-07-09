@@ -2,11 +2,17 @@ export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPT
 
 export enum ServerProtocol {
   HTTP = "http",
-  HTTP2 = "http2", 
+  HTTPS = "https",
+  HTTP2 = "http2",
+  HTTP2S = "http2s",
   WEBSOCKET = "websocket",
+  WEBSOCKETS = "websockets",
   GRPC = "grpc",
+  GRPCS = "grpcs",
   UDP = "udp",
-  TCP = "tcp"
+  DTLS = "dtls",
+  TCP = "tcp",
+  TLS = "tls"
 }
 
 export type VerbRequest = globalThis.Request & {

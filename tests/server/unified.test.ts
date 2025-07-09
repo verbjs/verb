@@ -2,9 +2,9 @@ import { test, expect } from "bun:test";
 import { 
   createServer, 
   createUnifiedServer, 
-  ProtocolGateway, 
   createProtocolGateway,
-  server
+  server,
+  type ProtocolGateway
 } from "../../src/server/unified";
 import { ServerProtocol } from "../../src/types";
 
@@ -311,15 +311,15 @@ test("Unified server - error handling for invalid protocol", () => {
   }).toThrow("Unsupported protocol: invalid");
 });
 
-test("Protocol Gateway - class instantiation", () => {
-  const gateway = new ProtocolGateway();
+test("Protocol Gateway - functional instantiation", () => {
+  const gateway = createProtocolGateway();
   
   expect(gateway).toBeDefined();
   expect(gateway.getCurrentProtocol()).toBe(ServerProtocol.HTTP);
 });
 
-test("Protocol Gateway - class instantiation with custom protocol", () => {
-  const gateway = new ProtocolGateway(ServerProtocol.TCP);
+test("Protocol Gateway - functional instantiation with custom protocol", () => {
+  const gateway = createProtocolGateway(ServerProtocol.TCP);
   
   expect(gateway.getCurrentProtocol()).toBe(ServerProtocol.TCP);
 });
