@@ -1,54 +1,23 @@
 {
-  "name": "verb",
+  "name": "bunplate",
+  "module": "src/index.ts",
   "type": "module",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "build": "bun run build:cli && bun run build:server && bun run build:plugins && bun run build:auth && bun run build:templates && bun run build:site",
-    "build:cli": "cd packages/cli && bun run build",
-    "build:server": "cd packages/server && bun run build",
-    "build:plugins": "cd packages/plugins && bun run build",
-    "build:auth": "cd packages/auth && bun run build",
-    "build:templates": "cd packages/templates && bun run build",
-    "build:site": "cd site && bun run build",
-    "dev:site": "cd site && bun run dev",
-    "cli": "bun packages/cli/src/main.ts",
-    "site:generate": "bun run cli site generate --input site/content --output site/dist",
-    "site:serve": "bun run cli site generate --input site/content --output site/dist --serve --watch",
-    "clean": "rm -rf packages/*/dist",
-    "clean:auth": "cd packages/auth && bun run clean",
-    "clean:site": "rm -rf site/dist",
-    "clean:test": "find . -name 'test-*' -type f -delete",
-    "test": "bun test",
-    "test:clean": "bun test && bun run clean:test",
-    "validate:templates": "cd packages/templates && bun run validate",
-    "lint": "biome lint --fix ./packages/**/src/**/*.ts",
-    "lint:check": "biome lint ./packages/**/src/**/*.ts",
-    "format": "biome format --write ./packages/**/src/**/*.ts",
-    "format:check": "biome format ./packages/**/src/**/*.ts",
-    "publish:all": "bun run build && bun run publish:server && bun run publish:auth && bun run publish:plugins && bun run publish:cli && bun run publish:templates",
-    "publish:server": "cd packages/server && bun publish",
-    "publish:auth": "cd packages/auth && bun publish",
-    "publish:plugins": "cd packages/plugins && bun publish",
-    "publish:cli": "cd packages/cli && bun publish",
-    "publish:templates": "cd packages/templates && bun publish",
-    "version:patch": "bun run version:bump patch",
-    "version:minor": "bun run version:bump minor",
-    "version:major": "bun run version:bump major",
-    "version:sync": "bun run version:bump sync",
-    "version:bump": "bun run scripts/version-bump.ts"
+    "dev": "bun run --hot src/main.ts",
+    "lint": "biome lint --fix src/*.ts",
+    "format": "biome format --fix src/*.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.0.0",
-    "@types/bun": "latest"
+    "@biomejs/biome": "2.0.6",
+    "@types/bun": "^1.2.18",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.8.3"
   },
-  "dependencies": {
-    "marked-gfm-heading-id": "^4.1.1",
-    "marked-highlight": "^2.2.1"
-  }
+  "dependencies": {}
 }

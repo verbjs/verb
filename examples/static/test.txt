@@ -1,0 +1,12 @@
+This is a test text file served by Verb's static middleware.
+
+The static middleware supports:
+- Automatic MIME type detection
+- ETag generation for caching
+- If-Modified-Since handling
+- Custom cache control headers
+- Directory index files
+- File extension fallback
+
+This file should be served with Content-Type: text/plain
+and appropriate caching headers if configured.

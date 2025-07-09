@@ -1,8 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
-  "files": {
-    "includes": ["packages/**/src/**/*.ts"]
-  },
+  "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -14,22 +11,17 @@
     "rules": {
       "recommended": true,
       "style": {
-        "useBlockStatements": "warn",
+        "useBlockStatements": "error",
         "useConst": "error",
         "useTemplate": "error",
-        "noNonNullAssertion": "warn"
+        "useImportType": "off"
       },
       "correctness": {
-        "noUnusedVariables": "warn",
-        "noUnusedImports": "warn",
+        "noUnusedVariables": "error",
         "useExhaustiveDependencies": "error"
-      },
-      "complexity": {
-        "noStaticOnlyClass": "warn"
       },
       "suspicious": {
         "noDebugger": "error",
-        "noConsole": "off",
         "noExplicitAny": "off"
       }
     }

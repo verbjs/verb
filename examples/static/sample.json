@@ -1,0 +1,12 @@
+{
+  "message": "This is a sample JSON file",
+  "features": [
+    "Static file serving",
+    "MIME type detection",
+    "Caching headers",
+    "ETag support"
+  ],
+  "middleware": "verb.static",
+  "timestamp": "2025-01-07T21:30:00.000Z",
+  "status": "success"
+}

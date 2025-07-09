@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verb File Upload Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .upload-form {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        .file-info {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .result {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Verb File Upload Example</h1>
+    
+    <div class="upload-form">
+        <h2>Single File Upload</h2>
+        <form id="singleForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="file">Choose File:</label>
+                <input type="file" id="file" name="file" required>
+                <div id="fileInfo" class="file-info" style="display: none;"></div>
+            </div>
+            
+            <button type="submit">Upload File</button>
+        </form>
+    </div>
+
+    <div class="upload-form">
+        <h2>Multiple Files Upload</h2>
+        <form id="multipleForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <input type="text" id="description" name="description" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="files">Choose Files:</label>
+                <input type="file" id="files" name="files" multiple required>
+                <div id="filesInfo" class="file-info" style="display: none;"></div>
+            </div>
+            
+            <button type="submit">Upload Files</button>
+        </form>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        function showFileInfo(input, infoDiv) {
+            input.addEventListener('change', function() {
+                const files = this.files;
+                if (files.length > 0) {
+                    let info = '';
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        info += `${file.name} (${(file.size / 1024).toFixed(1)}KB, ${file.type})<br>`;
+                    }
+                    infoDiv.innerHTML = info;
+                    infoDiv.style.display = 'block';
+                } else {
+                    infoDiv.style.display = 'none';
+                }
+            });
+        }
+
+        showFileInfo(document.getElementById('file'), document.getElementById('fileInfo'));
+        showFileInfo(document.getElementById('files'), document.getElementById('filesInfo'));
+
+        async function handleSubmit(form, endpoint) {
+            const formData = new FormData(form);
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '<p>Uploading...</p>';
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <h3>✅ Upload Successful!</h3>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Upload Failed</h3>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Network Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        document.getElementById('singleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleSubmit(this, '/upload/single');
+        });
+
+        document.getElementById('multipleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleSubmit(this, '/upload/multiple');
+        });
+    </script>
+</body>
+</html>
