@@ -49,6 +49,7 @@ bun run dev
 - Native Bun APIs for performance (`Bun.file`, `Bun.serve`)
 - HTML imports for frontend bundling
 - Hot Module Reloading (HMR) support
+- Bun native routes with `app.withRoutes()` for fullstack applications
 - TypeScript-first with strict typing
 - High-performance optimizations:
   - Route precompilation and caching (1000+ matches/ms)
@@ -110,6 +111,43 @@ const http2Server = createServer(ServerProtocol.HTTP2);
 const wsServer = createServer(ServerProtocol.WEBSOCKET);
 ```
 
+### Bun Native Routes (Fullstack)
+```typescript
+import { createServer } from "verb";
+import homepage from "./index.html";
+
+const app = createServer();
+
+app.withRoutes({
+  // HTML imports with automatic bundling
+  "/": homepage,
+  "/dashboard": dashboardHTML,
+  
+  // API endpoints
+  "/api/users": {
+    async GET(req) {
+      return Response.json(await getUsers());
+    },
+    async POST(req) {
+      const user = await req.json();
+      return Response.json(await createUser(user));
+    }
+  },
+  
+  // Parameterized routes
+  "/api/users/:id": async (req) => {
+    const { id } = req.params;
+    return Response.json(await getUser(id));
+  }
+});
+
+app.withOptions({
+  development: { hmr: true, console: true }
+});
+
+app.listen(3000);
+```
+
 ### Fluent API
 ```typescript
 import { server } from "verb";
@@ -142,6 +180,7 @@ const grpcApp = server.grpc();
 - ✅ Performance optimizations (route precompilation, caching, parsing)
 - ✅ Application configuration system
 - ✅ Complete web framework API
+- ✅ Bun native routes with `app.withRoutes()` for fullstack applications
 
 ## Testing
 - Comprehensive test suite with 200+ tests

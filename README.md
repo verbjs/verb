@@ -23,6 +23,7 @@ bun run dev
 - **Unified API** - Same interface across all protocols
 - **Runtime Protocol Switching** - Switch between protocols dynamically
 - **Built for Bun** - Native Bun APIs for maximum performance
+- **Bun Native Routes** - `app.withRoutes()` for fullstack applications with HTML imports
 - **TypeScript First** - Full type safety out of the box
 - **Application Configuration** - Complete app settings, locals, and environment detection
 - **Advanced Security** - Built-in CORS, rate limiting, and security headers
@@ -164,6 +165,62 @@ tcpServer.onConnection((connection) => {
 });
 ```
 
+### Bun Native Routes (Fullstack)
+
+Use `app.withRoutes()` to leverage Bun's native routing system with HTML imports:
+
+```typescript
+import { createServer } from "verb";
+import homepage from "./index.html";
+import dashboard from "./dashboard.html";
+
+const app = createServer();
+
+app.withRoutes({
+  // HTML imports with automatic bundling
+  "/": homepage,
+  "/dashboard": dashboard,
+  
+  // API endpoints
+  "/api/users": {
+    async GET(req) {
+      const users = await getUsers();
+      return Response.json(users);
+    },
+    async POST(req) {
+      const { name, email } = await req.json();
+      const user = await createUser(name, email);
+      return Response.json(user);
+    }
+  },
+  
+  // Parameterized routes
+  "/api/users/:id": async (req) => {
+    const { id } = req.params;
+    const user = await getUserById(id);
+    return Response.json(user);
+  },
+  
+  // Complex parameterized routes
+  "/api/users/:userId/posts/:postId": async (req) => {
+    const { userId, postId } = req.params;
+    const post = await getPostByIds(userId, postId);
+    return Response.json(post);
+  }
+});
+
+// Enable development features
+app.withOptions({
+  development: {
+    hmr: true,      // Hot module reloading
+    console: true   // Enhanced console logging
+  },
+  showRoutes: true  // Show registered routes on startup
+});
+
+app.listen(3000);
+```
+
 ### Fluent API
 
 ```typescript
@@ -234,6 +291,10 @@ app.patch(path, handler)
 // Middleware
 app.use(middleware)
 app.use(path, middleware)
+
+// Bun native routes
+app.withRoutes(routesConfig)
+app.withOptions(serverOptions)
 
 // Application configuration
 app.set(key, value)
@@ -380,6 +441,8 @@ app.listen(3000);
 Built specifically for Bun runtime with native optimizations:
 
 - **Native Bun APIs** - Uses `Bun.serve()`, `Bun.file()`, etc.
+- **Bun Native Routes** - `app.withRoutes()` leverages Bun's native routing system
+- **HTML Imports** - Automatic bundling with TypeScript, JSX, and CSS support
 - **Zero runtime dependencies** - Leverages Bun's built-in modules
 - **TypeScript-first** - No compilation overhead
 - **HTTP/2 support** - Native HTTP/2 multiplexing
