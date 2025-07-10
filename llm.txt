@@ -16,7 +16,7 @@ Verb is a high-performance, modern server framework built specifically for Bun r
 bun install verb
 # or
 bun add verb
-```
+``` 
 
 ## Core APIs
 
