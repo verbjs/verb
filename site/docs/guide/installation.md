@@ -160,7 +160,7 @@ console.log(`🚀 Server running on http://localhost:${port}`);
 
 Create a `.env` file:
 
-```env
+```bash
 PORT=3000
 NODE_ENV=development
 DEBUG=true
@@ -190,7 +190,7 @@ bun dist/server.js
 
 Create a `Dockerfile`:
 
-```dockerfile
+```docker
 FROM oven/bun:latest
 
 WORKDIR /app
@@ -353,7 +353,7 @@ bun test
 Now that Verb is installed, check out:
 
 - [Getting Started Guide](/guide/getting-started) - Build your first server
-- [Multi-Protocol Support](/guide/multi-protocol) - Learn about different protocols
+- [Protocol Support](/guide/protocols/http) - Learn about different protocols
 - [Examples](/examples/) - Real-world examples
 
 ## Support

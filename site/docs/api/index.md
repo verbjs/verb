@@ -4,7 +4,7 @@ Welcome to the Verb API reference. This section provides comprehensive documenta
 
 ## Core APIs
 
-### [`createServer(protocol?)`](/api/create-server)
+### [`createServer(protocol?)`](/api/server-creation)
 Create a new server instance with optional protocol specification.
 
 ```typescript
@@ -15,7 +15,7 @@ const httpsApp = createServer(ServerProtocol.HTTPS);
 const wsApp = createServer(ServerProtocol.WEBSOCKET);
 ```
 
-### [`ServerProtocol`](/api/server-protocol)
+### ServerProtocol
 Enum defining all supported protocols.
 
 ```typescript
@@ -35,7 +35,7 @@ enum ServerProtocol {
 }
 ```
 
-### [`createProtocolGateway(defaultProtocol?)`](/api/protocol-gateway)
+### [`createProtocolGateway(defaultProtocol?)`](/guide/protocol-gateway)
 Create a protocol gateway for runtime protocol switching.
 
 ```typescript
@@ -48,20 +48,15 @@ const httpsGateway = createProtocolGateway(ServerProtocol.HTTPS);
 ## Server Types
 
 ### HTTP-based Servers
-- [`HTTP Server`](/api/servers/http) - Standard HTTP/1.1 server
-- [`HTTPS Server`](/api/servers/https) - Secure HTTP server with TLS
-- [`HTTP/2 Server`](/api/servers/http2) - HTTP/2 server with multiplexing
-- [`HTTP/2 Secure Server`](/api/servers/http2s) - HTTP/2 with TLS
-- [`WebSocket Server`](/api/servers/websocket) - WebSocket server with HTTP fallback
-- [`WebSocket Secure Server`](/api/servers/websockets) - Secure WebSocket server
+- [HTTP Server](/guide/protocols/http) - Standard HTTP/1.1 server
+- [HTTPS Server](/guide/protocols/http) - Secure HTTP server with TLS
+- [HTTP/2 Server](/guide/protocols/http2) - HTTP/2 server with multiplexing
+- [WebSocket Server](/guide/protocols/websocket) - WebSocket server with HTTP fallback
 
 ### Non-HTTP Servers
-- [`gRPC Server`](/api/servers/grpc) - gRPC service server
-- [`gRPC Secure Server`](/api/servers/grpcs) - Secure gRPC server
-- [`UDP Server`](/api/servers/udp) - UDP message server
-- [`DTLS Server`](/api/servers/dtls) - Secure UDP server
-- [`TCP Server`](/api/servers/tcp) - TCP connection server
-- [`TLS Server`](/api/servers/tls) - Secure TCP server
+- [gRPC Server](/guide/protocols/grpc) - gRPC service server
+- [UDP Server](/guide/protocols/udp) - UDP message server
+- [TCP Server](/guide/protocols/tcp) - TCP connection server
 
 ## Common Interface
 
@@ -323,7 +318,7 @@ gateway.listen(3002);
 
 ## Next Steps
 
-- Explore specific [server types](/api/servers/http)
+- Explore [HTTP Protocol Guide](/guide/protocols/http)
 - Check out [examples](/examples/) for real-world usage
 - Learn about [protocol-specific features](/guide/protocols/http)
 - Review [performance optimization](/guide/performance)

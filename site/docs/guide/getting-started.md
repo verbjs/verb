@@ -1,6 +1,42 @@
 # Getting Started
 
-This guide will help you get started with Verb quickly and efficiently.
+Get up and running with Verb in less than 5 minutes! This guide will walk you through creating your first multi-protocol server.
+
+## Quick Start
+
+Install Verb and create your first server in seconds:
+
+```bash
+# Install Verb
+bun install verb
+```
+
+Create your server:
+
+```typescript
+// server.ts
+import { createServer } from "verb";
+
+const app = createServer();
+
+app.get("/", (req, res) => {
+  res.json({ message: "Hello World!" });
+});
+
+app.listen(3000);
+console.log("Server running on http://localhost:3000");
+```
+
+Run your server:
+
+```bash
+bun server.ts
+```
+
+Visit <a href="http://localhost:3000" target="_blank" rel="noreferrer">http://localhost:3000</a> and you'll see:
+```json
+{ "message": "Hello World!" }
+```
 
 ## Prerequisites
 
@@ -254,11 +290,79 @@ const host = process.env.HOST || "localhost";
 app.listen(port, host);
 ```
 
+## Advanced Features Preview
+
+### Fullstack with Bun Routes
+
+Build fullstack applications with HTML imports and automatic bundling:
+
+```typescript
+import { createServer } from "verb";
+import homepage from "./index.html"; // HTML import
+
+const app = createServer();
+
+app.withRoutes({
+  // Serve HTML with automatic bundling
+  "/": homepage,
+  
+  // API routes
+  "/api/users": {
+    GET: async () => Response.json(await getUsers()),
+    POST: async (req) => {
+      const user = await createUser(await req.json());
+      return Response.json(user, { status: 201 });
+    }
+  }
+});
+
+app.withOptions({
+  port: 3000,
+  development: {
+    hmr: true,     // Hot module reloading
+    console: true  // Enhanced console logging
+  }
+});
+
+app.listen();
+```
+
+### Protocol Gateway
+
+Connect different protocols seamlessly:
+
+```typescript
+import { createGateway } from "verb";
+
+const gateway = createGateway();
+
+// Add multiple protocol servers
+const httpServer = gateway.addServer("http", { port: 3000 });
+const wsServer = gateway.addServer("websocket", { port: 3001 });
+
+// HTTP to WebSocket bridge
+httpServer.post("/broadcast", (req, res) => {
+  const { message } = req.body;
+  
+  // Send to all WebSocket clients
+  gateway.broadcast("websocket", { 
+    type: "message", 
+    data: message 
+  });
+  
+  res.json({ success: true });
+});
+
+gateway.start();
+```
+
 ## Next Steps
 
 Now that you have a basic understanding of Verb, explore:
 
-- [Multi-Protocol Support](/guide/multi-protocol) - Learn about different protocols
+- [HTTP Protocol](/guide/protocols/http) - Learn about HTTP servers
+- [WebSocket Protocol](/guide/protocols/websocket) - Real-time communication
+- [gRPC Protocol](/guide/protocols/grpc) - High-performance RPC
 - [Protocol Gateway](/guide/protocol-gateway) - Runtime protocol switching
 - [Middleware](/guide/middleware) - Advanced middleware patterns
 - [API Reference](/api/) - Complete API documentation
