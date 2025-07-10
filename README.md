@@ -1,20 +1,41 @@
 # Verb
 
-A fast, modern server framework for Bun with multi-protocol support. Build HTTP, HTTP/2, WebSocket, gRPC, UDP, and TCP servers with the same intuitive API.
+> A fast, modern server framework built specifically for Bun runtime with multi-protocol support
 
-## Quick Start
+[![npm version](https://badge.fury.io/js/verb.svg)](https://badge.fury.io/js/verb)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=flat&logo=bun&logoColor=white)](https://bun.sh)
+
+## 📋 Requirements
+
+**⚠️ Verb requires Bun runtime** - it won't work with Node.js, as it uses Bun-specific APIs.
+
+- **Bun**: >= 1.0.0
+- **TypeScript**: >= 5.8.3 (peer dependency)
+
+## 📦 Installation
 
 ```bash
-# Install from GitHub
-bun add github:wess/verb
+# Install Bun (if you haven't already)
+curl -fsSL https://bun.sh/install | bash
 
-# Or clone and install locally
-git clone https://github.com/wess/verb.git
-cd verb
-bun install
+# Install Verb
+bun add verb
+```
 
-# Start development server
-bun run dev
+## 🚀 Quick Start
+
+```typescript
+import { createServer } from "verb";
+
+const app = createServer();
+
+app.get("/", (req, res) => {
+  res.json({ message: "Hello Verb!" });
+});
+
+app.listen(3000);
+console.log("Server running on http://localhost:3000");
 ```
 
 ## Features

@@ -1,0 +1,57 @@
+# Development files
+.DS_Store
+.env*
+.vscode/
+.idea/
+*.log
+*.tgz
+
+# Test files
+tests/
+test/
+*.test.*
+*.spec.*
+coverage/
+.nyc_output/
+
+# Development directories
+examples/
+docs/
+site/
+scripts/check-package-manager.ts
+scripts/post-install-info.ts
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Git
+.git/
+.gitignore
+
+# Documentation development
+README.dev.md
+CHANGELOG.md
+CONTRIBUTING.md
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# OS generated files
+Thumbs.db
+
+# Package manager files
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Only include what's needed for the package
+!src/
+!README.md
+!LICENSE
+!package.json
+!llm.txt
+!VERSION

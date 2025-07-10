@@ -1,196 +1,929 @@
 # Verb - Multi-Protocol Server Framework
 
 ## Overview
-Verb is a fast, modern server framework for Bun that provides unified API for multiple protocols (HTTP, HTTP/2, WebSocket, gRPC, UDP, TCP). It's designed for high-performance applications with complete middleware support and advanced routing capabilities.
+Verb is a high-performance, modern server framework built specifically for Bun runtime. It provides a unified API for building applications across multiple protocols (HTTP, HTTP/2, WebSocket, gRPC, UDP, TCP) with complete TypeScript support and functional programming approach.
 
-## Quick Start
+## Key Characteristics for AI Development
+- **Zero Classes**: Pure functional approach - no OOP patterns
+- **Bun-First**: Optimized for Bun runtime with native API usage
+- **TypeScript-First**: Complete type safety and IntelliSense support
+- **Protocol Agnostic**: Single API for multiple network protocols
+- **Performance Focused**: Optimized parsing, routing, and middleware execution
+- **Modern Patterns**: Async/await, Promises, streaming support
+
+## Installation & Setup
 ```bash
-bun install
-bun run dev
+bun install verb
+# or
+bun add verb
 ```
 
-## Core Architecture
+## Core APIs
 
-### Main Entry Point
-- `src/index.ts` - Central exports for all framework components
-- Uses functional programming approach (no classes)
-- Built specifically for Bun runtime
-
-### Key Components
-- **Server**: Multi-protocol server creation (`createServer`, `createUnifiedServer`)
-- **Router**: Advanced routing system with high-performance optimizations
-- **Middleware**: Complete middleware system with built-in parsers
-- **Request/Response**: Enhanced req/res objects with intuitive API
-- **Security**: Built-in security features (CORS, rate limiting, headers)
-- **Error Handling**: Comprehensive error management system
-- **Upload**: File upload handling with streaming support
-- **Content Negotiation**: HTTP content negotiation (accepts, charsets, etc.)
-- **Performance Optimizations**: Route precompilation, schema caching, header/query parsing optimization
-
-### Protocol Support
-- HTTP/1.1 - Standard HTTP server
-- HTTP/2 - HTTP/2 with multiplexing
-- WebSocket - WebSocket with HTTP routes
-- gRPC - gRPC service definitions
-- UDP - UDP message handling
-- TCP - TCP connection management
-
-## Key Features
-
-### Web Framework Features
-- Complete middleware system (global, path-specific, route-specific)
-- Request enhancements: `req.body`, `req.cookies`, `req.ip`, `req.path`, `req.hostname`
-- Response enhancements: `res.json()`, `res.send()`, `res.cookie()`, `res.download()`
-- Advanced routing: regex parameters, wildcards, route arrays, chaining
-- Error handling with custom error pages and middleware
-- Built-in middleware: static files, JSON/URL-encoded/raw/text parsing
-
-### Bun-Specific Optimizations
-- Native Bun APIs for performance (`Bun.file`, `Bun.serve`)
-- HTML imports for frontend bundling
-- Hot Module Reloading (HMR) support
-- Bun native routes with `app.withRoutes()` for fullstack applications
-- TypeScript-first with strict typing
-- High-performance optimizations:
-  - Route precompilation and caching (1000+ matches/ms)
-  - Schema-based JSON validation (sub-millisecond validation)
-  - Optimized header parsing with LRU caching
-  - Ultra-fast query string parsing (10,000+ ops/ms)
-
-### Security Features
-- Trust proxy support with X-Forwarded headers
-- Rate limiting with configurable strategies
-- CORS with origin validation
-- Security headers (Helmet-like functionality)
-- File upload security with magic number validation
-
-### Development Features
-- Route debugging with colorized output
-- Performance monitoring with metrics
-- Health check endpoints
-- Development middleware stack
-- Route introspection and caching
-
-## File Structure
-```
-src/
-├── index.ts              # Main exports
-├── server/               # Protocol implementations
-├── router/               # Routing system with optimizations
-├── middleware.ts         # Built-in middleware
-├── request.ts           # Request enhancements
-├── response.ts          # Response enhancements
-├── security/            # Security features
-├── errors/              # Error handling
-├── upload/              # File upload
-├── content-negotiation/ # HTTP content negotiation
-├── applications/        # Sub-applications
-├── development/         # Development tools
-├── validation/          # JSON schema validation and optimization
-└── utils/               # Performance utilities (headers, querystring)
-
-examples/                # Usage examples
-tests/                   # Comprehensive test suite
-site/                    # Documentation site
-```
-
-## Usage Patterns
-
-### Basic Server
+### Server Creation
 ```typescript
-import { createServer } from "verb";
+import { createServer, server, ServerProtocol } from "verb";
+
+// Basic HTTP server
 const app = createServer();
-app.get("/", (req, res) => res.json({ message: "Hello" }));
-app.listen(3000);
-```
 
-### Protocol Selection
-```typescript
-import { createServer, ServerProtocol } from "verb";
+// Protocol-specific servers
+const httpServer = createServer(ServerProtocol.HTTP);
+const httpsServer = createServer(ServerProtocol.HTTPS);
 const http2Server = createServer(ServerProtocol.HTTP2);
 const wsServer = createServer(ServerProtocol.WEBSOCKET);
-```
+const grpcServer = createServer(ServerProtocol.GRPC);
+const udpServer = createServer(ServerProtocol.UDP);
+const tcpServer = createServer(ServerProtocol.TCP);
 
-### Bun Native Routes (Fullstack)
-```typescript
-import { createServer } from "verb";
-import homepage from "./index.html";
-
-const app = createServer();
-
-app.withRoutes({
-  // HTML imports with automatic bundling
-  "/": homepage,
-  "/dashboard": dashboardHTML,
-  
-  // API endpoints
-  "/api/users": {
-    async GET(req) {
-      return Response.json(await getUsers());
-    },
-    async POST(req) {
-      const user = await req.json();
-      return Response.json(await createUser(user));
-    }
-  },
-  
-  // Parameterized routes
-  "/api/users/:id": async (req) => {
-    const { id } = req.params;
-    return Response.json(await getUser(id));
-  }
-});
-
-app.withOptions({
-  development: { hmr: true, console: true }
-});
-
-app.listen(3000);
-```
-
-### Fluent API
-```typescript
-import { server } from "verb";
-const app = server.http();
+// Fluent API alternative
+const app2 = server.http();
+const wsApp = server.websocket();
 const grpcApp = server.grpc();
 ```
 
-## Development Commands
-- `bun run dev` - Start development server with hot reload
-- `bun test` - Run test suite
-- `bun run lint` - Lint code with Biome
-- `bun run format` - Format code with Biome
+### Request Object (VerbRequest)
+Enhanced Request with additional properties:
+```typescript
+type VerbRequest = globalThis.Request & {
+  params?: Record<string, string>;        // Route parameters
+  query?: Record<string, string>;         // Query string parameters
+  body?: any;                             // Parsed body (JSON, form, etc.)
+  cookies?: Record<string, string>;       // Parsed cookies
+  ip?: string;                            // Client IP address
+  path?: string;                          // Request path
+  hostname?: string;                      // Request hostname
+  protocol?: string;                      // Protocol (http/https)
+  secure?: boolean;                       // HTTPS flag
+  xhr?: boolean;                          // XMLHttpRequest flag
+  
+  // Helper methods
+  get?: (header: string) => string | undefined;
+  accepts?: (types?: string | string[]) => string | string[] | null;
+  acceptsCharsets?: (charsets?: string | string[]) => string | string[] | null;
+  acceptsEncodings?: (encodings?: string | string[]) => string | string[] | null;
+  acceptsLanguages?: (languages?: string | string[]) => string | string[] | null;
+  formData?: () => Promise<{ fields: Record<string, string>; files: Record<string, any> }>;
+};
+```
 
-## Dependencies
-- Runtime: Bun (uses native APIs)
-- Dev: Biome for linting/formatting, React/React-DOM for examples
-- Zero runtime dependencies (leverages Bun's built-in modules)
+### Response Object (VerbResponse)
+Chainable response interface:
+```typescript
+type VerbResponse = {
+  send: (data: string | object | number | boolean) => VerbResponse;
+  json: (data: any) => VerbResponse;
+  status: (code: number) => VerbResponse;
+  redirect: (url: string, code?: number) => VerbResponse;
+  html: (content: string) => VerbResponse;
+  text: (content: string) => VerbResponse;
+  react: (component: any, props?: any) => VerbResponse;
+  header: (name: string, value: string) => VerbResponse;
+  headers: (headers: Record<string, string>) => VerbResponse;
+  cookie: (name: string, value: string, options?: any) => VerbResponse;
+  clearCookie: (name: string) => VerbResponse;
+  type: (contentType: string) => VerbResponse;
+  attachment: (filename?: string) => VerbResponse;
+  download: (path: string, filename?: string, options?: any) => Promise<VerbResponse>;
+  sendFile: (path: string, options?: any) => Promise<VerbResponse>;
+  vary: (header: string) => VerbResponse;
+  end: () => VerbResponse;
+};
+```
 
-## Implementation Status
-- ✅ Multi-protocol support
-- ✅ Complete middleware system
-- ✅ Advanced routing with regex/wildcards
-- ✅ Security features
-- ✅ Error handling
-- ✅ File upload with streaming
-- ✅ Development tools
-- ✅ Sub-applications and virtual hosts
-- ✅ Content negotiation
-- ✅ JSON Schema validation and optimization
-- ✅ Performance optimizations (route precompilation, caching, parsing)
-- ✅ Application configuration system
-- ✅ Complete web framework API
-- ✅ Bun native routes with `app.withRoutes()` for fullstack applications
+### Handler Types
+```typescript
+type Handler = (
+  req: VerbRequest,
+  res: VerbResponse,
+) => void | Promise<void> | VerbResponse | Promise<VerbResponse>;
 
-## Testing
-- Comprehensive test suite with 200+ tests
-- Organized by feature area
-- Tests cover all protocols and edge cases
-- Mock-based testing for optimal performance
+type Middleware = (
+  req: VerbRequest,
+  res: VerbResponse,
+  next: () => void,
+) => void | Promise<void>;
 
-## Project Goals
-- High-performance web framework for Bun
-- Leverage Bun's native capabilities
-- Support multiple protocols with unified API
-- Provide excellent developer experience
-- Modern architecture with TypeScript-first approach
+type ErrorHandler = (
+  err: Error,
+  req: VerbRequest,
+  res: VerbResponse,
+  next: () => void,
+) => void | Promise<void>;
+```
+
+## Routing System
+
+### Basic Routes
+```typescript
+app.get("/", (req, res) => res.json({ message: "Hello World" }));
+app.post("/users", (req, res) => res.json({ user: req.body }));
+app.put("/users/:id", (req, res) => res.json({ id: req.params.id }));
+app.delete("/users/:id", (req, res) => res.status(204).end());
+app.patch("/users/:id", (req, res) => res.json({ updated: true }));
+app.head("/users", (req, res) => res.status(200).end());
+app.options("/users", (req, res) => res.header("Allow", "GET,POST").end());
+```
+
+### Advanced Routing
+```typescript
+// Multiple paths
+app.get(["/", "/home", "/index"], handler);
+
+// Route parameters with regex
+app.get("/users/:id(\\d+)", handler);          // Numeric ID only
+app.get("/files/:name(.+)", handler);          // Any characters including /
+
+// Wildcard routes
+app.get("/api/*", handler);                    // Matches /api/anything
+app.get("/static/**", handler);                // Matches /static/path/to/file
+
+// Route chaining
+app.route("/users")
+  .get(getAllUsers)
+  .post(createUser)
+  .put(updateUser)
+  .delete(deleteUser);
+
+// Conditional routing
+app.get("/admin/*", requireAuth, adminHandler);
+```
+
+### Route Arrays & Multiple Handlers
+```typescript
+// Multiple middleware and handlers
+app.get("/protected", 
+  authenticateUser,
+  checkPermissions,
+  (req, res) => res.json({ data: "secret" })
+);
+
+// Array of paths with middleware
+app.use(["/api", "/v1"], cors(), rateLimiting());
+```
+
+## Middleware System
+
+### Global Middleware
+```typescript
+import { middleware } from "verb";
+
+// Built-in middleware
+app.use(middleware.json());                    // JSON body parsing
+app.use(middleware.urlencoded());              // URL-encoded forms
+app.use(middleware.raw());                     // Raw buffer parsing
+app.use(middleware.text());                    // Text parsing
+app.use(middleware.static("public"));          // Static file serving
+app.use(middleware.cors());                    // CORS headers
+app.use(middleware.helmet());                  // Security headers
+
+// Custom middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+```
+
+### Path-Specific Middleware
+```typescript
+// Apply middleware to specific paths
+app.use("/api", rateLimiting());
+app.use("/uploads", fileUploadMiddleware());
+app.use("/admin", requireAuth, requireAdmin);
+```
+
+### Error Handling Middleware
+```typescript
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+```
+
+## Bun Native Routes (Fullstack Development)
+
+### HTML Imports & Frontend Bundling
+```typescript
+import { createServer } from "verb";
+import homepage from "./index.html";      // HTML file import
+import dashboard from "./dashboard.html";
+
+const app = createServer();
+
+// HTML imports with automatic bundling
+app.withRoutes({
+  "/": homepage,                          // Serves HTML with bundled assets
+  "/dashboard": dashboard,
+  
+  // API endpoints alongside HTML routes
+  "/api/users": {
+    async GET(req) {
+      const users = await getUsersFromDB();
+      return Response.json(users);
+    },
+    async POST(req) {
+      const userData = await req.json();
+      const user = await createUser(userData);
+      return Response.json(user, { status: 201 });
+    }
+  },
+  
+  // Parameterized API routes
+  "/api/users/:id": {
+    async GET(req) {
+      const { id } = req.params;
+      const user = await getUserById(id);
+      return user ? Response.json(user) : new Response("Not Found", { status: 404 });
+    },
+    async PUT(req) {
+      const { id } = req.params;
+      const updates = await req.json();
+      const user = await updateUser(id, updates);
+      return Response.json(user);
+    },
+    async DELETE(req) {
+      const { id } = req.params;
+      await deleteUser(id);
+      return new Response(null, { status: 204 });
+    }
+  },
+  
+  // WebSocket endpoints
+  "/ws": {
+    message: (ws, message) => ws.send(`Echo: ${message}`),
+    open: (ws) => ws.send("Connected!"),
+    close: (ws) => console.log("Client disconnected")
+  }
+});
+
+// Development options
+app.withOptions({
+  development: {
+    hmr: true,                            // Hot Module Reloading
+    console: true                         // Enhanced console output
+  }
+});
+```
+
+### Frontend Asset Handling
+```html
+<!-- index.html - Bun automatically bundles these -->
+<html>
+<head>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="./app.tsx"></script>
+</body>
+</html>
+```
+
+```tsx
+// app.tsx - React component with imports
+import React from "react";
+import { createRoot } from "react-dom/client";
+import "./styles.css";                    // CSS import
+
+function App() {
+  const [users, setUsers] = React.useState([]);
+  
+  React.useEffect(() => {
+    fetch("/api/users")
+      .then(res => res.json())
+      .then(setUsers);
+  }, []);
+  
+  return (
+    <div>
+      <h1>Users</h1>
+      {users.map(user => <div key={user.id}>{user.name}</div>)}
+    </div>
+  );
+}
+
+createRoot(document.getElementById("app")).render(<App />);
+```
+
+## Protocol-Specific Features
+
+### WebSocket Server
+```typescript
+const wsServer = createServer(ServerProtocol.WEBSOCKET);
+
+wsServer.ws("/chat", {
+  message: (ws, message) => {
+    // Broadcast to all clients
+    ws.publish("chat", message);
+  },
+  open: (ws) => {
+    ws.subscribe("chat");
+    ws.publish("chat", "User joined");
+  },
+  close: (ws) => {
+    ws.publish("chat", "User left");
+  }
+});
+
+// HTTP routes also available
+wsServer.get("/", (req, res) => res.html(`
+  <script>
+    const ws = new WebSocket('ws://localhost:3000/chat');
+    ws.onmessage = (e) => console.log(e.data);
+  </script>
+`));
+```
+
+### HTTP/2 Server
+```typescript
+const http2Server = createServer(ServerProtocol.HTTP2);
+
+http2Server.get("/", (req, res) => {
+  // Server push for HTTP/2
+  res.push("/style.css", { "content-type": "text/css" });
+  res.html("<link rel='stylesheet' href='/style.css'>");
+});
+```
+
+### gRPC Server
+```typescript
+const grpcServer = createServer(ServerProtocol.GRPC);
+
+grpcServer.service("UserService", {
+  getUser: async (call) => {
+    const { id } = call.request;
+    return { user: await getUserById(id) };
+  },
+  createUser: async (call) => {
+    const userData = call.request;
+    return { user: await createUser(userData) };
+  }
+});
+```
+
+### UDP Server
+```typescript
+const udpServer = createServer(ServerProtocol.UDP);
+
+udpServer.on("message", (message, rinfo) => {
+  console.log(`UDP message from ${rinfo.address}:${rinfo.port}`);
+  // Echo back
+  udpServer.send(message, rinfo.port, rinfo.address);
+});
+```
+
+### TCP Server
+```typescript
+const tcpServer = createServer(ServerProtocol.TCP);
+
+tcpServer.on("connection", (socket) => {
+  socket.on("data", (data) => {
+    console.log("TCP data received:", data.toString());
+    socket.write("Echo: " + data);
+  });
+  
+  socket.on("close", () => {
+    console.log("TCP connection closed");
+  });
+});
+```
+
+## Security Features
+
+### Built-in Security Middleware
+```typescript
+import { security } from "verb";
+
+// CORS configuration
+app.use(security.cors({
+  origin: ["https://myapp.com", "https://admin.myapp.com"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// Rate limiting
+app.use(security.rateLimit({
+  windowMs: 15 * 60 * 1000,              // 15 minutes
+  max: 100,                              // Limit each IP to 100 requests per windowMs
+  message: "Too many requests"
+}));
+
+// Security headers (Helmet-like)
+app.use(security.helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"]
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true
+  }
+}));
+
+// Trust proxy for X-Forwarded headers
+app.set("trust proxy", true);
+```
+
+### File Upload Security
+```typescript
+import { upload } from "verb";
+
+app.post("/upload", upload.single("file", {
+  maxSize: 10 * 1024 * 1024,             // 10MB limit
+  allowedTypes: ["image/jpeg", "image/png"],
+  destination: "uploads/",
+  validateMagicNumbers: true             // Check actual file type
+}), (req, res) => {
+  res.json({ file: req.file });
+});
+
+// Multiple files
+app.post("/gallery", upload.array("images", 5), (req, res) => {
+  res.json({ files: req.files });
+});
+```
+
+## Error Handling
+
+### Global Error Handling
+```typescript
+import { errorHandler, createErrorPage } from "verb";
+
+// Custom error middleware
+app.use(errorHandler({
+  development: process.env.NODE_ENV === "development",
+  logger: console.error,
+  fallback: (err, req, res) => {
+    res.status(500).json({ 
+      error: "Internal Server Error",
+      message: err.message 
+    });
+  }
+}));
+
+// Custom error pages
+app.use(createErrorPage(404, "Page Not Found"));
+app.use(createErrorPage(500, "Internal Server Error"));
+```
+
+### Try-Catch Patterns
+```typescript
+app.get("/users/:id", async (req, res, next) => {
+  try {
+    const user = await getUserById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    next(error);                         // Pass to error middleware
+  }
+});
+```
+
+## Performance Optimizations
+
+### JSON Schema Validation
+```typescript
+import { createJsonValidator } from "verb";
+
+const userSchema = {
+  type: "object",
+  properties: {
+    name: { type: "string" },
+    email: { type: "string", format: "email" },
+    age: { type: "number", minimum: 0 }
+  },
+  required: ["name", "email"]
+};
+
+const validateUser = createJsonValidator(userSchema);
+
+app.post("/users", validateUser, (req, res) => {
+  // req.body is guaranteed to match schema
+  res.json({ created: req.body });
+});
+```
+
+### Route Precompilation
+```typescript
+// Routes are automatically precompiled for performance
+// 1000+ route matches per millisecond
+app.get("/users/:id(\\d+)", handler);    // Regex compiled once
+app.get("/files/**", handler);           // Wildcard optimized
+```
+
+### Header & Query Parsing Optimization
+```typescript
+// Optimized parsing with LRU caching
+// 10,000+ operations per millisecond
+app.use((req, res, next) => {
+  // req.query and req.headers are parsed with optimized algorithms
+  console.log(req.query.search);         // Ultra-fast query parsing
+  console.log(req.get("authorization")); // Cached header parsing
+  next();
+});
+```
+
+## Development Tools
+
+### Route Debugging
+```typescript
+app.listen(3000, {
+  showRoutes: true                       // Display registered routes
+});
+```
+
+### Performance Monitoring
+```typescript
+import { performanceMonitoring } from "verb";
+
+app.use(performanceMonitoring({
+  logRequests: true,
+  trackMemory: true,
+  slowRequestThreshold: 1000             // Log requests slower than 1s
+}));
+```
+
+### Health Checks
+```typescript
+import { healthCheck } from "verb";
+
+app.use("/health", healthCheck({
+  database: async () => await checkDatabaseConnection(),
+  redis: async () => await checkRedisConnection(),
+  external: async () => await checkExternalAPI()
+}));
+```
+
+## Sub-Applications & Virtual Hosts
+
+### Application Mounting
+```typescript
+import { createApplication } from "verb";
+
+const adminApp = createApplication();
+adminApp.use(requireAdmin);
+adminApp.get("/users", getAllUsers);
+adminApp.get("/settings", getSettings);
+
+const apiApp = createApplication();
+apiApp.use(rateLimiting());
+apiApp.get("/users", getPublicUsers);
+
+// Mount sub-applications
+app.use("/admin", adminApp);
+app.use("/api/v1", apiApp);
+```
+
+### Virtual Hosts
+```typescript
+app.use((req, res, next) => {
+  if (req.hostname === "admin.myapp.com") {
+    adminApp(req, res, next);
+  } else if (req.hostname === "api.myapp.com") {
+    apiApp(req, res, next);
+  } else {
+    next();
+  }
+});
+```
+
+## Content Negotiation
+
+### Accept Headers
+```typescript
+app.get("/data", (req, res) => {
+  const acceptedType = req.accepts(["json", "xml", "html"]);
+  
+  switch (acceptedType) {
+    case "json":
+      return res.json({ data: "value" });
+    case "xml":
+      return res.type("application/xml").send("<data>value</data>");
+    case "html":
+      return res.html("<h1>Data: value</h1>");
+    default:
+      return res.status(406).send("Not Acceptable");
+  }
+});
+```
+
+### Language & Encoding
+```typescript
+app.get("/content", (req, res) => {
+  const language = req.acceptsLanguages(["en", "es", "fr"]);
+  const encoding = req.acceptsEncodings(["gzip", "deflate"]);
+  
+  res.vary("Accept-Language, Accept-Encoding");
+  // Serve content based on preferences
+});
+```
+
+## Unified Server (Protocol Gateway)
+
+### Multi-Protocol Gateway
+```typescript
+import { createUnifiedServer, createProtocolGateway } from "verb";
+
+const gateway = createProtocolGateway({
+  http: { port: 3000 },
+  websocket: { port: 3001 },
+  grpc: { port: 3002 },
+  udp: { port: 3003 }
+});
+
+// Routes available across all protocols
+gateway.route("/health", (req, res) => res.json({ status: "ok" }));
+
+// Protocol-specific routes
+gateway.http.get("/", (req, res) => res.html(homepage));
+gateway.websocket.ws("/chat", chatHandler);
+gateway.grpc.service("UserService", userService);
+```
+
+## Configuration & Application Settings
+
+### Application Configuration
+```typescript
+// Set application-wide settings
+app.set("view engine", "ejs");
+app.set("views", "./views");
+app.set("trust proxy", true);
+app.set("case sensitive routing", false);
+app.set("strict routing", false);
+
+// Access settings
+const viewEngine = app.getSetting("view engine");
+
+// Application locals (available in templates)
+app.locals.siteName = "My App";
+app.locals.version = "1.0.0";
+```
+
+### Environment-Specific Configuration
+```typescript
+const config = {
+  development: {
+    database: "sqlite:///dev.db",
+    debug: true,
+    hmr: true
+  },
+  production: {
+    database: process.env.DATABASE_URL,
+    debug: false,
+    hmr: false
+  }
+};
+
+const env = process.env.NODE_ENV || "development";
+app.set("config", config[env]);
+```
+
+## Testing Patterns
+
+### Request Testing
+```typescript
+// Create fetch handler for testing
+const fetchHandler = app.createFetchHandler();
+
+// Test with standard fetch
+const response = await fetchHandler(new Request("http://localhost/api/users"));
+const data = await response.json();
+
+console.assert(response.status === 200);
+console.assert(Array.isArray(data));
+```
+
+### Mock Middleware
+```typescript
+// Mock authentication for testing
+const mockAuth = (req, res, next) => {
+  req.user = { id: 1, role: "admin" };
+  next();
+};
+
+// Use in test environment
+if (process.env.NODE_ENV === "test") {
+  app.use("/admin", mockAuth);
+}
+```
+
+## File Structure Best Practices
+
+```
+src/
+├── index.ts                  # Main application entry
+├── routes/                   # Route definitions
+│   ├── auth.ts              # Authentication routes
+│   ├── users.ts             # User management routes
+│   └── api.ts               # API routes
+├── middleware/               # Custom middleware
+│   ├── auth.ts              # Authentication middleware
+│   ├── validation.ts        # Request validation
+│   └── logging.ts           # Request logging
+├── services/                 # Business logic
+│   ├── UserService.ts       # User operations
+│   └── EmailService.ts      # Email operations
+├── models/                   # Data models
+│   └── User.ts              # User model
+├── config/                   # Configuration
+│   ├── database.ts          # Database config
+│   └── security.ts          # Security config
+├── public/                   # Static assets
+│   ├── css/
+│   ├── js/
+│   └── images/
+├── views/                    # Templates (if using)
+│   └── layouts/
+└── tests/                    # Test files
+    ├── routes/
+    ├── middleware/
+    └── services/
+```
+
+## Common Patterns & Best Practices
+
+### RESTful API Pattern
+```typescript
+import { createServer } from "verb";
+
+const app = createServer();
+
+// RESTful routes for users resource
+app.route("/api/users")
+  .get(async (req, res) => {
+    const users = await UserService.getAll(req.query);
+    res.json(users);
+  })
+  .post(async (req, res) => {
+    const user = await UserService.create(req.body);
+    res.status(201).json(user);
+  });
+
+app.route("/api/users/:id")
+  .get(async (req, res) => {
+    const user = await UserService.getById(req.params.id);
+    user ? res.json(user) : res.status(404).json({ error: "Not found" });
+  })
+  .put(async (req, res) => {
+    const user = await UserService.update(req.params.id, req.body);
+    res.json(user);
+  })
+  .delete(async (req, res) => {
+    await UserService.delete(req.params.id);
+    res.status(204).end();
+  });
+```
+
+### Authentication & Authorization
+```typescript
+const authenticate = async (req, res, next) => {
+  const token = req.get("Authorization")?.replace("Bearer ", "");
+  if (!token) return res.status(401).json({ error: "No token provided" });
+  
+  try {
+    const user = await verifyToken(token);
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: "Invalid token" });
+  }
+};
+
+const requireRole = (role) => (req, res, next) => {
+  if (req.user?.role !== role) {
+    return res.status(403).json({ error: "Insufficient permissions" });
+  }
+  next();
+};
+
+// Protected routes
+app.use("/api/admin", authenticate, requireRole("admin"));
+app.use("/api/user", authenticate);
+```
+
+### Database Integration
+```typescript
+// Using Bun's built-in SQLite
+import { Database } from "bun:sqlite";
+
+const db = new Database("app.sqlite");
+
+class UserService {
+  static async getAll(filters = {}) {
+    const query = db.query("SELECT * FROM users WHERE deleted_at IS NULL");
+    return query.all();
+  }
+  
+  static async create(userData) {
+    const query = db.query(`
+      INSERT INTO users (name, email, created_at) 
+      VALUES (?1, ?2, ?3) 
+      RETURNING *
+    `);
+    return query.get(userData.name, userData.email, new Date().toISOString());
+  }
+  
+  static async getById(id) {
+    const query = db.query("SELECT * FROM users WHERE id = ?1 AND deleted_at IS NULL");
+    return query.get(id);
+  }
+}
+```
+
+### Real-time Features
+```typescript
+// WebSocket with HTTP fallback
+const wsServer = createServer(ServerProtocol.WEBSOCKET);
+
+// WebSocket for real-time updates
+wsServer.ws("/updates", {
+  open: (ws) => {
+    ws.subscribe("global-updates");
+  },
+  message: (ws, message) => {
+    const data = JSON.parse(message);
+    ws.publish("global-updates", JSON.stringify({
+      type: "user-message",
+      data: data,
+      timestamp: Date.now()
+    }));
+  }
+});
+
+// HTTP endpoint for sending updates
+wsServer.post("/api/notify", (req, res) => {
+  wsServer.publish("global-updates", JSON.stringify({
+    type: "server-notification",
+    data: req.body,
+    timestamp: Date.now()
+  }));
+  res.json({ sent: true });
+});
+```
+
+## Deployment Considerations
+
+### Production Setup
+```typescript
+const app = createServer();
+
+// Production middleware stack
+app.use(security.helmet());
+app.use(security.cors({ origin: process.env.ALLOWED_ORIGINS?.split(",") }));
+app.use(security.rateLimit({ max: 1000, windowMs: 60000 }));
+app.use(middleware.compression());
+
+// Trust proxy in production
+app.set("trust proxy", true);
+
+// Error handling
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ 
+    error: "Internal Server Error",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack })
+  });
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, "0.0.0.0");
+```
+
+### Health & Monitoring
+```typescript
+// Health check endpoint
+app.get("/health", async (req, res) => {
+  const health = {
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    checks: {
+      database: await checkDatabase(),
+      redis: await checkRedis()
+    }
+  };
+  
+  const hasErrors = Object.values(health.checks).some(check => !check.healthy);
+  res.status(hasErrors ? 503 : 200).json(health);
+});
+
+// Metrics endpoint
+app.get("/metrics", (req, res) => {
+  const metrics = {
+    requests_total: requestCounter,
+    response_time_avg: averageResponseTime,
+    active_connections: activeConnections,
+    memory_usage: process.memoryUsage(),
+    cpu_usage: process.cpuUsage()
+  };
+  res.json(metrics);
+});
+```
+
+This documentation provides comprehensive coverage of Verb's capabilities for AI agents and LLMs to understand and effectively use the framework for building modern, high-performance applications with Bun.

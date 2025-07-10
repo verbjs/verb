@@ -1,6 +1,11 @@
 # dependencies (bun install)
 node_modules
 
+# agents
+.claude
+.zencoder
+
+
 # output
 out
 dist

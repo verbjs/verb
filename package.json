@@ -1,16 +1,56 @@
 {
   "name": "verb",
   "version": "1.0.0",
-  "description": "A fast, modern server framework for Bun with Express.js compatibility",
+  "description": "A fast, modern server framework built specifically for Bun runtime with multi-protocol support",
   "main": "src/index.ts",
   "module": "src/index.ts",
   "types": "src/index.ts",
   "type": "module",
   "private": false,
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "llm.txt",
+    "VERSION"
+  ],
+  "keywords": [
+    "bun",
+    "server",
+    "framework",
+    "http",
+    "websocket",
+    "grpc",
+    "multi-protocol",
+    "typescript",
+    "performance",
+    "bun-only"
+  ],
+  "homepage": "https://github.com/wess/verb",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wess/verb.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wess/verb/issues"
+  },
+  "author": "Wess Cope",
+  "license": "MIT",
   "scripts": {
+    "preinstall": "bun scripts/check-package-manager.ts",
+    "postinstall": "bun scripts/post-install-info.ts",
     "dev": "bun run --hot src/main.ts",
     "lint": "biome lint --fix src/*.ts",
-    "format": "biome format --fix src/*.ts"
+    "format": "biome format --fix src/*.ts",
+    "update-version": "bun scripts/update-version.ts",
+    "version:check": "bun scripts/update-version.ts --check",
+    "version:sync": "bun scripts/update-version.ts",
+    "version:set": "bun scripts/update-version.ts --set --",
+    "prepublishOnly": "bun run lint && bun test",
+    "publish:dry": "npm publish --dry-run",
+    "publish:beta": "npm publish --tag beta",
+    "publish:latest": "npm publish"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.6",
@@ -20,6 +60,11 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "engineStrict": true,
+  "preferredPackageManager": "bun",
   "peerDependencies": {
     "typescript": "^5.8.3"
   },
