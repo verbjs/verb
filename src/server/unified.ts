@@ -11,14 +11,30 @@ import { createDtlsServer, type DtlsServerInstance } from "./dtls";
 import { createTcpServer, type TcpServerInstance } from "./tcp";
 import { createTlsServer, type TlsServerInstance } from "./tls";
 
+// Base interface for HTTP-based servers that support withRoutes
+export interface HttpBasedServerInstance {
+  get: (path: string | string[], ...handlers: any[]) => void;
+  post: (path: string | string[], ...handlers: any[]) => void;
+  put: (path: string | string[], ...handlers: any[]) => void;
+  delete: (path: string | string[], ...handlers: any[]) => void;
+  patch: (path: string | string[], ...handlers: any[]) => void;
+  head: (path: string | string[], ...handlers: any[]) => void;
+  options: (path: string | string[], ...handlers: any[]) => void;
+  use: (pathOrMiddleware: string | any, ...middlewares: any[]) => void;
+  route: (path: string) => any;
+  withRoutes: (routes: any) => void;
+  withOptions: (options: any) => void;
+  listen: (port?: number, hostname?: string) => any;
+}
+
 // Union type for all server instances
 export type UnifiedServerInstance = 
-  | ReturnType<typeof createHttpServer>
-  | HttpsServerInstance
-  | ReturnType<typeof createHttp2Server>
-  | Http2sServerInstance
-  | WebSocketServerInstance
-  | WebSocketsServerInstance
+  | (ReturnType<typeof createHttpServer> & HttpBasedServerInstance)
+  | (HttpsServerInstance & HttpBasedServerInstance)
+  | (ReturnType<typeof createHttp2Server> & HttpBasedServerInstance)
+  | (Http2sServerInstance & HttpBasedServerInstance)
+  | (WebSocketServerInstance & HttpBasedServerInstance)
+  | (WebSocketsServerInstance & HttpBasedServerInstance)
   | GrpcServerInstance
   | UdpServerInstance
   | DtlsServerInstance
@@ -56,9 +72,11 @@ export const createUnifiedServer = (protocol: ServerProtocol = ServerProtocol.HT
 };
 
 // Enhanced createServer function that accepts protocol parameter
-export const createServer = (protocol?: ServerProtocol): UnifiedServerInstance => {
+export function createServer(): ReturnType<typeof createHttpServer> & HttpBasedServerInstance;
+export function createServer(protocol: ServerProtocol): UnifiedServerInstance;
+export function createServer(protocol?: ServerProtocol): UnifiedServerInstance {
   return createUnifiedServer(protocol || ServerProtocol.HTTP);
-};
+}
 
 // Protocol gateway state
 type ProtocolGatewayState = {

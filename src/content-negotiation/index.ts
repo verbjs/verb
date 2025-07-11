@@ -1,4 +1,4 @@
-import type { VerbRequest } from './types';
+import type { VerbRequest } from '../types';
 
 // Content negotiation types
 export type MediaType = {

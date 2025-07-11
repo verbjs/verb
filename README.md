@@ -26,9 +26,9 @@ bun add verb
 ## 🚀 Quick Start
 
 ```typescript
-import { createServer } from "verb";
+import { createServer, ServerProtocol } from "verb";
 
-const app = createServer();
+const app = createServer(ServerProtocol.HTTP);
 
 app.get("/", (req, res) => {
   res.json({ message: "Hello Verb!" });
@@ -59,9 +59,9 @@ console.log("Server running on http://localhost:3000");
 ### HTTP Server
 
 ```typescript
-import { createServer } from "verb";
+import { createServer, ServerProtocol } from "verb";
 
-const app = createServer();
+const app = createServer(ServerProtocol.HTTP);
 
 app.get("/", (req, res) => {
   res.json({ message: "Hello World!" });
@@ -75,9 +75,9 @@ app.listen(3000);
 Schema-based validation and serialization for maximum performance:
 
 ```typescript
-import { createServer, schemas, optimizedJSON, validateSchema } from "verb";
+import { createServer, schemas, optimizedJSON, validateSchema, ServerProtocol } from "verb";
 
-const app = createServer();
+const app = createServer(ServerProtocol.HTTP);
 
 // Define JSON schema for validation and optimization
 const userSchema = schemas.object({
@@ -115,9 +115,9 @@ app.listen(3000);
 Complete web framework capabilities:
 
 ```typescript
-import { createServer, middleware } from "verb";
+import { createServer, middleware, ServerProtocol } from "verb";
 
-const app = createServer();
+const app = createServer(ServerProtocol.HTTP);
 
 // Application settings
 app.set("trust proxy", true);
@@ -191,11 +191,11 @@ tcpServer.onConnection((connection) => {
 Use `app.withRoutes()` to leverage Bun's native routing system with HTML imports:
 
 ```typescript
-import { createServer } from "verb";
+import { createServer, ServerProtocol } from "verb";
 import homepage from "./index.html";
 import dashboard from "./dashboard.html";
 
-const app = createServer();
+const app = createServer(ServerProtocol.HTTP);
 
 app.withRoutes({
   // HTML imports with automatic bundling
@@ -242,6 +242,90 @@ app.withOptions({
 app.listen(3000);
 ```
 
+### Complete Fullstack Boilerplate
+
+See our complete fullstack boilerplate that demonstrates the `withRoutes` pattern with React frontend and REST API:
+
+```typescript
+import { createServer, ServerProtocol } from 'verb';
+// @ts-ignore - HTML imports work with Bun but TypeScript doesn't recognize them
+import indexHtml from './frontend/index.html';
+import apiHtml from './frontend/api.html';
+
+const app = createServer(ServerProtocol.HTTP);
+
+// Data stores
+const users = [
+  { id: 1, name: 'John Doe', email: 'john@example.com' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com' }
+];
+
+app.withRoutes({
+  // ** HTML imports **
+  // Bundle & route index.html to "/". This uses HTMLRewriter to scan the HTML for `<script>` and `<link>` tags, 
+  // runs Bun's JavaScript & CSS bundler on them, transpiles any TypeScript, JSX, and TSX, 
+  // downlevels CSS with Bun's CSS parser and serves the result.
+  "/": indexHtml,
+  "/api-demo": apiHtml,
+
+  // ** API endpoints ** (Verb + Bun v1.2.3+ pattern)
+  "/api/users": {
+    async GET() {
+      return Response.json(users);
+    },
+    async POST(req) {
+      const { name, email } = await req.json();
+      if (!name || !email) {
+        return Response.json({ error: "Name and email are required" }, { status: 400 });
+      }
+      const newUser = { id: Date.now(), name, email };
+      users.push(newUser);
+      return Response.json(newUser, { status: 201 });
+    },
+  },
+  "/api/users/:id": async (req) => {
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split('/');
+    const id = parseInt(pathParts[pathParts.length - 1] || '0');
+    const user = users.find(u => u.id === id);
+    if (!user) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+    return Response.json(user);
+  },
+  
+  "/api/health": async () => {
+    return Response.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage()
+    });
+  }
+});
+
+// Configure development options
+app.withOptions({
+  port: 3001,
+  hostname: 'localhost',
+  development: {
+    hmr: true,     // Hot module reloading (Bun v1.2.3+ required)
+    console: true  // Enhanced console output
+  }
+});
+
+app.listen();
+console.log('🚀 Server running on http://localhost:3001');
+```
+
+**Features demonstrated:**
+- HTML imports with automatic React/TSX bundling
+- REST API with CRUD operations
+- Parameter extraction from URLs
+- Error handling and validation
+- Health check endpoints
+- Development features (HMR, route logging)
+
 ### Fluent API
 
 ```typescript
@@ -257,9 +341,9 @@ const udpApp = server.udp();
 Switch between protocols at runtime with the same routes:
 
 ```typescript
-import { ProtocolGateway, ServerProtocol } from "verb";
+import { createProtocolGateway, ServerProtocol } from "verb";
 
-const gateway = new ProtocolGateway();
+const gateway = createProtocolGateway();
 
 // Define routes that work across HTTP-based protocols
 gateway.defineRoutes((app) => {
@@ -444,8 +528,8 @@ NODE_ENV=development   # Node.js compatible environment
 Verb provides a familiar web framework API:
 
 ```typescript
-import { createServer } from 'verb';
-const app = createServer();
+import { createServer, ServerProtocol } from 'verb';
+const app = createServer(ServerProtocol.HTTP);
 
 // Application settings
 app.set('trust proxy', true);

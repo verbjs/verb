@@ -1,6 +1,6 @@
-import type { VerbRequest, VerbResponse, Middleware, ServerInstance, Handler } from './types';
-import { createRouter } from './router';
-import type { RouteInstance } from './router';
+import type { VerbRequest, VerbResponse, Middleware, ServerInstance, Handler } from '../types';
+import { createRouter } from './index';
+import type { RouteInstance } from './types';
 
 // Route namespace types
 export type RouteNamespace = {

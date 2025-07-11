@@ -1,4 +1,4 @@
-import type { VerbRequest, VerbResponse, VerbNextFunction } from './types';
+import type { VerbRequest, VerbResponse } from '../types';
 
 // Trust proxy configuration
 export type TrustProxyOptions = {
@@ -55,7 +55,7 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 export const trustProxy = (options: TrustProxyOptions = {}) => {
   const { enabled = true, trustedProxies = [], trustAll = false } = options;
 
-  return (req: VerbRequest, res: VerbResponse, next: VerbNextFunction) => {
+  return (req: VerbRequest, res: VerbResponse, next: () => void) => {
     if (!enabled) {
       return next();
     }
@@ -115,7 +115,7 @@ export const rateLimit = (options: RateLimitOptions = {}) => {
     onLimitReached
   } = options;
 
-  return (req: VerbRequest, res: VerbResponse, next: VerbNextFunction) => {
+  return (req: VerbRequest, res: VerbResponse, next: () => void) => {
     const key = keyGenerator(req);
     const now = Date.now();
     
@@ -213,7 +213,7 @@ export const cors = (options: CORSOptions = {}) => {
     optionsSuccessStatus = 204
   } = options;
 
-  return (req: VerbRequest, res: VerbResponse, next: VerbNextFunction) => {
+  return (req: VerbRequest, res: VerbResponse, next: () => void) => {
     const requestOrigin = req.headers.get('origin') || '';
     
     // Determine if origin is allowed
@@ -274,7 +274,7 @@ export const securityHeaders = (options: SecurityHeadersOptions = {}) => {
     xssFilter = true
   } = options;
 
-  return (req: VerbRequest, res: VerbResponse, next: VerbNextFunction) => {
+  return (req: VerbRequest, res: VerbResponse, next: () => void) => {
     // Content Security Policy
     if (contentSecurityPolicy) {
       res.header('Content-Security-Policy', contentSecurityPolicy);

@@ -1,5 +1,8 @@
 import type { ListenOptions } from "../types";
 
+// Bun-specific types
+type BunFile = any;
+
 export interface TlsConnection {
   id: string;
   remoteAddress: string;

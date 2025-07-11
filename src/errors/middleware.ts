@@ -103,7 +103,7 @@ export const errorLogger: ErrorHandler = (err: Error, req: VerbRequest, res: Ver
     stack: err.stack,
     method: req.method,
     url: req.url,
-    headers: Object.fromEntries(req.headers.entries()),
+    headers: Object.fromEntries(Array.from(req.headers.entries())),
     timestamp: new Date().toISOString()
   });
   next();

@@ -93,7 +93,7 @@ export const optimizedJSON = (options: OptimizedJSONOptions = {}): Middleware =>
           
           // Use optimized serialization
           const serialized = responseValidator.serialize(result.data);
-          res.setHeader('Content-Type', 'application/json');
+          res.header('Content-Type', 'application/json');
           return res.send(serialized);
         };
       }
@@ -143,7 +143,7 @@ export const withSchema = (requestSchema?: JSONSchema, responseSchema?: JSONSche
           }
           
           const serialized = validator.serialize(result.data);
-          res.setHeader('Content-Type', 'application/json');
+          res.header('Content-Type', 'application/json');
           return res.send(serialized);
         };
       }

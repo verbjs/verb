@@ -1,5 +1,8 @@
 import type { ListenOptions } from "../types";
 
+// Bun-specific types
+type BunFile = any;
+
 export interface DtlsMessage {
   data: Buffer;
   remoteAddress: string;

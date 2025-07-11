@@ -1,4 +1,4 @@
-import type { VerbRequest, VerbResponse, ErrorHandler } from './types';
+import type { VerbRequest, VerbResponse, ErrorHandler } from '../types';
 
 // Custom error classes
 export class HttpError extends Error {

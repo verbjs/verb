@@ -1,5 +1,8 @@
 import { enhanceRequest } from "../request";
 import { createResponse } from "../response";
+
+// Bun-specific types
+type BunFile = any;
 import type { RouteInstance } from "../router";
 import { createRouter } from "../router";
 import type {

@@ -1,28 +1,20 @@
 import { createServer } from '../../src/index';
-import type { Request, Response } from '../../src/index';
 
 // Import HTML file - Bun will handle bundling automatically  
-import * as indexHTML from './index.html';
+// @ts-ignore - HTML imports work with Bun but TypeScript doesn't recognize them
+import indexHTML from './index.html';
 
 const app = createServer();
 
-// API routes using traditional Verb routing
-app.get('/api/hello', (_req: Request, res: Response) => {
-  res.json({ message: 'Hello from Verb API!' });
-});
-
-app.get('/api/users/:id', (req: Request, res: Response) => {
-  const { id } = req.params || {};
-  res.json({ 
-    id, 
-    name: `User ${id}`, 
-    email: `user${id}@example.com` 
-  });
-});
-
 // Configure server with HTML routes for Bun's native bundling
 app.withRoutes({
+  // ** HTML imports **
+  // Bundle & route index.html to "/". This uses HTMLRewriter to scan the HTML for `<script>` and `<link>` tags, 
+  // runs Bun's JavaScript & CSS bundler on them, transpiles any TypeScript, JSX, and TSX, 
+  // downlevels CSS with Bun's CSS parser and serves the result.
   '/': indexHTML,
+  
+  // ** API endpoints ** (Verb + Bun v1.2.3+ pattern)
   '/api/hello': {
     GET: () => Response.json({ message: 'Hello from Verb API!' })
   },
@@ -36,6 +28,16 @@ app.withRoutes({
         email: `user${id}@example.com` 
       });
     }
+  },
+  
+  // Health check endpoint
+  '/api/health': async () => {
+    return Response.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage()
+    });
   }
 });
 
