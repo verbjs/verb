@@ -1,7 +1,9 @@
 {
   "name": "verb",
+  "author": "Wess Cope",
   "version": "1.0.0",
   "description": "A fast, modern server framework built specifically for Bun runtime with multi-protocol support",
+  "license": "MIT",
   "main": "src/index.ts",
   "module": "src/index.ts",
   "types": "src/index.ts",
@@ -35,8 +37,6 @@
   "bugs": {
     "url": "https://github.com/wess/verb/issues"
   },
-  "author": "Wess Cope",
-  "license": "MIT",
   "scripts": {
     "preinstall": "bun scripts/check-package-manager.ts",
     "postinstall": "bun scripts/post-install-info.ts",
