@@ -108,10 +108,10 @@ test("Wildcard routes - simple file path", async () => {
 });
 
 test("Wildcard routes - nested file path", async () => {
-  const response = await fetch(`http://localhost:${TEST_PORT}/files/docs/reports/2024/annual.pdf`);
+  const response = await fetch(`http://localhost:${TEST_PORT}/files/docs/reports/2025/annual.pdf`);
   expect(response.status).toBe(200);
   const data = await response.json();
-  expect(data.filePath).toBe('docs/reports/2024/annual.pdf');
+  expect(data.filePath).toBe('docs/reports/2025/annual.pdf');
   expect(data.type).toBe('wildcard');
 });
 

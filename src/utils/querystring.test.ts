@@ -167,11 +167,11 @@ test("parseCommonPatterns - search", () => {
 });
 
 test("parseCommonPatterns - filters", () => {
-  const result = parseCommonPatterns.filters("filter_category=tech&filter_status=active&where_date=2023");
+  const result = parseCommonPatterns.filters("filter_category=tech&filter_status=active&where_date=2025");
   expect(result).toEqual({
     filter_category: "tech",
     filter_status: "active",
-    where_date: "2023"
+    where_date: "2025"
   });
 });
 
