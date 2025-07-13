@@ -24,3 +24,4 @@ export * from "./router/advanced";
 export * from "./development";
 export * from "./validation";
 export * from "./middleware/json-optimized";
+export * from "./utils/graceful-shutdown";

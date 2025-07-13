@@ -17,7 +17,7 @@ import { parseFormData } from "../upload";
 import { parseQuery } from "../utils";
 
 export interface WebSocketHandlers {
-  open?: (ws: any) => void;
+  open?: (ws: any, req?: any) => void;
   message?: (ws: any, message: string | Buffer) => void;
   close?: (ws: any, code?: number, reason?: string) => void;
   error?: (ws: any, error: Error) => void;
@@ -361,27 +361,57 @@ export const createWebSocketServer = (): WebSocketServerInstance => {
       hostname: finalHostname,
       // WebSocket configuration
       websocket: {
-        open: websocketHandlers.open || (() => {}),
+        open: (ws: any, req: any) => {
+          if (websocketHandlers.open) {
+            websocketHandlers.open(ws, req);
+          }
+        },
         message: websocketHandlers.message || (() => {}),
         close: websocketHandlers.close || (() => {}),
         error: websocketHandlers.error || (() => {}),
       },
     };
 
-    // If HTML routes are set, use Bun's native routes feature
+    // Create fetch handler that includes WebSocket upgrade logic
+    const fetchHandler = (req: Request, server: any) => {
+      // Check for WebSocket upgrade first
+      if (req.headers.get("upgrade") === "websocket") {
+        const success = server.upgrade(req, {
+          data: { url: req.url }
+        });
+        if (success) {
+          return; // Don't return a Response for successful upgrades
+        }
+        return new Response("WebSocket upgrade failed", { status: 400 });
+      }
+      
+      // Handle regular HTTP requests
+      if (htmlRoutes) {
+        // Let Bun handle HTML routes natively
+        return undefined;
+      }
+      
+      // Use our custom fetch handler for API routes
+      return createFetchHandler()(req);
+    };
+
+    // Create the server
+    const finalConfig = {
+      ...config,
+      fetch: fetchHandler,
+    };
+
+    // Add routes if they exist
     if (htmlRoutes) {
-      config.routes = htmlRoutes;
-    } else {
-      // Otherwise use our custom fetch handler
-      config.fetch = createFetchHandler();
+      finalConfig.routes = htmlRoutes;
     }
 
     // Apply development options if set
     if (serverOptions?.development) {
-      config.development = serverOptions.development;
+      finalConfig.development = serverOptions.development;
     }
 
-    const server = Bun.serve(config);
+    const server = Bun.serve(finalConfig);
 
     // Show routes if enabled
     if (serverOptions?.showRoutes) {
