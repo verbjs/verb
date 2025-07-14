@@ -77,7 +77,7 @@ This Code of Conduct also applies to behavior outside of community spaces when s
 
 If you experience or witness unacceptable behavior, or have any other concerns, please report it by contacting the project team at:
 
-- **Email**: [conduct@verb.sh](mailto:conduct@verb.sh)
+- **Email**: [conduct@verb.codes](mailto:conduct@verb.codes)
 - **GitHub**: Create a private security advisory
 
 ### What to Include
@@ -136,7 +136,7 @@ Community leaders will follow these Community Impact Guidelines in determining t
 
 If you believe you have been wrongly accused or that the penalty is too severe, you may appeal the decision by:
 
-1. **Contacting the team** at [conduct@verb.sh](mailto:conduct@verb.sh) within 14 days
+1. **Contacting the team** at [conduct@verb.codes](mailto:conduct@verb.codes) within 14 days
 2. **Providing additional context** or information that may not have been considered
 3. **Requesting a review** by a different community leader if possible
 
@@ -170,8 +170,8 @@ This Code of Conduct may be updated from time to time. When we do, we will notif
 
 If you have questions about this Code of Conduct, please contact:
 
-- **Email**: [conduct@verb.sh](mailto:conduct@verb.sh)
+- **Email**: [conduct@verb.codes](mailto:conduct@verb.codes)
 - **GitHub**: Open an issue in the main repository
-- **Website**: [https://verb.sh/conduct](https://verb.sh/conduct)
+- **Website**: [https://verb.codes/conduct](https://verb.codes/conduct)
 
 Thank you for helping make the Verb community welcoming and inclusive for everyone! 🚀
