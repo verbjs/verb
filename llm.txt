@@ -1,26 +1,37 @@
-# Verb - Multi-Protocol Server Framework
+# Verb - Multi-Protocol Server Framework for AI Agents & LLMs
 
 ## Overview
-Verb is a high-performance, modern server framework built specifically for Bun runtime. It provides a unified API for building applications across multiple protocols (HTTP, HTTP/2, WebSocket, gRPC, UDP, TCP) with complete TypeScript support and functional programming approach.
+Verb is a production-ready, high-performance server framework built exclusively for Bun runtime. It provides a unified API for building applications across multiple protocols (HTTP, HTTP/2, WebSocket, gRPC, UDP, TCP) with complete TypeScript support and functional programming patterns.
 
-## Key Characteristics for AI Development
-- **Zero Classes**: Pure functional approach - no OOP patterns
-- **Bun-First**: Optimized for Bun runtime with native API usage
-- **TypeScript-First**: Complete type safety and IntelliSense support
-- **Protocol Agnostic**: Single API for multiple network protocols
-- **Performance Focused**: Optimized parsing, routing, and middleware execution
-- **Modern Patterns**: Async/await, Promises, streaming support
+**Key Capabilities**: Multi-protocol support, Enterprise security, React SSR, File uploads, Real-time features, Development tools, Performance optimization, Testing utilities
 
-## Installation & Setup
+## Framework Architecture
+
+### Core Design Principles
+- **Zero Classes**: Pure functional programming approach - no OOP patterns
+- **Bun-First**: Native integration with Bun APIs (Bun.serve, Bun.file, bun:sqlite)
+- **TypeScript-First**: Complete type safety with advanced inference
+- **Protocol Agnostic**: Single codebase supporting 7+ network protocols
+- **Performance Focused**: Sub-millisecond routing, optimized parsing
+- **Express.js Compatible**: Migration-friendly API surface
+- **Production Ready**: Enterprise security, monitoring, health checks
+
+### Installation & Quick Start
 ```bash
-bun install verb
-# or
 bun add verb
-``` 
+```
 
-## Core APIs
+```typescript
+import { createServer } from "verb";
 
-### Server Creation
+const app = createServer();
+app.get("/", (req, res) => res.json({ message: "Hello World" }));
+app.listen(3000);
+```
+
+## Core API Reference
+
+### Server Creation (Multi-Protocol)
 ```typescript
 import { createServer, server, ServerProtocol } from "verb";
 
@@ -40,58 +51,81 @@ const tcpServer = createServer(ServerProtocol.TCP);
 const app2 = server.http();
 const wsApp = server.websocket();
 const grpcApp = server.grpc();
+
+// Multi-protocol gateway (single codebase, multiple protocols)
+import { createProtocolGateway } from "verb";
+const gateway = createProtocolGateway({
+  http: { port: 3000 },
+  websocket: { port: 3001 },
+  grpc: { port: 3002 }
+});
 ```
 
-### Request Object (VerbRequest)
-Enhanced Request with additional properties:
+### Enhanced Request Object (VerbRequest)
 ```typescript
 type VerbRequest = globalThis.Request & {
-  params?: Record<string, string>;        // Route parameters
-  query?: Record<string, string>;         // Query string parameters
-  body?: any;                             // Parsed body (JSON, form, etc.)
+  // Route & Query Data
+  params?: Record<string, string>;        // Route parameters (/users/:id)
+  query?: Record<string, string>;         // Query string (?search=term)
+  body?: any;                             // Parsed body (JSON/form/raw)
+  
+  // Client Information
   cookies?: Record<string, string>;       // Parsed cookies
-  ip?: string;                            // Client IP address
+  ip?: string;                            // Client IP (proxy-aware)
   path?: string;                          // Request path
   hostname?: string;                      // Request hostname
   protocol?: string;                      // Protocol (http/https)
   secure?: boolean;                       // HTTPS flag
-  xhr?: boolean;                          // XMLHttpRequest flag
+  xhr?: boolean;                          // XMLHttpRequest detection
   
-  // Helper methods
+  // Content Negotiation
   get?: (header: string) => string | undefined;
   accepts?: (types?: string | string[]) => string | string[] | null;
   acceptsCharsets?: (charsets?: string | string[]) => string | string[] | null;
   acceptsEncodings?: (encodings?: string | string[]) => string | string[] | null;
   acceptsLanguages?: (languages?: string | string[]) => string | string[] | null;
-  formData?: () => Promise<{ fields: Record<string, string>; files: Record<string, any> }>;
+  
+  // File Uploads
+  formData?: () => Promise<{ 
+    fields: Record<string, string>; 
+    files: Record<string, UploadedFile[]> 
+  }>;
 };
 ```
 
-### Response Object (VerbResponse)
-Chainable response interface:
+### Comprehensive Response Object (VerbResponse)
 ```typescript
 type VerbResponse = {
+  // Content Methods
   send: (data: string | object | number | boolean) => VerbResponse;
   json: (data: any) => VerbResponse;
-  status: (code: number) => VerbResponse;
-  redirect: (url: string, code?: number) => VerbResponse;
   html: (content: string) => VerbResponse;
   text: (content: string) => VerbResponse;
   react: (component: any, props?: any) => VerbResponse;
+  
+  // Status & Redirects
+  status: (code: number) => VerbResponse;
+  redirect: (url: string, code?: number) => VerbResponse;
+  
+  // Headers & Cookies
   header: (name: string, value: string) => VerbResponse;
   headers: (headers: Record<string, string>) => VerbResponse;
-  cookie: (name: string, value: string, options?: any) => VerbResponse;
+  cookie: (name: string, value: string, options?: CookieOptions) => VerbResponse;
   clearCookie: (name: string) => VerbResponse;
   type: (contentType: string) => VerbResponse;
+  vary: (header: string) => VerbResponse;
+  
+  // File Operations
   attachment: (filename?: string) => VerbResponse;
   download: (path: string, filename?: string, options?: any) => Promise<VerbResponse>;
   sendFile: (path: string, options?: any) => Promise<VerbResponse>;
-  vary: (header: string) => VerbResponse;
+  
+  // Response Control
   end: () => VerbResponse;
 };
 ```
 
-### Handler Types
+### Handler & Middleware Types
 ```typescript
 type Handler = (
   req: VerbRequest,
@@ -112,97 +146,173 @@ type ErrorHandler = (
 ) => void | Promise<void>;
 ```
 
-## Routing System
+## Advanced Routing System
 
-### Basic Routes
-```typescript
-app.get("/", (req, res) => res.json({ message: "Hello World" }));
-app.post("/users", (req, res) => res.json({ user: req.body }));
-app.put("/users/:id", (req, res) => res.json({ id: req.params.id }));
-app.delete("/users/:id", (req, res) => res.status(204).end());
-app.patch("/users/:id", (req, res) => res.json({ updated: true }));
-app.head("/users", (req, res) => res.status(200).end());
-app.options("/users", (req, res) => res.header("Allow", "GET,POST").end());
-```
+### Dual Router Architecture
+Verb uses a high-performance dual-tier routing system:
+- **Static Routes**: O(1) Map-based lookup for exact matches
+- **Dynamic Routes**: O(n) RegEx matching for parameterized routes
+- **Route Precompilation**: Patterns compiled once, cached for performance
 
-### Advanced Routing
+### Basic & Advanced Routing
 ```typescript
-// Multiple paths
+// HTTP Methods
+app.get("/", handler);
+app.post("/users", handler);
+app.put("/users/:id", handler);
+app.delete("/users/:id", handler);
+app.patch("/users/:id", handler);
+app.head("/users", handler);
+app.options("/users", handler);
+app.all("/debug", handler);                // All methods
+
+// Advanced Pattern Matching
+app.get("/users/:id(\\d+)", handler);      // Numeric ID only
+app.get("/files/:name(.+)", handler);      // Any characters including /
+app.get("/api/*", handler);                // Single wildcard
+app.get("/static/**", handler);            // Multi-level wildcard
+
+// Multiple Paths
 app.get(["/", "/home", "/index"], handler);
 
-// Route parameters with regex
-app.get("/users/:id(\\d+)", handler);          // Numeric ID only
-app.get("/files/:name(.+)", handler);          // Any characters including /
+// Route Arrays with Middleware
+app.use(["/api", "/v1"], cors(), rateLimiting());
 
-// Wildcard routes
-app.get("/api/*", handler);                    // Matches /api/anything
-app.get("/static/**", handler);                // Matches /static/path/to/file
-
-// Route chaining
+// Route Chaining
 app.route("/users")
   .get(getAllUsers)
   .post(createUser)
   .put(updateUser)
   .delete(deleteUser);
 
-// Conditional routing
-app.get("/admin/*", requireAuth, adminHandler);
-```
-
-### Route Arrays & Multiple Handlers
-```typescript
-// Multiple middleware and handlers
+// Conditional Routing with Multiple Middleware
 app.get("/protected", 
   authenticateUser,
   checkPermissions,
+  logAccess,
   (req, res) => res.json({ data: "secret" })
 );
-
-// Array of paths with middleware
-app.use(["/api", "/v1"], cors(), rateLimiting());
 ```
 
-## Middleware System
-
-### Global Middleware
+### Performance-Optimized Routing
 ```typescript
-import { middleware } from "verb";
+// Routes are automatically categorized and optimized:
+// - Static routes: Map-based O(1) lookup
+// - Dynamic routes: Compiled RegEx with parameter extraction
+// - Wildcard routes: Optimized prefix matching
 
-// Built-in middleware
-app.use(middleware.json());                    // JSON body parsing
-app.use(middleware.urlencoded());              // URL-encoded forms
-app.use(middleware.raw());                     // Raw buffer parsing
-app.use(middleware.text());                    // Text parsing
-app.use(middleware.static("public"));          // Static file serving
-app.use(middleware.cors());                    // CORS headers
-app.use(middleware.helmet());                  // Security headers
-
-// Custom middleware
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
+// Example: 1000+ route matches per millisecond
+app.get("/users/:id(\\d+)", handler);    // Regex compiled once
+app.get("/files/**", handler);           // Wildcard optimized
+app.get("/api/v1/exact", handler);       // Map lookup O(1)
 ```
 
-### Path-Specific Middleware
+## Comprehensive Middleware System
+
+### Built-in Middleware Stack
 ```typescript
-// Apply middleware to specific paths
+import { middleware, security } from "verb";
+
+// Body Parsing Middleware
+app.use(middleware.json({
+  limit: "10mb",                          // Size limit
+  strict: true,                           // Strict JSON parsing
+  reviver: (key, value) => value          // JSON reviver function
+}));
+app.use(middleware.urlencoded({
+  extended: true,                         // Extended object notation
+  limit: "1mb",
+  parameterLimit: 1000
+}));
+app.use(middleware.raw({ limit: "50mb" }));
+app.use(middleware.text({ limit: "1mb" }));
+
+// Static File Serving (Express.static compatible)
+app.use(middleware.static("public", {
+  index: ["index.html", "index.htm"],
+  extensions: ["html", "htm"],
+  maxAge: "1d",                           // Cache control
+  etag: true,                             // ETag support
+  lastModified: true,
+  dotfiles: "ignore"                      // Security: ignore dotfiles
+}));
+
+// Security Middleware
+app.use(security.cors({
+  origin: ["https://myapp.com", "https://admin.myapp.com"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["X-Total-Count"],
+  maxAge: 86400                           // Preflight cache
+}));
+
+app.use(security.rateLimit({
+  windowMs: 15 * 60 * 1000,               // 15 minutes
+  max: 100,                               // Requests per window
+  message: "Too many requests",
+  standardHeaders: true,                  // Return rate limit info
+  legacyHeaders: false,
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
+  keyGenerator: (req) => req.ip           // Custom key function
+}));
+
+// Security Headers (Helmet-equivalent)
+app.use(security.helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"]
+    }
+  },
+  hsts: {
+    maxAge: 31536000,                     // 1 year
+    includeSubDomains: true,
+    preload: true
+  },
+  crossOriginEmbedderPolicy: false        // Disable for compatibility
+}));
+```
+
+### Path-Specific & Custom Middleware
+```typescript
+// Path-specific middleware
 app.use("/api", rateLimiting());
 app.use("/uploads", fileUploadMiddleware());
 app.use("/admin", requireAuth, requireAdmin);
+
+// Custom middleware patterns
+const requestLogger = (req, res, next) => {
+  const start = Date.now();
+  console.log(`${req.method} ${req.url}`);
+  
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    console.log(`${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`);
+  });
+  
+  next();
+};
+
+const asyncMiddleware = async (req, res, next) => {
+  try {
+    req.user = await validateToken(req.get("Authorization"));
+    next();
+  } catch (error) {
+    res.status(401).json({ error: "Unauthorized" });
+  }
+};
+
+app.use(requestLogger);
+app.use("/api", asyncMiddleware);
 ```
 
-### Error Handling Middleware
-```typescript
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal Server Error" });
-});
-```
+## Bun Native Fullstack Development
 
-## Bun Native Routes (Fullstack Development)
-
-### HTML Imports & Frontend Bundling
+### HTML Imports with Automatic Bundling
 ```typescript
 import { createServer } from "verb";
 import homepage from "./index.html";      // HTML file import
@@ -210,20 +320,22 @@ import dashboard from "./dashboard.html";
 
 const app = createServer();
 
-// HTML imports with automatic bundling
+// Unified routing for HTML and API
 app.withRoutes({
-  "/": homepage,                          // Serves HTML with bundled assets
+  // Static HTML pages (automatically bundled)
+  "/": homepage,
   "/dashboard": dashboard,
   
-  // API endpoints alongside HTML routes
+  // REST API endpoints
   "/api/users": {
     async GET(req) {
-      const users = await getUsersFromDB();
+      const filters = new URL(req.url).searchParams;
+      const users = await UserService.getAll(Object.fromEntries(filters));
       return Response.json(users);
     },
     async POST(req) {
       const userData = await req.json();
-      const user = await createUser(userData);
+      const user = await UserService.create(userData);
       return Response.json(user, { status: 201 });
     }
   },
@@ -232,44 +344,60 @@ app.withRoutes({
   "/api/users/:id": {
     async GET(req) {
       const { id } = req.params;
-      const user = await getUserById(id);
+      const user = await UserService.getById(id);
       return user ? Response.json(user) : new Response("Not Found", { status: 404 });
     },
     async PUT(req) {
       const { id } = req.params;
       const updates = await req.json();
-      const user = await updateUser(id, updates);
+      const user = await UserService.update(id, updates);
       return Response.json(user);
     },
     async DELETE(req) {
       const { id } = req.params;
-      await deleteUser(id);
+      await UserService.delete(id);
       return new Response(null, { status: 204 });
     }
   },
   
   // WebSocket endpoints
-  "/ws": {
-    message: (ws, message) => ws.send(`Echo: ${message}`),
-    open: (ws) => ws.send("Connected!"),
-    close: (ws) => console.log("Client disconnected")
+  "/ws/chat": {
+    message: (ws, message) => {
+      const data = JSON.parse(message);
+      ws.publish("chat", JSON.stringify({
+        ...data,
+        timestamp: Date.now(),
+        id: crypto.randomUUID()
+      }));
+    },
+    open: (ws) => {
+      ws.subscribe("chat");
+      ws.send(JSON.stringify({ type: "welcome", message: "Connected!" }));
+    },
+    close: (ws) => {
+      console.log("Client disconnected");
+    }
   }
 });
 
-// Development options
+// Development configuration
 app.withOptions({
   development: {
     hmr: true,                            // Hot Module Reloading
-    console: true                         // Enhanced console output
+    console: true,                        // Enhanced console output
+    showRoutes: true                      // Display registered routes
   }
 });
 ```
 
-### Frontend Asset Handling
+### Frontend Asset Integration
 ```html
-<!-- index.html - Bun automatically bundles these -->
+<!-- index.html - Bun bundles all imports automatically -->
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verb App</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -280,24 +408,55 @@ app.withOptions({
 ```
 
 ```tsx
-// app.tsx - React component with imports
-import React from "react";
+// app.tsx - React component with full import support
+import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";                    // CSS import
+import "./components/theme.scss";         // SCSS support
+import UserCard from "./components/UserCard"; // Component imports
 
 function App() {
-  const [users, setUsers] = React.useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  React.useEffect(() => {
+  useEffect(() => {
     fetch("/api/users")
       .then(res => res.json())
-      .then(setUsers);
+      .then(data => {
+        setUsers(data);
+        setLoading(false);
+      })
+      .catch(err => console.error("Failed to fetch users:", err));
   }, []);
   
+  const handleUserCreate = async (userData) => {
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData)
+    });
+    
+    if (response.ok) {
+      const newUser = await response.json();
+      setUsers(prev => [...prev, newUser]);
+    }
+  };
+  
   return (
-    <div>
-      <h1>Users</h1>
-      {users.map(user => <div key={user.id}>{user.name}</div>)}
+    <div className="app">
+      <header>
+        <h1>User Management</h1>
+      </header>
+      
+      {loading ? (
+        <div className="loading">Loading users...</div>
+      ) : (
+        <div className="user-grid">
+          {users.map(user => (
+            <UserCard key={user.id} user={user} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -307,623 +466,1352 @@ createRoot(document.getElementById("app")).render(<App />);
 
 ## Protocol-Specific Features
 
-### WebSocket Server
+### WebSocket Server with Advanced Features
 ```typescript
 const wsServer = createServer(ServerProtocol.WEBSOCKET);
 
-wsServer.ws("/chat", {
+// Advanced WebSocket configuration
+wsServer.ws("/chat/:room", {
   message: (ws, message) => {
-    // Broadcast to all clients
-    ws.publish("chat", message);
+    const { room } = ws.data.params;
+    const data = JSON.parse(message);
+    
+    // Room-based broadcasting
+    ws.publish(`chat:${room}`, JSON.stringify({
+      type: "message",
+      room,
+      user: ws.data.user,
+      message: data.message,
+      timestamp: Date.now()
+    }));
   },
+  
   open: (ws) => {
-    ws.subscribe("chat");
-    ws.publish("chat", "User joined");
+    const { room } = ws.data.params;
+    ws.subscribe(`chat:${room}`);
+    
+    // Send room history
+    ws.send(JSON.stringify({
+      type: "history",
+      messages: getChatHistory(room)
+    }));
+    
+    // Notify room of new user
+    ws.publish(`chat:${room}`, JSON.stringify({
+      type: "user_joined",
+      room,
+      user: ws.data.user,
+      timestamp: Date.now()
+    }));
   },
+  
   close: (ws) => {
-    ws.publish("chat", "User left");
+    const { room } = ws.data.params;
+    ws.publish(`chat:${room}`, JSON.stringify({
+      type: "user_left",
+      room,
+      user: ws.data.user,
+      timestamp: Date.now()
+    }));
+  },
+  
+  drain: (ws) => {
+    console.log("WebSocket backpressure relieved");
   }
 });
 
-// HTTP routes also available
-wsServer.get("/", (req, res) => res.html(`
-  <script>
-    const ws = new WebSocket('ws://localhost:3000/chat');
-    ws.onmessage = (e) => console.log(e.data);
-  </script>
-`));
+// HTTP routes available alongside WebSocket
+wsServer.get("/chat/:room", (req, res) => {
+  const { room } = req.params;
+  res.html(`
+    <script>
+      const ws = new WebSocket('ws://localhost:3000/chat/${room}');
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        console.log('Received:', data);
+      };
+    </script>
+  `);
+});
 ```
 
-### HTTP/2 Server
+### HTTP/2 Server with Server Push
 ```typescript
 const http2Server = createServer(ServerProtocol.HTTP2);
 
 http2Server.get("/", (req, res) => {
-  // Server push for HTTP/2
-  res.push("/style.css", { "content-type": "text/css" });
-  res.html("<link rel='stylesheet' href='/style.css'>");
+  // Server push for critical resources
+  res.push("/styles.css", { "content-type": "text/css" });
+  res.push("/app.js", { "content-type": "application/javascript" });
+  
+  res.html(`
+    <html>
+      <head>
+        <link rel="stylesheet" href="/styles.css">
+      </head>
+      <body>
+        <h1>HTTP/2 with Server Push</h1>
+        <script src="/app.js"></script>
+      </body>
+    </html>
+  `);
 });
 ```
 
-### gRPC Server
+### gRPC Server Implementation
 ```typescript
 const grpcServer = createServer(ServerProtocol.GRPC);
 
+// Define gRPC services
 grpcServer.service("UserService", {
-  getUser: async (call) => {
+  async getUser(call) {
     const { id } = call.request;
-    return { user: await getUserById(id) };
+    const user = await UserService.getById(id);
+    
+    if (!user) {
+      throw {
+        code: grpc.status.NOT_FOUND,
+        message: "User not found"
+      };
+    }
+    
+    return { user };
   },
-  createUser: async (call) => {
+  
+  async listUsers(call) {
+    const { pageSize = 10, pageToken } = call.request;
+    const users = await UserService.getAll({ pageSize, pageToken });
+    
+    return {
+      users: users.data,
+      nextPageToken: users.nextPageToken
+    };
+  },
+  
+  async createUser(call) {
     const userData = call.request;
-    return { user: await createUser(userData) };
+    const user = await UserService.create(userData);
+    
+    return { user };
   }
 });
 ```
 
-### UDP Server
+### UDP & TCP Servers
 ```typescript
+// UDP Server for real-time gaming or IoT
 const udpServer = createServer(ServerProtocol.UDP);
 
 udpServer.on("message", (message, rinfo) => {
-  console.log(`UDP message from ${rinfo.address}:${rinfo.port}`);
-  // Echo back
-  udpServer.send(message, rinfo.port, rinfo.address);
+  console.log(`UDP from ${rinfo.address}:${rinfo.port}:`, message.toString());
+  
+  // Echo with timestamp
+  const response = JSON.stringify({
+    echo: message.toString(),
+    timestamp: Date.now(),
+    server: "verb-udp"
+  });
+  
+  udpServer.send(response, rinfo.port, rinfo.address);
 });
-```
 
-### TCP Server
-```typescript
+// TCP Server for persistent connections
 const tcpServer = createServer(ServerProtocol.TCP);
 
 tcpServer.on("connection", (socket) => {
+  console.log("TCP connection established");
+  
   socket.on("data", (data) => {
-    console.log("TCP data received:", data.toString());
-    socket.write("Echo: " + data);
+    const message = data.toString().trim();
+    console.log("TCP data:", message);
+    
+    // Protocol handling
+    if (message.startsWith("GET")) {
+      socket.write("HTTP/1.1 200 OK\r\n\r\nTCP Response");
+    } else {
+      socket.write(`Echo: ${message}\n`);
+    }
   });
   
   socket.on("close", () => {
     console.log("TCP connection closed");
   });
+  
+  socket.on("error", (err) => {
+    console.error("TCP error:", err);
+  });
 });
 ```
 
-## Security Features
+## Enterprise Security Features
 
-### Built-in Security Middleware
+### Multi-Layer Security Stack
 ```typescript
-import { security } from "verb";
+import { security, createServer } from "verb";
 
-// CORS configuration
+const app = createServer();
+
+// Trust Proxy Configuration (for load balancers)
+app.use(security.trustProxy({
+  trust: ["127.0.0.1", "10.0.0.0/8", "172.16.0.0/12"],
+  headers: ["x-forwarded-for", "x-real-ip"],
+  maxHops: 1
+}));
+
+// Advanced CORS with Dynamic Origins
 app.use(security.cors({
-  origin: ["https://myapp.com", "https://admin.myapp.com"],
+  origin: (origin, callback) => {
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+    const isAllowed = !origin || allowedOrigins.includes(origin);
+    callback(null, isAllowed);
+  },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 }));
 
-// Rate limiting
+// Sophisticated Rate Limiting
 app.use(security.rateLimit({
-  windowMs: 15 * 60 * 1000,              // 15 minutes
-  max: 100,                              // Limit each IP to 100 requests per windowMs
-  message: "Too many requests"
+  windowMs: 15 * 60 * 1000,               // 15 minutes
+  max: (req) => {
+    // Different limits based on user type
+    if (req.user?.role === "premium") return 1000;
+    if (req.user?.role === "basic") return 100;
+    return 50; // Anonymous users
+  },
+  keyGenerator: (req) => {
+    // Custom key generation
+    return req.user?.id || req.ip;
+  },
+  skip: (req) => {
+    // Skip rate limiting for certain conditions
+    return req.user?.role === "admin";
+  },
+  onLimitReached: (req, res) => {
+    console.log(`Rate limit exceeded for ${req.ip}`);
+  }
 }));
 
-// Security headers (Helmet-like)
+// Comprehensive Security Headers
 app.use(security.helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"]
-    }
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "wss:", "https:"],
+      mediaSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"]
+    },
+    reportOnly: false
   },
   hsts: {
     maxAge: 31536000,
-    includeSubDomains: true
-  }
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: "strict-origin-when-cross-origin"
 }));
-
-// Trust proxy for X-Forwarded headers
-app.set("trust proxy", true);
 ```
 
 ### File Upload Security
 ```typescript
-import { upload } from "verb";
+import { upload, security } from "verb";
 
-app.post("/upload", upload.single("file", {
-  maxSize: 10 * 1024 * 1024,             // 10MB limit
-  allowedTypes: ["image/jpeg", "image/png"],
-  destination: "uploads/",
-  validateMagicNumbers: true             // Check actual file type
-}), (req, res) => {
-  res.json({ file: req.file });
-});
+// Enterprise-grade file upload with security
+app.post("/api/upload", 
+  security.rateLimit({ max: 5, windowMs: 60000 }), // 5 uploads per minute
+  upload.single("file", {
+    maxSize: 10 * 1024 * 1024,                    // 10MB limit
+    allowedTypes: [
+      "image/jpeg", "image/png", "image/gif",
+      "application/pdf", "text/plain"
+    ],
+    destination: "uploads/",
+    validateMagicNumbers: true,                   // Check real file type
+    sanitizeFilename: true,                       // Prevent path traversal
+    virusScan: process.env.NODE_ENV === "production", // Optional virus scanning
+    
+    // Custom validation
+    validate: async (file) => {
+      if (file.name.includes("..")) {
+        throw new Error("Invalid filename");
+      }
+      
+      // Check file content
+      const buffer = await file.arrayBuffer();
+      if (buffer.byteLength === 0) {
+        throw new Error("Empty file not allowed");
+      }
+      
+      return true;
+    }
+  }),
+  async (req, res) => {
+    try {
+      const file = req.file;
+      
+      // Process uploaded file
+      const result = await processUploadedFile(file);
+      
+      res.json({
+        success: true,
+        file: {
+          id: result.id,
+          name: file.sanitizedName,
+          size: file.size,
+          type: file.type,
+          url: `/uploads/${result.filename}`
+        }
+      });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
 
-// Multiple files
-app.post("/gallery", upload.array("images", 5), (req, res) => {
-  res.json({ files: req.files });
-});
+// Multiple file upload with advanced options
+app.post("/api/gallery", 
+  upload.array("images", 10, {
+    maxSize: 5 * 1024 * 1024,                     // 5MB per file
+    maxTotalSize: 50 * 1024 * 1024,               // 50MB total
+    allowedTypes: ["image/jpeg", "image/png"],
+    generateUniqueNames: true,
+    preserveOriginalNames: false,
+    
+    // Progress tracking
+    onProgress: (bytesReceived, totalBytes) => {
+      console.log(`Upload progress: ${(bytesReceived / totalBytes * 100).toFixed(2)}%`);
+    }
+  }),
+  async (req, res) => {
+    const files = req.files;
+    const results = await Promise.all(
+      files.map(file => processImageFile(file))
+    );
+    
+    res.json({ files: results });
+  }
+);
 ```
 
-## Error Handling
+## Advanced Error Handling
 
-### Global Error Handling
+### Comprehensive Error Management
 ```typescript
-import { errorHandler, createErrorPage } from "verb";
+import { errorHandler, createErrorPage, HttpError } from "verb";
 
-// Custom error middleware
+// Custom error classes
+class ValidationError extends HttpError {
+  constructor(message, errors = {}) {
+    super(400, message);
+    this.name = "ValidationError";
+    this.errors = errors;
+  }
+}
+
+class DatabaseError extends HttpError {
+  constructor(message, query = null) {
+    super(500, "Database operation failed");
+    this.name = "DatabaseError";
+    this.originalMessage = message;
+    this.query = query;
+    this.expose = false; // Don't expose database details
+  }
+}
+
+// Global error handling middleware
 app.use(errorHandler({
   development: process.env.NODE_ENV === "development",
-  logger: console.error,
+  logger: {
+    error: (err, req) => {
+      console.error(`Error in ${req.method} ${req.url}:`, {
+        error: err.message,
+        stack: err.stack,
+        user: req.user?.id,
+        ip: req.ip,
+        userAgent: req.get("User-Agent"),
+        timestamp: new Date().toISOString()
+      });
+    }
+  },
+  
+  // Custom error formatting
+  formatter: (err, req) => {
+    const isProduction = process.env.NODE_ENV === "production";
+    
+    if (err instanceof ValidationError) {
+      return {
+        error: "Validation failed",
+        message: err.message,
+        errors: err.errors,
+        statusCode: err.statusCode
+      };
+    }
+    
+    if (err instanceof DatabaseError) {
+      return {
+        error: "Database error",
+        message: isProduction ? "Internal server error" : err.originalMessage,
+        statusCode: err.statusCode,
+        ...(isProduction ? {} : { query: err.query })
+      };
+    }
+    
+    return {
+      error: err.name || "Unknown error",
+      message: err.expose ? err.message : "Internal server error",
+      statusCode: err.statusCode || 500,
+      ...(isProduction ? {} : { stack: err.stack })
+    };
+  },
+  
+  // Fallback handler
   fallback: (err, req, res) => {
-    res.status(500).json({ 
-      error: "Internal Server Error",
-      message: err.message 
-    });
+    const statusCode = err.statusCode || 500;
+    
+    if (req.accepts(["json", "html"]) === "html") {
+      res.status(statusCode).html(`
+        <h1>Error ${statusCode}</h1>
+        <p>${err.message}</p>
+      `);
+    } else {
+      res.status(statusCode).json({
+        error: "Internal Server Error",
+        message: err.message,
+        statusCode
+      });
+    }
+  }
+}));
+
+// Async error wrapper utility
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+// Usage with async routes
+app.get("/api/users/:id", asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  
+  if (!id || isNaN(id)) {
+    throw new ValidationError("Invalid user ID", { id: "Must be a number" });
+  }
+  
+  try {
+    const user = await UserService.getById(id);
+    
+    if (!user) {
+      throw new HttpError(404, "User not found");
+    }
+    
+    res.json(user);
+  } catch (dbError) {
+    throw new DatabaseError(dbError.message, `SELECT * FROM users WHERE id = ${id}`);
   }
 }));
 
 // Custom error pages
-app.use(createErrorPage(404, "Page Not Found"));
-app.use(createErrorPage(500, "Internal Server Error"));
+app.use(createErrorPage(404, "Page Not Found", {
+  template: `
+    <html>
+      <body>
+        <h1>Page Not Found</h1>
+        <p>The requested page could not be found.</p>
+        <a href="/">Go Home</a>
+      </body>
+    </html>
+  `
+}));
 ```
 
-### Try-Catch Patterns
+## Performance Optimization & Monitoring
+
+### High-Performance JSON Validation
 ```typescript
-app.get("/users/:id", async (req, res, next) => {
-  try {
-    const user = await getUserById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.json(user);
-  } catch (error) {
-    next(error);                         // Pass to error middleware
-  }
-});
-```
+import { createJsonValidator, createOptimizedSerializer } from "verb";
 
-## Performance Optimizations
-
-### JSON Schema Validation
-```typescript
-import { createJsonValidator } from "verb";
-
+// Compile schemas for maximum performance
 const userSchema = {
   type: "object",
   properties: {
-    name: { type: "string" },
+    name: { type: "string", minLength: 1, maxLength: 100 },
     email: { type: "string", format: "email" },
-    age: { type: "number", minimum: 0 }
+    age: { type: "number", minimum: 0, maximum: 150 },
+    preferences: {
+      type: "object",
+      properties: {
+        theme: { type: "string", enum: ["light", "dark"] },
+        notifications: { type: "boolean" }
+      }
+    }
   },
-  required: ["name", "email"]
+  required: ["name", "email"],
+  additionalProperties: false
 };
 
 const validateUser = createJsonValidator(userSchema);
+const optimizedSerializer = createOptimizedSerializer(userSchema);
 
-app.post("/users", validateUser, (req, res) => {
-  // req.body is guaranteed to match schema
-  res.json({ created: req.body });
-});
-```
+app.post("/api/users", 
+  middleware.json(),
+  validateUser,  // Validates req.body against schema
+  async (req, res) => {
+    const user = await UserService.create(req.body);
+    
+    // Use optimized serialization (2-3x faster than JSON.stringify)
+    const serialized = optimizedSerializer(user);
+    
+    res.type("application/json").send(serialized);
+  }
+);
 
-### Route Precompilation
-```typescript
-// Routes are automatically precompiled for performance
-// 1000+ route matches per millisecond
-app.get("/users/:id(\\d+)", handler);    // Regex compiled once
-app.get("/files/**", handler);           // Wildcard optimized
-```
-
-### Header & Query Parsing Optimization
-```typescript
-// Optimized parsing with LRU caching
-// 10,000+ operations per millisecond
-app.use((req, res, next) => {
-  // req.query and req.headers are parsed with optimized algorithms
-  console.log(req.query.search);         // Ultra-fast query parsing
-  console.log(req.get("authorization")); // Cached header parsing
-  next();
-});
-```
-
-## Development Tools
-
-### Route Debugging
-```typescript
-app.listen(3000, {
-  showRoutes: true                       // Display registered routes
-});
-```
-
-### Performance Monitoring
-```typescript
+// Performance metrics middleware
 import { performanceMonitoring } from "verb";
 
 app.use(performanceMonitoring({
   logRequests: true,
   trackMemory: true,
-  slowRequestThreshold: 1000             // Log requests slower than 1s
-}));
-```
-
-### Health Checks
-```typescript
-import { healthCheck } from "verb";
-
-app.use("/health", healthCheck({
-  database: async () => await checkDatabaseConnection(),
-  redis: async () => await checkRedisConnection(),
-  external: async () => await checkExternalAPI()
-}));
-```
-
-## Sub-Applications & Virtual Hosts
-
-### Application Mounting
-```typescript
-import { createApplication } from "verb";
-
-const adminApp = createApplication();
-adminApp.use(requireAdmin);
-adminApp.get("/users", getAllUsers);
-adminApp.get("/settings", getSettings);
-
-const apiApp = createApplication();
-apiApp.use(rateLimiting());
-apiApp.get("/users", getPublicUsers);
-
-// Mount sub-applications
-app.use("/admin", adminApp);
-app.use("/api/v1", apiApp);
-```
-
-### Virtual Hosts
-```typescript
-app.use((req, res, next) => {
-  if (req.hostname === "admin.myapp.com") {
-    adminApp(req, res, next);
-  } else if (req.hostname === "api.myapp.com") {
-    apiApp(req, res, next);
-  } else {
-    next();
-  }
-});
-```
-
-## Content Negotiation
-
-### Accept Headers
-```typescript
-app.get("/data", (req, res) => {
-  const acceptedType = req.accepts(["json", "xml", "html"]);
+  slowRequestThreshold: 1000,              // Log requests slower than 1s
   
-  switch (acceptedType) {
-    case "json":
-      return res.json({ data: "value" });
-    case "xml":
-      return res.type("application/xml").send("<data>value</data>");
-    case "html":
-      return res.html("<h1>Data: value</h1>");
-    default:
-      return res.status(406).send("Not Acceptable");
-  }
-});
-```
-
-### Language & Encoding
-```typescript
-app.get("/content", (req, res) => {
-  const language = req.acceptsLanguages(["en", "es", "fr"]);
-  const encoding = req.acceptsEncodings(["gzip", "deflate"]);
-  
-  res.vary("Accept-Language, Accept-Encoding");
-  // Serve content based on preferences
-});
-```
-
-## Unified Server (Protocol Gateway)
-
-### Multi-Protocol Gateway
-```typescript
-import { createUnifiedServer, createProtocolGateway } from "verb";
-
-const gateway = createProtocolGateway({
-  http: { port: 3000 },
-  websocket: { port: 3001 },
-  grpc: { port: 3002 },
-  udp: { port: 3003 }
-});
-
-// Routes available across all protocols
-gateway.route("/health", (req, res) => res.json({ status: "ok" }));
-
-// Protocol-specific routes
-gateway.http.get("/", (req, res) => res.html(homepage));
-gateway.websocket.ws("/chat", chatHandler);
-gateway.grpc.service("UserService", userService);
-```
-
-## Configuration & Application Settings
-
-### Application Configuration
-```typescript
-// Set application-wide settings
-app.set("view engine", "ejs");
-app.set("views", "./views");
-app.set("trust proxy", true);
-app.set("case sensitive routing", false);
-app.set("strict routing", false);
-
-// Access settings
-const viewEngine = app.getSetting("view engine");
-
-// Application locals (available in templates)
-app.locals.siteName = "My App";
-app.locals.version = "1.0.0";
-```
-
-### Environment-Specific Configuration
-```typescript
-const config = {
-  development: {
-    database: "sqlite:///dev.db",
-    debug: true,
-    hmr: true
+  // Custom metrics collection
+  onRequest: (req) => {
+    req.startTime = process.hrtime.bigint();
   },
-  production: {
-    database: process.env.DATABASE_URL,
-    debug: false,
-    hmr: false
-  }
-};
-
-const env = process.env.NODE_ENV || "development";
-app.set("config", config[env]);
-```
-
-## Testing Patterns
-
-### Request Testing
-```typescript
-// Create fetch handler for testing
-const fetchHandler = app.createFetchHandler();
-
-// Test with standard fetch
-const response = await fetchHandler(new Request("http://localhost/api/users"));
-const data = await response.json();
-
-console.assert(response.status === 200);
-console.assert(Array.isArray(data));
-```
-
-### Mock Middleware
-```typescript
-// Mock authentication for testing
-const mockAuth = (req, res, next) => {
-  req.user = { id: 1, role: "admin" };
-  next();
-};
-
-// Use in test environment
-if (process.env.NODE_ENV === "test") {
-  app.use("/admin", mockAuth);
-}
-```
-
-## File Structure Best Practices
-
-```
-src/
-├── index.ts                  # Main application entry
-├── routes/                   # Route definitions
-│   ├── auth.ts              # Authentication routes
-│   ├── users.ts             # User management routes
-│   └── api.ts               # API routes
-├── middleware/               # Custom middleware
-│   ├── auth.ts              # Authentication middleware
-│   ├── validation.ts        # Request validation
-│   └── logging.ts           # Request logging
-├── services/                 # Business logic
-│   ├── UserService.ts       # User operations
-│   └── EmailService.ts      # Email operations
-├── models/                   # Data models
-│   └── User.ts              # User model
-├── config/                   # Configuration
-│   ├── database.ts          # Database config
-│   └── security.ts          # Security config
-├── public/                   # Static assets
-│   ├── css/
-│   ├── js/
-│   └── images/
-├── views/                    # Templates (if using)
-│   └── layouts/
-└── tests/                    # Test files
-    ├── routes/
-    ├── middleware/
-    └── services/
-```
-
-## Common Patterns & Best Practices
-
-### RESTful API Pattern
-```typescript
-import { createServer } from "verb";
-
-const app = createServer();
-
-// RESTful routes for users resource
-app.route("/api/users")
-  .get(async (req, res) => {
-    const users = await UserService.getAll(req.query);
-    res.json(users);
-  })
-  .post(async (req, res) => {
-    const user = await UserService.create(req.body);
-    res.status(201).json(user);
-  });
-
-app.route("/api/users/:id")
-  .get(async (req, res) => {
-    const user = await UserService.getById(req.params.id);
-    user ? res.json(user) : res.status(404).json({ error: "Not found" });
-  })
-  .put(async (req, res) => {
-    const user = await UserService.update(req.params.id, req.body);
-    res.json(user);
-  })
-  .delete(async (req, res) => {
-    await UserService.delete(req.params.id);
-    res.status(204).end();
-  });
-```
-
-### Authentication & Authorization
-```typescript
-const authenticate = async (req, res, next) => {
-  const token = req.get("Authorization")?.replace("Bearer ", "");
-  if (!token) return res.status(401).json({ error: "No token provided" });
   
-  try {
-    const user = await verifyToken(token);
-    req.user = user;
-    next();
-  } catch (error) {
-    res.status(401).json({ error: "Invalid token" });
+  onResponse: (req, res) => {
+    const duration = process.hrtime.bigint() - req.startTime;
+    const ms = Number(duration) / 1_000_000;
+    
+    if (ms > 500) {
+      console.warn(`Slow request: ${req.method} ${req.url} - ${ms.toFixed(2)}ms`);
+    }
   }
-};
-
-const requireRole = (role) => (req, res, next) => {
-  if (req.user?.role !== role) {
-    return res.status(403).json({ error: "Insufficient permissions" });
-  }
-  next();
-};
-
-// Protected routes
-app.use("/api/admin", authenticate, requireRole("admin"));
-app.use("/api/user", authenticate);
+}));
 ```
 
-### Database Integration
+### Advanced Health Checks & Monitoring
 ```typescript
-// Using Bun's built-in SQLite
+import { healthCheck, createMetricsCollector } from "verb";
+
+// Comprehensive health monitoring
+app.use("/health", healthCheck({
+  // Service dependency checks
+  database: async () => {
+    try {
+      await db.query("SELECT 1");
+      return { healthy: true, latency: Date.now() };
+    } catch (error) {
+      return { healthy: false, error: error.message };
+    }
+  },
+  
+  redis: async () => {
+    try {
+      const start = Date.now();
+      await redis.ping();
+      return { healthy: true, latency: Date.now() - start };
+    } catch (error) {
+      return { healthy: false, error: error.message };
+    }
+  },
+  
+  externalAPI: async () => {
+    try {
+      const response = await fetch("https://api.external.com/health", {
+        timeout: 5000
+      });
+      return { 
+        healthy: response.ok, 
+        status: response.status,
+        latency: response.headers.get("x-response-time")
+      };
+    } catch (error) {
+      return { healthy: false, error: error.message };
+    }
+  },
+  
+  // System resource checks
+  memory: () => {
+    const usage = process.memoryUsage();
+    const healthy = usage.heapUsed < 1024 * 1024 * 1024; // 1GB limit
+    
+    return {
+      healthy,
+      heapUsed: usage.heapUsed,
+      heapTotal: usage.heapTotal,
+      external: usage.external,
+      rss: usage.rss
+    };
+  },
+  
+  // Custom business logic checks
+  queueSize: async () => {
+    const queueLength = await getQueueLength();
+    const healthy = queueLength < 1000;
+    
+    return {
+      healthy,
+      queueLength,
+      threshold: 1000
+    };
+  }
+}));
+
+// Detailed metrics endpoint
+const metrics = createMetricsCollector();
+
+app.get("/metrics", (req, res) => {
+  const data = metrics.getMetrics();
+  
+  res.json({
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    
+    // Request metrics
+    requests: {
+      total: data.requests.total,
+      rate: data.requests.rate,
+      averageResponseTime: data.requests.averageResponseTime,
+      statusCodes: data.requests.statusCodes
+    },
+    
+    // System metrics
+    system: {
+      memory: process.memoryUsage(),
+      cpu: process.cpuUsage(),
+      platform: process.platform,
+      version: process.version
+    },
+    
+    // Application metrics
+    application: {
+      routes: data.routes.count,
+      activeConnections: data.connections.active,
+      totalConnections: data.connections.total,
+      errors: data.errors
+    }
+  });
+});
+```
+
+## Database Integration Patterns
+
+### Bun SQLite Integration
+```typescript
 import { Database } from "bun:sqlite";
 
-const db = new Database("app.sqlite");
+// Initialize database with optimizations
+const db = new Database("app.sqlite", {
+  create: true,
+  readwrite: true,
+  // Performance optimizations
+  strict: true,
+  // WAL mode for better concurrency
+  journal_mode: "WAL",
+  synchronous: "NORMAL",
+  cache_size: 10000,
+  temp_store: "MEMORY"
+});
 
+// Service layer with prepared statements
 class UserService {
-  static async getAll(filters = {}) {
-    const query = db.query("SELECT * FROM users WHERE deleted_at IS NULL");
-    return query.all();
-  }
+  static queries = {
+    getAll: db.query(`
+      SELECT id, name, email, created_at, updated_at 
+      FROM users 
+      WHERE deleted_at IS NULL 
+      ORDER BY created_at DESC 
+      LIMIT ?1 OFFSET ?2
+    `),
+    
+    getById: db.query(`
+      SELECT id, name, email, created_at, updated_at 
+      FROM users 
+      WHERE id = ?1 AND deleted_at IS NULL
+    `),
+    
+    create: db.query(`
+      INSERT INTO users (name, email, created_at, updated_at) 
+      VALUES (?1, ?2, ?3, ?3) 
+      RETURNING id, name, email, created_at, updated_at
+    `),
+    
+    update: db.query(`
+      UPDATE users 
+      SET name = ?2, email = ?3, updated_at = ?4 
+      WHERE id = ?1 AND deleted_at IS NULL 
+      RETURNING id, name, email, created_at, updated_at
+    `),
+    
+    softDelete: db.query(`
+      UPDATE users 
+      SET deleted_at = ?2, updated_at = ?2 
+      WHERE id = ?1 AND deleted_at IS NULL
+    `),
+    
+    count: db.query(`
+      SELECT COUNT(*) as total 
+      FROM users 
+      WHERE deleted_at IS NULL
+    `)
+  };
   
-  static async create(userData) {
-    const query = db.query(`
-      INSERT INTO users (name, email, created_at) 
-      VALUES (?1, ?2, ?3) 
-      RETURNING *
-    `);
-    return query.get(userData.name, userData.email, new Date().toISOString());
+  static async getAll(options = {}) {
+    const { limit = 20, offset = 0, search } = options;
+    
+    if (search) {
+      const searchQuery = db.query(`
+        SELECT id, name, email, created_at, updated_at 
+        FROM users 
+        WHERE (name LIKE ?1 OR email LIKE ?1) AND deleted_at IS NULL 
+        ORDER BY created_at DESC 
+        LIMIT ?2 OFFSET ?3
+      `);
+      return searchQuery.all(`%${search}%`, limit, offset);
+    }
+    
+    return this.queries.getAll.all(limit, offset);
   }
   
   static async getById(id) {
-    const query = db.query("SELECT * FROM users WHERE id = ?1 AND deleted_at IS NULL");
-    return query.get(id);
+    return this.queries.getById.get(id);
+  }
+  
+  static async create(userData) {
+    const now = new Date().toISOString();
+    return this.queries.create.get(userData.name, userData.email, now);
+  }
+  
+  static async update(id, updates) {
+    const now = new Date().toISOString();
+    return this.queries.update.get(id, updates.name, updates.email, now);
+  }
+  
+  static async delete(id) {
+    const now = new Date().toISOString();
+    return this.queries.softDelete.run(id, now);
+  }
+  
+  static async count() {
+    return this.queries.count.get().total;
+  }
+  
+  // Transaction support
+  static async createWithProfile(userData, profileData) {
+    return db.transaction(() => {
+      const user = this.create(userData);
+      const profile = ProfileService.create({ ...profileData, userId: user.id });
+      return { user, profile };
+    })();
   }
 }
+
+// RESTful API implementation
+app.route("/api/users")
+  .get(async (req, res) => {
+    try {
+      const options = {
+        limit: parseInt(req.query.limit) || 20,
+        offset: parseInt(req.query.offset) || 0,
+        search: req.query.search
+      };
+      
+      const [users, total] = await Promise.all([
+        UserService.getAll(options),
+        UserService.count()
+      ]);
+      
+      res.json({
+        users,
+        pagination: {
+          total,
+          limit: options.limit,
+          offset: options.offset,
+          hasMore: options.offset + options.limit < total
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  })
+  .post(async (req, res) => {
+    try {
+      const user = await UserService.create(req.body);
+      res.status(201).json(user);
+    } catch (error) {
+      if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+        res.status(409).json({ error: "Email already exists" });
+      } else {
+        res.status(500).json({ error: "Failed to create user" });
+      }
+    }
+  });
 ```
 
-### Real-time Features
-```typescript
-// WebSocket with HTTP fallback
-const wsServer = createServer(ServerProtocol.WEBSOCKET);
+## Testing Strategies & Patterns
 
-// WebSocket for real-time updates
-wsServer.ws("/updates", {
-  open: (ws) => {
-    ws.subscribe("global-updates");
-  },
-  message: (ws, message) => {
-    const data = JSON.parse(message);
-    ws.publish("global-updates", JSON.stringify({
-      type: "user-message",
-      data: data,
-      timestamp: Date.now()
-    }));
+### Comprehensive Testing Setup
+```typescript
+// test-setup.ts
+import { createServer } from "verb";
+import { Database } from "bun:sqlite";
+import { beforeEach, afterEach } from "bun:test";
+
+// Test database setup
+export const setupTestDB = () => {
+  const testDB = new Database(":memory:");
+  
+  // Create tables
+  testDB.exec(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    );
+  `);
+  
+  return testDB;
+};
+
+// Test server factory
+export const createTestServer = (options = {}) => {
+  const app = createServer();
+  
+  // Test middleware
+  app.use((req, res, next) => {
+    req.testMode = true;
+    next();
+  });
+  
+  return app;
+};
+
+// Test client helper
+export class TestClient {
+  constructor(app) {
+    this.fetchHandler = app.createFetchHandler();
   }
-});
+  
+  async get(path, options = {}) {
+    const response = await this.fetchHandler(
+      new Request(`http://localhost${path}`, {
+        method: "GET",
+        ...options
+      })
+    );
+    return {
+      status: response.status,
+      headers: Object.fromEntries(response.headers),
+      data: await response.json().catch(() => response.text())
+    };
+  }
+  
+  async post(path, data, options = {}) {
+    const response = await this.fetchHandler(
+      new Request(`http://localhost${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers
+        },
+        body: JSON.stringify(data),
+        ...options
+      })
+    );
+    return {
+      status: response.status,
+      headers: Object.fromEntries(response.headers),
+      data: await response.json().catch(() => response.text())
+    };
+  }
+  
+  // Helper methods for PUT, DELETE, etc.
+}
 
-// HTTP endpoint for sending updates
-wsServer.post("/api/notify", (req, res) => {
-  wsServer.publish("global-updates", JSON.stringify({
-    type: "server-notification",
-    data: req.body,
-    timestamp: Date.now()
-  }));
-  res.json({ sent: true });
+// Integration test example
+import { test, expect, beforeEach, describe } from "bun:test";
+
+describe("User API", () => {
+  let app, client, db;
+  
+  beforeEach(() => {
+    db = setupTestDB();
+    app = createTestServer();
+    client = new TestClient(app);
+    
+    // Setup routes
+    app.get("/api/users", async (req, res) => {
+      const users = await UserService.getAll();
+      res.json(users);
+    });
+    
+    app.post("/api/users", async (req, res) => {
+      const user = await UserService.create(req.body);
+      res.status(201).json(user);
+    });
+  });
+  
+  test("GET /api/users returns empty array initially", async () => {
+    const response = await client.get("/api/users");
+    
+    expect(response.status).toBe(200);
+    expect(response.data).toEqual([]);
+  });
+  
+  test("POST /api/users creates new user", async () => {
+    const userData = {
+      name: "John Doe",
+      email: "john@example.com"
+    };
+    
+    const response = await client.post("/api/users", userData);
+    
+    expect(response.status).toBe(201);
+    expect(response.data).toMatchObject({
+      name: "John Doe",
+      email: "john@example.com",
+      id: expect.any(Number),
+      created_at: expect.any(String)
+    });
+  });
+  
+  test("POST /api/users validates required fields", async () => {
+    const response = await client.post("/api/users", {});
+    
+    expect(response.status).toBe(400);
+    expect(response.data).toMatchObject({
+      error: "Validation failed",
+      errors: expect.objectContaining({
+        name: expect.any(String),
+        email: expect.any(String)
+      })
+    });
+  });
 });
 ```
 
-## Deployment Considerations
+## Production Deployment Patterns
 
-### Production Setup
+### Production-Ready Server Configuration
 ```typescript
+// production.ts
+import { createServer, security, middleware, errorHandler } from "verb";
+import { gracefulShutdown } from "verb/utils";
+
 const app = createServer();
 
 // Production middleware stack
-app.use(security.helmet());
-app.use(security.cors({ origin: process.env.ALLOWED_ORIGINS?.split(",") }));
-app.use(security.rateLimit({ max: 1000, windowMs: 60000 }));
-app.use(middleware.compression());
+app.use(security.trustProxy({
+  trust: process.env.TRUSTED_PROXIES?.split(",") || ["127.0.0.1"]
+}));
 
-// Trust proxy in production
-app.set("trust proxy", true);
-
-// Error handling
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ 
-    error: "Internal Server Error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack })
-  });
-});
-
-const port = process.env.PORT || 3000;
-app.listen(port, "0.0.0.0");
-```
-
-### Health & Monitoring
-```typescript
-// Health check endpoint
-app.get("/health", async (req, res) => {
-  const health = {
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
-    checks: {
-      database: await checkDatabase(),
-      redis: await checkRedis()
+app.use(security.helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "wss:", "https:"]
     }
-  };
-  
-  const hasErrors = Object.values(health.checks).some(check => !check.healthy);
-  res.status(hasErrors ? 503 : 200).json(health);
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+app.use(security.cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["https://myapp.com"],
+  credentials: true
+}));
+
+app.use(security.rateLimit({
+  windowMs: 15 * 60 * 1000,               // 15 minutes
+  max: 1000,                              // Higher limit for production
+  standardHeaders: true
+}));
+
+app.use(middleware.compression());
+app.use(middleware.json({ limit: "10mb" }));
+app.use(middleware.static("public", {
+  maxAge: "1d",                           // Cache static assets
+  etag: true
+}));
+
+// Production error handling
+app.use(errorHandler({
+  development: false,
+  logger: {
+    error: (err, req) => {
+      // Send to monitoring service (e.g., Sentry)
+      console.error(JSON.stringify({
+        level: "error",
+        message: err.message,
+        stack: err.stack,
+        url: req.url,
+        method: req.method,
+        ip: req.ip,
+        userAgent: req.get("User-Agent"),
+        timestamp: new Date().toISOString(),
+        requestId: req.id
+      }));
+    }
+  }
+}));
+
+// Health checks for load balancer
+app.get("/health", (req, res) => {
+  res.json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
-// Metrics endpoint
-app.get("/metrics", (req, res) => {
-  const metrics = {
-    requests_total: requestCounter,
-    response_time_avg: averageResponseTime,
-    active_connections: activeConnections,
-    memory_usage: process.memoryUsage(),
-    cpu_usage: process.cpuUsage()
-  };
-  res.json(metrics);
+// Graceful shutdown handling
+const server = app.listen(process.env.PORT || 3000, "0.0.0.0");
+
+gracefulShutdown(server, {
+  timeout: 30000,                         // 30 second timeout
+  onShutdown: async () => {
+    console.log("Shutting down gracefully...");
+    // Close database connections, cleanup resources
+    await cleanup();
+  }
+});
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
 });
 ```
 
-This documentation provides comprehensive coverage of Verb's capabilities for AI agents and LLMs to understand and effectively use the framework for building modern, high-performance applications with Bun.
+## Advanced Configuration & Environment Management
+
+### Environment-Specific Configuration
+```typescript
+// config/index.ts
+interface Config {
+  port: number;
+  database: {
+    url: string;
+    poolSize: number;
+    timeout: number;
+  };
+  redis: {
+    url: string;
+    keyPrefix: string;
+  };
+  security: {
+    jwtSecret: string;
+    bcryptRounds: number;
+  };
+  features: {
+    registration: boolean;
+    fileUpload: boolean;
+    realtime: boolean;
+  };
+}
+
+const configs: Record<string, Config> = {
+  development: {
+    port: 3000,
+    database: {
+      url: "sqlite:///dev.db",
+      poolSize: 5,
+      timeout: 5000
+    },
+    redis: {
+      url: "redis://localhost:6379",
+      keyPrefix: "verb:dev:"
+    },
+    security: {
+      jwtSecret: "dev-secret-key",
+      bcryptRounds: 10
+    },
+    features: {
+      registration: true,
+      fileUpload: true,
+      realtime: true
+    }
+  },
+  
+  production: {
+    port: parseInt(process.env.PORT || "3000"),
+    database: {
+      url: process.env.DATABASE_URL!,
+      poolSize: parseInt(process.env.DB_POOL_SIZE || "20"),
+      timeout: parseInt(process.env.DB_TIMEOUT || "30000")
+    },
+    redis: {
+      url: process.env.REDIS_URL!,
+      keyPrefix: "verb:prod:"
+    },
+    security: {
+      jwtSecret: process.env.JWT_SECRET!,
+      bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || "12")
+    },
+    features: {
+      registration: process.env.ALLOW_REGISTRATION === "true",
+      fileUpload: process.env.ENABLE_FILE_UPLOAD === "true",
+      realtime: process.env.ENABLE_REALTIME === "true"
+    }
+  }
+};
+
+export const config = configs[process.env.NODE_ENV || "development"];
+
+// Validation
+const requiredEnvVars = ["DATABASE_URL", "REDIS_URL", "JWT_SECRET"];
+if (process.env.NODE_ENV === "production") {
+  for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+      throw new Error(`Missing required environment variable: ${envVar}`);
+    }
+  }
+}
+
+// Application settings
+export const setupApp = (app) => {
+  // Configure based on environment
+  app.set("trust proxy", true);
+  app.set("case sensitive routing", false);
+  app.set("strict routing", false);
+  
+  // Application locals
+  app.locals = {
+    config,
+    version: process.env.npm_package_version || "1.0.0",
+    environment: process.env.NODE_ENV || "development"
+  };
+};
+```
+
+## Common Patterns & Best Practices for AI Development
+
+### Authentication & Authorization Patterns
+```typescript
+// auth/middleware.ts
+import jwt from "jsonwebtoken";
+import { config } from "../config";
+
+export const authenticate = async (req, res, next) => {
+  try {
+    const token = req.get("Authorization")?.replace("Bearer ", "");
+    
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+    
+    const decoded = jwt.verify(token, config.security.jwtSecret);
+    const user = await UserService.getById(decoded.id);
+    
+    if (!user) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+    
+    req.user = user;
+    req.token = token;
+    next();
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token expired" });
+    }
+    return res.status(401).json({ error: "Invalid token" });
+  }
+};
+
+export const requireRole = (...roles) => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  
+  if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ 
+      error: "Insufficient permissions",
+      required: roles,
+      current: req.user.role
+    });
+  }
+  
+  next();
+};
+
+export const requirePermission = (permission) => (req, res, next) => {
+  if (!req.user?.permissions?.includes(permission)) {
+    return res.status(403).json({ 
+      error: "Permission denied",
+      required: permission
+    });
+  }
+  
+  next();
+};
+
+// Usage patterns
+app.use("/api/admin", authenticate, requireRole("admin"));
+app.use("/api/user", authenticate);
+app.post("/api/users", authenticate, requirePermission("users:create"), handler);
+```
+
+### Real-time Application Patterns
+```typescript
+// Real-time features with WebSocket + HTTP fallback
+const wsServer = createServer(ServerProtocol.WEBSOCKET);
+
+// WebSocket connection manager
+class ConnectionManager {
+  constructor() {
+    this.connections = new Map();
+    this.rooms = new Map();
+  }
+  
+  addConnection(ws, userId) {
+    this.connections.set(userId, ws);
+    ws.data.userId = userId;
+  }
+  
+  removeConnection(userId) {
+    this.connections.delete(userId);
+  }
+  
+  joinRoom(userId, roomId) {
+    if (!this.rooms.has(roomId)) {
+      this.rooms.set(roomId, new Set());
+    }
+    this.rooms.get(roomId).add(userId);
+    
+    const ws = this.connections.get(userId);
+    if (ws) {
+      ws.subscribe(`room:${roomId}`);
+    }
+  }
+  
+  leaveRoom(userId, roomId) {
+    this.rooms.get(roomId)?.delete(userId);
+    
+    const ws = this.connections.get(userId);
+    if (ws) {
+      ws.unsubscribe(`room:${roomId}`);
+    }
+  }
+  
+  broadcast(roomId, message) {
+    wsServer.publish(`room:${roomId}`, JSON.stringify(message));
+  }
+  
+  sendToUser(userId, message) {
+    const ws = this.connections.get(userId);
+    if (ws) {
+      ws.send(JSON.stringify(message));
+    }
+  }
+}
+
+const connectionManager = new ConnectionManager();
+
+// WebSocket handlers
+wsServer.ws("/ws", {
+  open: (ws) => {
+    console.log("WebSocket connection opened");
+  },
+  
+  message: (ws, message) => {
+    try {
+      const data = JSON.parse(message);
+      
+      switch (data.type) {
+        case "authenticate":
+          handleAuthentication(ws, data.token);
+          break;
+          
+        case "join_room":
+          connectionManager.joinRoom(ws.data.userId, data.roomId);
+          break;
+          
+        case "leave_room":
+          connectionManager.leaveRoom(ws.data.userId, data.roomId);
+          break;
+          
+        case "chat_message":
+          handleChatMessage(ws, data);
+          break;
+          
+        default:
+          ws.send(JSON.stringify({ error: "Unknown message type" }));
+      }
+    } catch (error) {
+      ws.send(JSON.stringify({ error: "Invalid message format" }));
+    }
+  },
+  
+  close: (ws) => {
+    if (ws.data.userId) {
+      connectionManager.removeConnection(ws.data.userId);
+    }
+  }
+});
+
+// HTTP endpoints for real-time features
+wsServer.post("/api/broadcast", authenticate, async (req, res) => {
+  const { roomId, message } = req.body;
+  
+  connectionManager.broadcast(roomId, {
+    type: "broadcast",
+    message,
+    sender: req.user.name,
+    timestamp: Date.now()
+  });
+  
+  res.json({ success: true });
+});
+```
+
+## Framework Comparison & Migration Guide
+
+### Express.js to Verb Migration
+```typescript
+// Express.js pattern
+app.use(express.json());
+app.use(express.static("public"));
+app.get("/users/:id", (req, res) => {
+  res.json({ id: req.params.id });
+});
+
+// Equivalent Verb pattern
+app.use(middleware.json());
+app.use(middleware.static("public"));
+app.get("/users/:id", (req, res) => {
+  res.json({ id: req.params.id });
+});
+
+// Verb enhancements
+app.get("/users/:id", (req, res) => {
+  // Enhanced request object
+  console.log(req.ip);          // Proxy-aware IP
+  console.log(req.secure);      // HTTPS detection
+  console.log(req.xhr);         // AJAX detection
+  
+  // Chainable response
+  res.status(200)
+     .header("X-Custom", "value")
+     .json({ id: req.params.id });
+});
+```
+
+This comprehensive documentation provides AI agents and LLMs with deep understanding of Verb's architecture, capabilities, and best practices for building production-ready applications with Bun runtime.
