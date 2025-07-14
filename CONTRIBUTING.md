@@ -321,7 +321,6 @@ touch index.ts package.json README.md
 
 - **GitHub Issues**: Bug reports and feature requests for the core framework
 - **GitHub Discussions**: Questions about framework development and usage
-- **Discord**: Real-time community support
 
 ### Recognition
 
@@ -425,8 +424,7 @@ bun run build:types
 If you have questions about contributing:
 
 1. Check existing GitHub issues and discussions
-2. Join our Discord community
-3. Create a new GitHub discussion
-4. Reach out to maintainers
+2. Create a new GitHub discussion
+3. Reach out to maintainers
 
 Thank you for contributing to Verb! 🚀

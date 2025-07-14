@@ -44,7 +44,7 @@ Examples of unacceptable behavior include:
 - **Discussions**: Keep conversations relevant and respectful
 - **Commit Messages**: Use professional language in commit messages and documentation
 
-### Discord/Community Chat
+### Community Chat
 
 - **Stay on topic** in designated channels
 - **Use appropriate channels** for different types of discussions
@@ -79,7 +79,6 @@ If you experience or witness unacceptable behavior, or have any other concerns, 
 
 - **Email**: [conduct@verb.sh](mailto:conduct@verb.sh)
 - **GitHub**: Create a private security advisory
-- **Discord**: Direct message to moderators
 
 ### What to Include
 
