@@ -5,7 +5,27 @@ All notable changes to Verb will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 07-10-2025
+## [1.0.1] - 2025-12-01
+
+### Changed
+- **Simplified Router Architecture** - Consolidated 5 router files (~920 lines) into single `router.ts` (128 lines)
+- **Unified Server Base** - Protocol servers now share `base.ts` for common HTTP handling, reducing duplication from ~2400 lines to ~450 lines
+- Protocol-specific servers (HTTP, HTTPS, HTTP/2, WebSocket) are now thin wrappers around shared base
+
+### Removed
+- Express-style `Router()` factory for mounting sub-routers (use path middleware instead)
+- Route namespacing and grouping (`namespace()`, `routeGroup()`)
+- Global route caching with mutable state
+- `showRoutes` / `logRoutes` debug feature
+- Duplicate path-to-regex implementations
+
+### Fixed
+- URL-encoded route parameters now properly decoded (e.g., `%40` → `@`)
+
+### Documentation
+- Added `docs/book/` - Complete tutorial for building a blog with Verb
+
+## [1.0.0] - 2025-07-10
 
 ### Added
 - 🎉 Initial release of Verb

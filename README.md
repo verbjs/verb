@@ -52,7 +52,7 @@ console.log("Server running on http://localhost:3000");
 - **JSON Optimization** - Schema-based validation and serialization for maximum performance
 - **Performance Optimizations** - Route precompilation, caching, and ultra-fast parsing
 - **Complete Middleware System** - Global, path-specific, and route-specific middleware
-- **Advanced Routing** - Regex parameters, wildcards, route arrays, and chaining
+- **Simple Routing** - Path parameters, wildcards, and route chaining
 
 ## Basic Usage
 
@@ -235,8 +235,7 @@ app.withOptions({
   development: {
     hmr: true,      // Hot module reloading
     console: true   // Enhanced console logging
-  },
-  showRoutes: true  // Show registered routes on startup
+  }
 });
 
 app.listen(3000);

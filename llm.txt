@@ -146,15 +146,15 @@ type ErrorHandler = (
 ) => void | Promise<void>;
 ```
 
-## Advanced Routing System
+## Routing System
 
-### Dual Router Architecture
-Verb uses a high-performance dual-tier routing system:
+### Simple Router Architecture
+Verb uses a streamlined single-router design (~128 lines):
 - **Static Routes**: O(1) Map-based lookup for exact matches
-- **Dynamic Routes**: O(n) RegEx matching for parameterized routes
-- **Route Precompilation**: Patterns compiled once, cached for performance
+- **Dynamic Routes**: Array with compiled RegEx for parameterized routes
+- **Route Precompilation**: Patterns compiled once at registration
 
-### Basic & Advanced Routing
+### Basic Routing
 ```typescript
 // HTTP Methods
 app.get("/", handler);
@@ -194,17 +194,22 @@ app.get("/protected",
 );
 ```
 
-### Performance-Optimized Routing
+### Router API
 ```typescript
-// Routes are automatically categorized and optimized:
-// - Static routes: Map-based O(1) lookup
-// - Dynamic routes: Compiled RegEx with parameter extraction
-// - Wildcard routes: Optimized prefix matching
+import { createRouter } from "verb";
 
-// Example: 1000+ route matches per millisecond
-app.get("/users/:id(\\d+)", handler);    // Regex compiled once
-app.get("/files/**", handler);           // Wildcard optimized
-app.get("/api/v1/exact", handler);       // Map lookup O(1)
+const router = createRouter();
+
+// Add routes
+router.add("GET", "/users", [], handler);
+router.add("GET", "/users/:id", [authMiddleware], handler);
+
+// Match routes
+const match = router.match("GET", "/users/123");
+// Returns: { handler, middlewares, params: { id: "123" } }
+
+// Get all routes
+const routes = router.routes();
 ```
 
 ## Comprehensive Middleware System
@@ -384,8 +389,7 @@ app.withRoutes({
 app.withOptions({
   development: {
     hmr: true,                            // Hot Module Reloading
-    console: true,                        // Enhanced console output
-    showRoutes: true                      // Display registered routes
+    console: true                         // Enhanced console output
   }
 });
 ```

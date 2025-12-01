@@ -272,11 +272,11 @@ test("Parameter extraction edge cases", async () => {
 
   const fetchHandler = (app as any).createFetchHandler();
   
-  // Test parameter with special characters
+  // Test parameter with special characters (properly decoded)
   const specialParamRequest = createMockRequest("GET", "http://localhost:3000/users/user%40example.com");
   const specialParamResponse = await fetchHandler(specialParamRequest);
   const specialParamData = await specialParamResponse.json();
-  expect(specialParamData.id).toBe("user%40example.com"); // URL encoding preserved
+  expect(specialParamData.id).toBe("user@example.com"); // URL decoded
   
   // Test wildcard with deep path
   const deepWildcardRequest = createMockRequest("GET", "http://localhost:3000/files/path/to/deep/file.txt");

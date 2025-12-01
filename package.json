@@ -1,7 +1,7 @@
 {
   "name": "verb",
   "author": "Wess Cope",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A fast, modern server framework built specifically for Bun runtime with multi-protocol support",
   "license": "MIT",
   "main": "src/index.ts",

@@ -417,47 +417,6 @@ test("Multiple middleware can use same next() function safely", async () => {
   expect(data.nextCallCount).toBe(3);
 });
 
-test("Router middleware integration", async () => {
-  const app = createServer();
-  const { Router } = await import("../../src/index");
-  const router = Router();
-  const execOrder: string[] = [];
-
-  // App-level middleware
-  app.use((req, res, next) => {
-    execOrder.push("app-middleware");
-    next();
-  });
-
-  // Router-level middleware
-  router.use((req, res, next) => {
-    execOrder.push("router-middleware");
-    next();
-  });
-
-  // Route handler
-  router.get("/test", (req, res) => {
-    execOrder.push("route-handler");
-    res.json({ order: [...execOrder] });
-  });
-
-  // Mount router
-  app.use("/api", router as any);
-
-  const fetchHandler = (app as any).createFetchHandler();
-  const mockRequest = createMockRequest("GET", "http://localhost:3000/api/test");
-  
-  const response = await fetchHandler(mockRequest);
-  const data = await response.json();
-
-  // Current implementation doesn't execute router middleware
-  // This would need router middleware support in the mounting logic
-  expect(data.order).toEqual([
-    "app-middleware",
-    "route-handler"
-  ]);
-});
-
 test("Conditional middleware execution", async () => {
   const app = createServer();
   const executions: string[] = [];

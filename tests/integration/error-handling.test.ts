@@ -318,25 +318,6 @@ test("Error after response has been sent throws correctly", () => {
   expect(() => res.json({ error: true })).toThrow("Cannot set response after it has been sent");
 });
 
-test("Router-level error handling", async () => {
-  const app = createServer();
-  const { Router } = await import("../../src/index");
-  const router = Router();
-  
-  router.get("/test", (req, res) => {
-    res.json({ message: "Router success" });
-  });
-  
-  app.use("/api", router as any);
-
-  const fetchHandler = (app as any).createFetchHandler();
-  
-  // Test router success (router middleware not fully implemented yet)
-  const successRequest = createMockRequest("GET", "http://localhost:3000/api/test");
-  const successResponse = await fetchHandler(successRequest);
-  expect(successResponse.status).toBe(200);
-});
-
 test("Nested error scenarios with static files", async () => {
   const app = createServer();
   const { middleware } = await import("../../src/index");

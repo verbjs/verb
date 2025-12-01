@@ -9,7 +9,7 @@ test("Router - static routes", () => {
   
   const result = router.match('GET', '/');
   expect(result?.handler).toBe(handler);
-  expect(result?.params).toBeUndefined();
+  expect(result?.params).toEqual({});
 });
 
 test("Router - static routes not found", () => {
@@ -72,7 +72,7 @@ test("Router - mixed static and dynamic routes", () => {
   
   const staticResult = router.match('GET', '/about');
   expect(staticResult?.handler).toBe(staticHandler);
-  expect(staticResult?.params).toBeUndefined();
+  expect(staticResult?.params).toEqual({});
   
   const dynamicResult = router.match('GET', '/users/123');
   expect(dynamicResult?.handler).toBe(dynamicHandler);
