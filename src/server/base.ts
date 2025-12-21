@@ -32,15 +32,37 @@ export type BaseServerConfig = {
   websocket?: WebSocketHandlers
 }
 
-export const createBaseServer = (config: BaseServerConfig = {}) => {
+export type Context<T = Record<string, unknown>> = {
+  get: <K extends keyof T>(key: K) => T[K] | undefined
+  set: <K extends keyof T>(key: K, value: T[K]) => void
+  has: <K extends keyof T>(key: K) => boolean
+  delete: <K extends keyof T>(key: K) => boolean
+  clear: () => void
+  all: () => T
+}
+
+const createContext = <T = Record<string, unknown>>(): Context<T> => {
+  const store = new Map<keyof T, T[keyof T]>()
+
+  return {
+    get: <K extends keyof T>(key: K) => store.get(key) as T[K] | undefined,
+    set: <K extends keyof T>(key: K, value: T[K]) => { store.set(key, value) },
+    has: <K extends keyof T>(key: K) => store.has(key),
+    delete: <K extends keyof T>(key: K) => store.delete(key),
+    clear: () => store.clear(),
+    all: () => Object.fromEntries(store) as T,
+  }
+}
+
+export const createBaseServer = <TContext = Record<string, unknown>>(config: BaseServerConfig = {}) => {
   const router = createRouter()
   const globalMiddlewares: Middleware[] = []
-  const pathMiddlewares = new Map<string, Middleware[]>()
+  const pathMiddlewaresList: { path: string; middlewares: Middleware[] }[] = []
   let htmlRoutes: RouteConfig | null = null
   let serverOptions: ListenOptions | null = null
 
   const settings = new Map<string, any>()
-  const locals: Record<string, any> = {}
+  const context = createContext<TContext>()
   const mountpath = "/"
 
   const env = process.env.VERB_ENV || process.env.BUN_ENV || process.env.NODE_ENV || "development"
@@ -50,13 +72,28 @@ export const createBaseServer = (config: BaseServerConfig = {}) => {
 
   const path = () => mountpath
 
-  const use = (pathOrMiddleware: string | Middleware, ...middlewares: Middleware[]) => {
+  const use = (
+    pathOrMiddleware: string | Middleware | Middleware[],
+    ...middlewares: (Middleware | Middleware[])[]
+  ) => {
+    // flatten all middleware arrays
+    const flatMiddlewares = middlewares.flatMap(m => Array.isArray(m) ? m : [m])
+
     if (typeof pathOrMiddleware === "string") {
-      const path = pathOrMiddleware
-      const existing = pathMiddlewares.get(path) || []
-      pathMiddlewares.set(path, [...existing, ...middlewares])
+      const mwPath = pathOrMiddleware
+      // find existing or create new
+      const existing = pathMiddlewaresList.find(p => p.path === mwPath)
+      if (existing) {
+        existing.middlewares.push(...flatMiddlewares)
+      } else {
+        pathMiddlewaresList.push({ path: mwPath, middlewares: flatMiddlewares })
+        // sort by path length ascending (parent paths run before children)
+        pathMiddlewaresList.sort((a, b) => a.path.length - b.path.length)
+      }
+    } else if (Array.isArray(pathOrMiddleware)) {
+      globalMiddlewares.push(...pathOrMiddleware)
     } else {
-      globalMiddlewares.push(pathOrMiddleware)
+      globalMiddlewares.push(pathOrMiddleware, ...flatMiddlewares)
     }
   }
 
@@ -68,19 +105,33 @@ export const createBaseServer = (config: BaseServerConfig = {}) => {
     serverOptions = options
   }
 
-  const set = (key: string, value: any) => settings.set(key, value)
+  const set = (key: string | Record<string, any>, value?: any) => {
+    if (typeof key === "object") {
+      for (const [k, v] of Object.entries(key)) {
+        settings.set(k, v)
+      }
+    } else {
+      settings.set(key, value)
+    }
+  }
+
   const getSetting = (key: string) => settings.get(key)
 
-  const parseHandlers = (...handlers: MiddlewareHandler[]): { middlewares: Middleware[]; handler: Handler } => {
+  const parseHandlers = (handlers: MiddlewareHandler[]): { middlewares: Middleware[]; handler: Handler } => {
     const handler = handlers[handlers.length - 1] as Handler
-    const middlewares = handlers.slice(0, -1) as Middleware[]
+    const middlewares: Middleware[] = []
+    for (let i = 0; i < handlers.length - 1; i++) {
+      middlewares.push(handlers[i] as Middleware)
+    }
     return { middlewares, handler }
   }
 
   const addRoute = (method: Method, path: string | string[], handlers: MiddlewareHandler[]) => {
-    const { middlewares, handler } = parseHandlers(...handlers)
+    const { middlewares, handler } = parseHandlers(handlers)
     const paths = Array.isArray(path) ? path : [path]
-    paths.forEach(p => router.add(method, p, middlewares, handler))
+    for (const p of paths) {
+      router.add(method, p, middlewares, handler)
+    }
   }
 
   const get = (path: string | string[], ...handlers: MiddlewareHandler[]) => addRoute("GET", path, handlers)
@@ -101,7 +152,7 @@ export const createBaseServer = (config: BaseServerConfig = {}) => {
     options: (...h: MiddlewareHandler[]) => { addRoute("OPTIONS", path, h); return route(path) },
     all: (...h: MiddlewareHandler[]) => {
       const methods: Method[] = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
-      methods.forEach(m => addRoute(m, path, h))
+      for (const m of methods) addRoute(m, path, h)
       return route(path)
     },
   })
@@ -124,7 +175,7 @@ export const createBaseServer = (config: BaseServerConfig = {}) => {
       (extendedReq as any).formData = () => parseFormData(req)
     }
 
-    const path = extendedReq.path || "/"
+    const reqPath = extendedReq.path || "/"
 
     try {
       const { res, getResponse } = createResponse()
@@ -133,15 +184,16 @@ export const createBaseServer = (config: BaseServerConfig = {}) => {
         return await getResponse()
       }
 
-      for (const [mwPath, middlewares] of pathMiddlewares) {
-        if (path === mwPath || path.startsWith(`${mwPath}/`)) {
-          if (!(await runMiddlewares(middlewares, extendedReq, res))) {
+      // optimized path middleware matching
+      for (const pm of pathMiddlewaresList) {
+        if (reqPath === pm.path || reqPath.startsWith(pm.path + "/")) {
+          if (!(await runMiddlewares(pm.middlewares, extendedReq, res))) {
             return await getResponse()
           }
         }
       }
 
-      const match = router.match(method, path)
+      const match = router.match(method, reqPath)
       if (!match) {
         return new Response("Not Found", { status: 404 })
       }
@@ -184,7 +236,6 @@ export const createBaseServer = (config: BaseServerConfig = {}) => {
         close: config.websocket.close || (() => {}),
         error: config.websocket.error || (() => {}),
       }
-      // WebSocket upgrade handling
       const baseFetch = createFetchHandler()
       bunConfig.fetch = (req: Request, server: any) => {
         if (req.headers.get("upgrade") === "websocket") {
@@ -224,12 +275,13 @@ export const createBaseServer = (config: BaseServerConfig = {}) => {
     router,
     set,
     getSetting,
-    locals,
+    context,
     mountpath,
     path,
-    // Allow protocol servers to modify config
     _setTls: (tls: BaseServerConfig["tls"]) => { config.tls = tls },
     _setHttp2: (enabled: boolean) => { config.http2 = enabled },
     _setWebsocket: (handlers: WebSocketHandlers) => { config.websocket = handlers },
   }
 }
+
+export { Context }

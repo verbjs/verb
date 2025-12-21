@@ -14,7 +14,7 @@ export * from "./utils";
 export * from "./upload";
 export * from "./request";
 export * as middleware from "./middleware";
-export { createRouter, type Router } from "./router";
+export { createRouter, type Router, type RouteMatch, type RouteInfo } from "./router";
 export * from "./security";
 export * from "./errors";
 export * from "./errors/middleware";

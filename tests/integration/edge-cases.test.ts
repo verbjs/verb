@@ -166,12 +166,12 @@ test("Multiple slashes in paths", async () => {
 
   const fetchHandler = (app as any).createFetchHandler();
   
-  // Test paths with multiple slashes
+  // Test paths with multiple slashes - framework normalizes them
   const multiSlashRequest = createMockRequest("GET", "http://localhost:3000//api///users");
   const multiSlashResponse = await fetchHandler(multiSlashRequest);
-  
-  // Should normalize to single slashes
-  expect(multiSlashResponse.status).toBe(404); // Current implementation treats these as different paths
+
+  // Should normalize to single slashes and match /api/users
+  expect(multiSlashResponse.status).toBe(200);
 });
 
 test("Empty path segments", async () => {

@@ -1,9 +1,10 @@
-import type { VerbRequest, VerbResponse, Middleware, ServerInstance } from '../types';
+import type { VerbRequest, VerbResponse, Middleware } from '../types';
 import { createServer } from '../server';
 
-// Sub-application types
+type AppInstance = ReturnType<typeof createServer>
+
 export type SubApplication = {
-  server: ServerInstance;
+  server: AppInstance;
   mountPath: string;
   domain?: string;
   subdomain?: string;
@@ -13,7 +14,7 @@ export type SubApplication = {
 export type VirtualHost = {
   domain: string;
   subdomain?: string;
-  server: ServerInstance;
+  server: AppInstance;
 };
 
 export type MountOptions = {
@@ -29,7 +30,7 @@ const subApplications = new Map<string, SubApplication>();
 const virtualHosts = new Map<string, VirtualHost>();
 
 // Create a sub-application
-export const createSubApplication = (mountPath: string, options: MountOptions = {}): ServerInstance => {
+export const createSubApplication = (mountPath: string, options: MountOptions = {}): AppInstance => {
   const subApp = createServer();
   
   // Store sub-application
@@ -54,9 +55,9 @@ export const createSubApplication = (mountPath: string, options: MountOptions = 
 
 // Mount a sub-application
 export const mountSubApplication = (
-  parentApp: ServerInstance,
+  parentApp: AppInstance,
   mountPath: string,
-  subApp: ServerInstance,
+  subApp: AppInstance,
   options: MountOptions = {}
 ) => {
   // Set parent relationship
@@ -151,7 +152,7 @@ export const mountSubApplication = (
 };
 
 // Virtual host support
-export const createVirtualHost = (domain: string, subdomain?: string): ServerInstance => {
+export const createVirtualHost = (domain: string, subdomain?: string): AppInstance => {
   const vhost = createServer();
   
   const virtualHost: VirtualHost = {
@@ -232,8 +233,8 @@ export const removeVirtualHost = (key: string): boolean => {
 };
 
 // Application hierarchy utilities
-export const getApplicationHierarchy = (app: ServerInstance): ServerInstance[] => {
-  const hierarchy: ServerInstance[] = [app];
+export const getApplicationHierarchy = (app: AppInstance): AppInstance[] => {
+  const hierarchy: AppInstance[] = [app];
   let current = app;
   
   while ((current as any).parent) {
@@ -245,17 +246,17 @@ export const getApplicationHierarchy = (app: ServerInstance): ServerInstance[] =
 };
 
 // Check if application is mounted
-export const isMounted = (app: ServerInstance): boolean => {
+export const isMounted = (app: AppInstance): boolean => {
   return !!(app as any).parent;
 };
 
 // Get mount path
-export const getMountPath = (app: ServerInstance): string => {
+export const getMountPath = (app: AppInstance): string => {
   return (app as any).mountPath || '/';
 };
 
 // Get full mount path (including parent paths)
-export const getFullMountPath = (app: ServerInstance): string => {
+export const getFullMountPath = (app: AppInstance): string => {
   const hierarchy = getApplicationHierarchy(app);
   const path = hierarchy
     .slice(1) // Skip root app

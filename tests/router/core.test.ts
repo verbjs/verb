@@ -5,7 +5,7 @@ test("Router - static routes", () => {
   const router = createRouter();
   
   const handler = (req: any, res: any) => res.send("Hello");
-  router.addRoute('GET', '/', [], handler);
+  router.add('GET', '/', [], handler);
   
   const result = router.match('GET', '/');
   expect(result?.handler).toBe(handler);
@@ -15,7 +15,7 @@ test("Router - static routes", () => {
 test("Router - static routes not found", () => {
   const router = createRouter();
   
-  router.addRoute('GET', '/', [], (req, res) => res.send("Hello"));
+  router.add('GET', '/', [], (req, res) => res.send("Hello"));
   
   const result = router.match('GET', '/not-found');
   expect(result).toBeNull();
@@ -24,7 +24,7 @@ test("Router - static routes not found", () => {
 test("Router - method mismatch", () => {
   const router = createRouter();
   
-  router.addRoute('GET', '/', [], (req, res) => res.send("Hello"));
+  router.add('GET', '/', [], (req, res) => res.send("Hello"));
   
   const result = router.match('POST', '/');
   expect(result).toBeNull();
@@ -34,7 +34,7 @@ test("Router - dynamic routes with single parameter", () => {
   const router = createRouter();
   
   const handler = (req: any, res: any) => res.send("User");
-  router.addRoute('GET', '/users/:id', [], handler);
+  router.add('GET', '/users/:id', [], handler);
   
   const result = router.match('GET', '/users/123');
   expect(result?.handler).toBe(handler);
@@ -45,7 +45,7 @@ test("Router - dynamic routes with multiple parameters", () => {
   const router = createRouter();
   
   const handler = (req: any, res: any) => res.send("Post");
-  router.addRoute('GET', '/users/:userId/posts/:postId', [], handler);
+  router.add('GET', '/users/:userId/posts/:postId', [], handler);
   
   const result = router.match('GET', '/users/123/posts/456');
   expect(result?.handler).toBe(handler);
@@ -55,7 +55,7 @@ test("Router - dynamic routes with multiple parameters", () => {
 test("Router - dynamic routes not matching", () => {
   const router = createRouter();
   
-  router.addRoute('GET', '/users/:id', [], (req, res) => res.send("User"));
+  router.add('GET', '/users/:id', [], (req, res) => res.send("User"));
   
   const result = router.match('GET', '/users/123/extra');
   expect(result).toBeNull();
@@ -67,8 +67,8 @@ test("Router - mixed static and dynamic routes", () => {
   const staticHandler = (req: any, res: any) => res.send("Static");
   const dynamicHandler = (req: any, res: any) => res.send("Dynamic");
   
-  router.addRoute('GET', '/about', [], staticHandler);
-  router.addRoute('GET', '/users/:id', [], dynamicHandler);
+  router.add('GET', '/about', [], staticHandler);
+  router.add('GET', '/users/:id', [], dynamicHandler);
   
   const staticResult = router.match('GET', '/about');
   expect(staticResult?.handler).toBe(staticHandler);
@@ -85,8 +85,8 @@ test("Router - route priority (static over dynamic)", () => {
   const staticHandler = (req: any, res: any) => res.send("Static");
   const dynamicHandler = (req: any, res: any) => res.send("Dynamic");
   
-  router.addRoute('GET', '/users/:id', [], dynamicHandler);
-  router.addRoute('GET', '/users/profile', [], staticHandler);
+  router.add('GET', '/users/:id', [], dynamicHandler);
+  router.add('GET', '/users/profile', [], staticHandler);
   
   // Static route should be found even though dynamic was added first
   const result = router.match('GET', '/users/profile');

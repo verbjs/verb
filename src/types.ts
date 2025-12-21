@@ -119,7 +119,16 @@ export type RouteConfig = {
   [path: string]: BunRouteValue;
 };
 
-export type ServerInstance = {
+export type Context<T = Record<string, unknown>> = {
+  get: <K extends keyof T>(key: K) => T[K] | undefined;
+  set: <K extends keyof T>(key: K, value: T[K]) => void;
+  has: <K extends keyof T>(key: K) => boolean;
+  delete: <K extends keyof T>(key: K) => boolean;
+  clear: () => void;
+  all: () => T;
+};
+
+export type ServerInstance<TContext = Record<string, unknown>> = {
   get: (path: string | string[], ...handlers: MiddlewareHandler[]) => void;
   post: (path: string | string[], ...handlers: MiddlewareHandler[]) => void;
   put: (path: string | string[], ...handlers: MiddlewareHandler[]) => void;
@@ -127,16 +136,15 @@ export type ServerInstance = {
   patch: (path: string | string[], ...handlers: MiddlewareHandler[]) => void;
   head: (path: string | string[], ...handlers: MiddlewareHandler[]) => void;
   options: (path: string | string[], ...handlers: MiddlewareHandler[]) => void;
-  use: (pathOrMiddleware: string | Middleware, ...middlewares: Middleware[]) => void;
-  route: (path: string) => any; // Route instance
+  use: (pathOrMiddleware: string | Middleware | Middleware[], ...middlewares: (Middleware | Middleware[])[]) => void;
+  route: (path: string) => any;
   withRoutes: (routes: RouteConfig) => void;
   withOptions: (options: ListenOptions) => void;
   listen: (port?: number, hostname?: string) => any;
   createFetchHandler: () => (req: globalThis.Request) => Promise<globalThis.Response>;
-  // Application configuration
-  set: (key: string, value: any) => void;
+  set: (key: string | Record<string, any>, value?: any) => void;
   getSetting: (key: string) => any;
-  locals: Record<string, any>;
+  context: Context<TContext>;
   mountpath: string;
   path: () => string;
 };

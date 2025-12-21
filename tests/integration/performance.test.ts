@@ -193,20 +193,20 @@ test("Many concurrent requests simulation", async () => {
 test("Route matching performance with complex patterns", async () => {
   const app = createServer();
   
-  // Add routes with various complexity levels
+  // Add routes with various complexity levels (non-conflicting paths)
   app.get("/simple", (req, res) => res.json({ type: "simple" }));
   app.get("/users/:id", (req, res) => res.json({ type: "param" }));
-  app.get("/users/:id(\\d+)", (req, res) => res.json({ type: "regex" }));
+  app.get("/products/:id(\\d+)", (req, res) => res.json({ type: "regex" }));
   app.get("/files/*", (req, res) => res.json({ type: "wildcard" }));
-  app.get("/api/:version(v\\d+)/users/:id(\\d+)/posts/:postId", (req, res) => 
+  app.get("/api/:version(v\\d+)/users/:id(\\d+)/posts/:postId", (req, res) =>
     res.json({ type: "complex" }));
 
   const fetchHandler = (app as any).createFetchHandler();
-  
+
   const testCases = [
     { url: "/simple", expectedType: "simple" },
     { url: "/users/abc", expectedType: "param" },
-    { url: "/users/123", expectedType: "param" }, // Current implementation matches param first
+    { url: "/products/123", expectedType: "regex" },
     { url: "/files/deep/path/file.txt", expectedType: "wildcard" },
     { url: "/api/v1/users/123/posts/456", expectedType: "complex" }
   ];

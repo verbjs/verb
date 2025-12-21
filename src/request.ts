@@ -1,184 +1,144 @@
-import type { VerbRequest } from "./types";
-import { enhanceRequestWithContentNegotiation } from "./content-negotiation";
+import type { VerbRequest } from "./types"
+import { enhanceRequestWithContentNegotiation } from "./content-negotiation"
 
-/**
- * Parse cookies from the Cookie header
- * @param cookieHeader - The value of the Cookie header
- * @returns Object with cookie name-value pairs
- */
 export const parseCookies = (cookieHeader: string): Record<string, string> => {
-  const cookies: Record<string, string> = {};
+  const cookies: Record<string, string> = {}
+  if (!cookieHeader) return cookies
 
-  if (!cookieHeader) {
-    return cookies;
-  }
+  let i = 0
+  const len = cookieHeader.length
 
-  cookieHeader.split(";").forEach((cookie) => {
-    const [name, ...rest] = cookie.trim().split("=");
-    if (name && rest.length > 0) {
-      const trimmedName = name.trim();
-      const value = rest.join("=").trim();
-      cookies[trimmedName] = value;
+  while (i < len) {
+    // skip whitespace
+    while (i < len && cookieHeader[i] === " ") i++
+
+    // find semicolon or end
+    let end = i
+    while (end < len && cookieHeader[end] !== ";") end++
+
+    // find equals
+    let eq = i
+    while (eq < end && cookieHeader[eq] !== "=") eq++
+
+    if (eq > i && eq < end) {
+      const name = cookieHeader.slice(i, eq).trim()
+      const value = cookieHeader.slice(eq + 1, end).trim()
+      if (name) cookies[name] = value
     }
-  });
 
-  return cookies;
-};
-
-/**
- * Extract client IP address from request headers
- * @param req - The request object
- * @returns Client IP address
- */
-export const getClientIP = (req: Request): string => {
-  // Check common proxy headers first
-  const xForwardedFor = req.headers.get("x-forwarded-for");
-  if (xForwardedFor) {
-    // x-forwarded-for can contain multiple IPs, take the first one
-    const firstIP = xForwardedFor.split(",")[0];
-    return firstIP ? firstIP.trim() : "";
+    i = end + 1
   }
 
-  const xRealIP = req.headers.get("x-real-ip");
-  if (xRealIP) {
-    return xRealIP;
-  }
+  return cookies
+}
 
-  const xClientIP = req.headers.get("x-client-ip");
-  if (xClientIP) {
-    return xClientIP;
-  }
-
-  const cfConnectingIP = req.headers.get("cf-connecting-ip");
-  if (cfConnectingIP) {
-    return cfConnectingIP;
-  }
-
-  // Fallback - this might not be available in all environments
-  return "unknown";
-};
-
-/**
- * Get hostname from request headers
- * @param req - The request object
- * @returns Hostname
- */
-export const getHostname = (req: Request): string => {
-  const host = req.headers.get("host");
-  if (host) {
-    // Remove port if present
-    return host.split(":")[0] || "";
-  }
-
-  // Fallback to extracting from URL
-  try {
-    const url = new URL(req.url);
-    return url.hostname;
-  } catch {
-    return "localhost";
-  }
-};
-
-/**
- * Get protocol from request
- * @param req - The request object
- * @returns Protocol (http or https)
- */
-export const getProtocol = (req: Request): string => {
-  // Check x-forwarded-proto header (common with proxies)
-  const xForwardedProto = req.headers.get("x-forwarded-proto");
-  if (xForwardedProto) {
-    return xForwardedProto;
-  }
-
-  // Check if the connection is secure
-  const url = new URL(req.url);
-  return url.protocol.replace(":", "");
-};
-
-/**
- * Check if request is secure (HTTPS)
- * @param req - The request object
- * @returns True if HTTPS, false otherwise
- */
-export const isSecure = (req: Request): boolean => {
-  return getProtocol(req) === "https";
-};
-
-/**
- * Check if request is XMLHttpRequest (AJAX)
- * @param req - The request object
- * @returns True if XHR, false otherwise
- */
-export const isXHR = (req: Request): boolean => {
-  const xRequestedWith = req.headers.get("x-requested-with");
-  return xRequestedWith?.toLowerCase() === "xmlhttprequest";
-};
-
-/**
- * Get request path without query string
- * @param url - The full URL
- * @returns Path without query string
- */
-export const getPath = (url: string): string => {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.pathname;
-  } catch {
-    // Fallback parsing
-    const queryIndex = url.indexOf("?");
-    const protocolEnd = url.indexOf("://") + 3;
-    const hostEnd = url.indexOf("/", protocolEnd);
-    return queryIndex === -1 ? url.slice(hostEnd) : url.slice(hostEnd, queryIndex);
-  }
-};
-
-/**
- * Create a header getter function for the request
- * @param req - The request object
- * @returns Function to get header values
- */
-export const createHeaderGetter = (req: Request) => {
-  return (header: string): string | undefined => {
-    return req.headers.get(header) || undefined;
-  };
-};
-
-/**
- * Enhance request object with all additional properties
- * @param req - The base request object
- * @returns Enhanced VerbRequest object
- */
 export const enhanceRequest = (req: Request): VerbRequest => {
-  const enhanced = req as VerbRequest;
+  const enhanced = req as VerbRequest
+  const headers = req.headers
 
-  // Parse and add cookies
-  const cookieHeader = req.headers.get("cookie") || "";
-  enhanced.cookies = parseCookies(cookieHeader);
+  // batch header lookups - single pass
+  const host = headers.get("host")
+  const xForwardedFor = headers.get("x-forwarded-for")
+  const xForwardedProto = headers.get("x-forwarded-proto")
+  const cookieHeader = headers.get("cookie")
 
-  // Add IP address
-  enhanced.ip = getClientIP(req);
+  // parse URL once
+  let urlPath = "/"
+  let urlHostname = "localhost"
+  let urlProtocol = "http"
 
-  // Add path
-  enhanced.path = getPath(req.url);
+  const url = req.url
+  const qIdx = url.indexOf("?")
+  const protoEnd = url.indexOf("://")
 
-  // Add hostname
-  enhanced.hostname = getHostname(req);
+  if (protoEnd !== -1) {
+    urlProtocol = url.slice(0, protoEnd)
+    const hostStart = protoEnd + 3
+    const pathStart = url.indexOf("/", hostStart)
+    if (pathStart !== -1) {
+      urlHostname = url.slice(hostStart, pathStart)
+      urlPath = qIdx === -1 ? url.slice(pathStart) : url.slice(pathStart, qIdx)
+    }
+  }
 
-  // Add protocol
-  enhanced.protocol = getProtocol(req);
+  // IP - check proxy headers in order of priority
+  enhanced.ip = xForwardedFor?.split(",")[0]?.trim()
+    || headers.get("x-real-ip")
+    || headers.get("x-client-ip")
+    || headers.get("cf-connecting-ip")
+    || "unknown"
 
-  // Add secure flag
-  enhanced.secure = isSecure(req);
+  // cookies
+  enhanced.cookies = cookieHeader ? parseCookies(cookieHeader) : {}
 
-  // Add XHR flag
-  enhanced.xhr = isXHR(req);
+  // path
+  enhanced.path = urlPath
 
-  // Add header getter function
-  enhanced.get = createHeaderGetter(req);
+  // hostname - prefer Host header
+  enhanced.hostname = host ? host.split(":")[0] : urlHostname
 
-  // Add content negotiation methods
-  enhanceRequestWithContentNegotiation(enhanced);
+  // protocol - prefer x-forwarded-proto
+  const protocol = xForwardedProto || urlProtocol
+  enhanced.protocol = protocol
+  enhanced.secure = protocol === "https"
 
-  return enhanced;
-};
+  // XHR check
+  enhanced.xhr = headers.get("x-requested-with")?.toLowerCase() === "xmlhttprequest"
+
+  // header getter - inline, no closure allocation
+  enhanced.get = (header: string) => headers.get(header) || undefined
+
+  // content negotiation
+  enhanceRequestWithContentNegotiation(enhanced)
+
+  return enhanced
+}
+
+// keep for backward compat
+export const getClientIP = (req: Request): string => {
+  const xff = req.headers.get("x-forwarded-for")
+  if (xff) return xff.split(",")[0]?.trim() || ""
+  return req.headers.get("x-real-ip")
+    || req.headers.get("x-client-ip")
+    || req.headers.get("cf-connecting-ip")
+    || "unknown"
+}
+
+export const getHostname = (req: Request): string => {
+  const host = req.headers.get("host")
+  if (host) return host.split(":")[0] || ""
+  try {
+    return new URL(req.url).hostname
+  } catch {
+    return "localhost"
+  }
+}
+
+export const getProtocol = (req: Request): string => {
+  const proto = req.headers.get("x-forwarded-proto")
+  if (proto) return proto
+  try {
+    return new URL(req.url).protocol.replace(":", "")
+  } catch {
+    return "http"
+  }
+}
+
+export const isSecure = (req: Request): boolean => getProtocol(req) === "https"
+
+export const isXHR = (req: Request): boolean =>
+  req.headers.get("x-requested-with")?.toLowerCase() === "xmlhttprequest"
+
+export const getPath = (url: string): string => {
+  const protoEnd = url.indexOf("://")
+  if (protoEnd === -1) return url
+  const pathStart = url.indexOf("/", protoEnd + 3)
+  if (pathStart === -1) return "/"
+  const qIdx = url.indexOf("?", pathStart)
+  const hashIdx = url.indexOf("#", pathStart)
+  const endIdx = qIdx === -1 ? hashIdx : hashIdx === -1 ? qIdx : Math.min(qIdx, hashIdx)
+  return endIdx === -1 ? url.slice(pathStart) : url.slice(pathStart, endIdx)
+}
+
+export const createHeaderGetter = (req: Request) =>
+  (header: string): string | undefined => req.headers.get(header) || undefined

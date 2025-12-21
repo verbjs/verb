@@ -22,21 +22,6 @@ test("Application config - default environment settings", () => {
   expect(app.getSetting("view cache")).toBeDefined()
 })
 
-test("Application config - app.locals", () => {
-  const app = createHttpServer()
-
-  expect(app.locals).toBeDefined()
-  expect(typeof app.locals).toBe("object")
-
-  app.locals.title = "My Application"
-  app.locals.version = "1.0.0"
-  app.locals.config = { theme: "dark" }
-
-  expect(app.locals.title).toBe("My Application")
-  expect(app.locals.version).toBe("1.0.0")
-  expect(app.locals.config).toEqual({ theme: "dark" })
-})
-
 test("Application config - app.mountpath", () => {
   const app = createHttpServer()
   expect(app.mountpath).toBe("/")
@@ -94,27 +79,6 @@ test("Application config - mixed data types", () => {
   expect(app.getSetting("array")).toEqual([1, 2, 3])
   expect(app.getSetting("null")).toBeNull()
   expect(app.getSetting("undefined")).toBeUndefined()
-})
-
-test("Application config - app.locals integration", () => {
-  const app = createHttpServer()
-
-  app.locals.appName = "Test App"
-  app.locals.version = "1.0.0"
-
-  const mockHandler = () => ({
-    app: app.locals.appName,
-    version: app.locals.version,
-    settings: {
-      env: app.getSetting("env"),
-      port: app.getSetting("port") || 3000
-    }
-  })
-
-  const result = mockHandler()
-  expect(result.app).toBe("Test App")
-  expect(result.version).toBe("1.0.0")
-  expect(result.settings.env).toBeDefined()
 })
 
 test("Application config - independent server instances", () => {
