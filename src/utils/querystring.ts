@@ -6,7 +6,7 @@ export interface QueryObject {
 }
 
 export interface QueryParseOptions {
-  arrayFormat?: 'brackets' | 'comma' | 'repeat';
+  arrayFormat?: "brackets" | "comma" | "repeat";
   delimiter?: string;
   maxKeys?: number;
   decodeValues?: boolean;
@@ -19,14 +19,14 @@ export interface QueryParseOptions {
 // Fast query string parsing with minimal allocations
 export const parseQueryString = (query: string, options: QueryParseOptions = {}): QueryObject => {
   const {
-    arrayFormat = 'brackets',
-    delimiter = '&',
+    arrayFormat = "brackets",
+    delimiter = "&",
     maxKeys = 1000,
     decodeValues = true,
     allowDots = false,
     parseArrays = true,
     parseNumbers = false,
-    parseBooleans = false
+    parseBooleans = false,
   } = options;
 
   if (!query || query.length === 0) {
@@ -34,8 +34,8 @@ export const parseQueryString = (query: string, options: QueryParseOptions = {})
   }
 
   // Remove leading ? if present
-  const cleanQuery = query.startsWith('?') ? query.slice(1) : query;
-  
+  const cleanQuery = query.startsWith("?") ? query.slice(1) : query;
+
   if (cleanQuery.length === 0) {
     return {};
   }
@@ -50,13 +50,13 @@ export const parseQueryString = (query: string, options: QueryParseOptions = {})
       break;
     }
 
-    const equalIndex = pair.indexOf('=');
+    const equalIndex = pair.indexOf("=");
     let key: string;
     let value: string;
 
     if (equalIndex === -1) {
       key = pair;
-      value = '';
+      value = "";
     } else {
       key = pair.substring(0, equalIndex);
       value = pair.substring(equalIndex + 1);
@@ -79,7 +79,7 @@ export const parseQueryString = (query: string, options: QueryParseOptions = {})
     }
 
     // Handle array notation
-    if (parseArrays && arrayFormat === 'brackets' && key.endsWith('[]')) {
+    if (parseArrays && arrayFormat === "brackets" && key.endsWith("[]")) {
       const baseKey = key.slice(0, -2);
       if (baseKey.length > 0) {
         const existing = result[baseKey];
@@ -96,8 +96,8 @@ export const parseQueryString = (query: string, options: QueryParseOptions = {})
     }
 
     // Handle dot notation (nested objects)
-    if (allowDots && key.includes('.')) {
-      setNestedValue(result, key.split('.'), value, parseBooleans, parseNumbers);
+    if (allowDots && key.includes(".")) {
+      setNestedValue(result, key.split("."), value, parseBooleans, parseNumbers);
       keyCount++;
       continue;
     }
@@ -122,49 +122,61 @@ export const parseQueryString = (query: string, options: QueryParseOptions = {})
 };
 
 // Parse individual values with type conversion
-const parseValue = (value: string, parseBooleans: boolean, parseNumbers: boolean): string | number | boolean => {
+const parseValue = (
+  value: string,
+  parseBooleans: boolean,
+  parseNumbers: boolean,
+): string | number | boolean => {
   if (parseBooleans) {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
+    if (value === "true") {
+      return true;
+    }
+    if (value === "false") {
+      return false;
+    }
   }
 
-  if (parseNumbers && value.length > 0 && !isNaN(Number(value))) {
+  if (parseNumbers && value.length > 0 && !Number.isNaN(Number(value))) {
     const num = Number(value);
-    if (Number.isInteger(num)) return num;
+    if (Number.isInteger(num)) {
+      return num;
+    }
   }
 
   return value;
 };
 
 // Set nested object values using dot notation
-const setNestedValue = (obj: any, path: string[], value: string, parseBooleans: boolean, parseNumbers: boolean): void => {
+const setNestedValue = (
+  obj: any,
+  path: string[],
+  value: string,
+  parseBooleans: boolean,
+  parseNumbers: boolean,
+): void => {
   let current = obj;
-  
+
   for (let i = 0; i < path.length - 1; i++) {
     const key = path[i];
     if (current[key] === undefined) {
       current[key] = {};
-    } else if (typeof current[key] !== 'object') {
+    } else if (typeof current[key] !== "object") {
       // Convert to object if not already
       current[key] = {};
     }
     current = current[key];
   }
-  
+
   const finalKey = path[path.length - 1];
   current[finalKey] = parseValue(value, parseBooleans, parseNumbers);
 };
 
 // Fast query string building
 export const buildQueryString = (params: QueryObject, options: QueryParseOptions = {}): string => {
-  const {
-    arrayFormat = 'brackets',
-    delimiter = '&',
-    decodeValues = true
-  } = options;
+  const { arrayFormat = "brackets", delimiter = "&", decodeValues = true } = options;
 
   if (!params || Object.keys(params).length === 0) {
-    return '';
+    return "";
   }
 
   const pairs: string[] = [];
@@ -180,7 +192,7 @@ export const buildQueryString = (params: QueryObject, options: QueryParseOptions
       // Handle array values
       for (const item of value) {
         const encodeValue = decodeValues ? encodeURIComponent(String(item)) : String(item);
-        if (arrayFormat === 'brackets') {
+        if (arrayFormat === "brackets") {
           pairs.push(`${encodeKey}[]=${encodeValue}`);
         } else {
           pairs.push(`${encodeKey}=${encodeValue}`);
@@ -200,25 +212,29 @@ const queryCache = new Map<string, QueryObject>();
 let queryCacheEnabled = true;
 const MAX_CACHE_SIZE = 1000;
 
-export const parseQueryStringCached = (query: string, options: QueryParseOptions = {}): QueryObject => {
+export const parseQueryStringCached = (
+  query: string,
+  options: QueryParseOptions = {},
+): QueryObject => {
   if (!queryCacheEnabled) {
     return parseQueryString(query, options);
   }
 
   const cacheKey = `${query}_${JSON.stringify(options)}`;
-  
-  if (queryCache.has(cacheKey)) {
-    return queryCache.get(cacheKey)!;
+
+  const cached = queryCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   const result = parseQueryString(query, options);
-  
+
   // Simple LRU: if cache is full, remove oldest entry
   if (queryCache.size >= MAX_CACHE_SIZE) {
     const firstKey = queryCache.keys().next().value;
     queryCache.delete(firstKey);
   }
-  
+
   queryCache.set(cacheKey, result);
   return result;
 };
@@ -228,15 +244,17 @@ export const parseCommonPatterns = {
   // Parse simple key=value pairs (most common)
   simple: (query: string): QueryObject => {
     const result: QueryObject = {};
-    const pairs = query.split('&');
-    
+    const pairs = query.split("&");
+
     for (const pair of pairs) {
-      const equalIndex = pair.indexOf('=');
-      if (equalIndex === -1) continue;
-      
+      const equalIndex = pair.indexOf("=");
+      if (equalIndex === -1) {
+        continue;
+      }
+
       const key = pair.substring(0, equalIndex);
       const value = pair.substring(equalIndex + 1);
-      
+
       if (key.length > 0) {
         try {
           result[decodeURIComponent(key)] = decodeURIComponent(value);
@@ -245,7 +263,7 @@ export const parseCommonPatterns = {
         }
       }
     }
-    
+
     return result;
   },
 
@@ -255,17 +273,17 @@ export const parseCommonPatterns = {
     return {
       page: params.page ? parseInt(String(params.page), 10) : undefined,
       limit: params.limit ? parseInt(String(params.limit), 10) : undefined,
-      offset: params.offset ? parseInt(String(params.offset), 10) : undefined
+      offset: params.offset ? parseInt(String(params.offset), 10) : undefined,
     };
   },
 
   // Parse search parameters
-  search: (query: string): { q?: string; sort?: string; order?: 'asc' | 'desc' } => {
+  search: (query: string): { q?: string; sort?: string; order?: "asc" | "desc" } => {
     const params = parseCommonPatterns.simple(query);
     return {
       q: params.q ? String(params.q) : undefined,
       sort: params.sort ? String(params.sort) : undefined,
-      order: params.order === 'desc' ? 'desc' : 'asc'
+      order: params.order === "desc" ? "desc" : "asc",
     };
   },
 
@@ -273,15 +291,15 @@ export const parseCommonPatterns = {
   filters: (query: string): { [key: string]: string | string[] } => {
     const params = parseQueryString(query, { parseArrays: true });
     const filters: { [key: string]: string | string[] } = {};
-    
+
     for (const [key, value] of Object.entries(params)) {
-      if (key.startsWith('filter_') || key.startsWith('where_')) {
-        filters[key] = value!;
+      if ((key.startsWith("filter_") || key.startsWith("where_")) && value !== undefined) {
+        filters[key] = value;
       }
     }
-    
+
     return filters;
-  }
+  },
 };
 
 // Query string validation
@@ -319,45 +337,47 @@ export const getQueryCacheStats = (): {
   return {
     size: queryCache.size,
     enabled: queryCacheEnabled,
-    maxSize: MAX_CACHE_SIZE
+    maxSize: MAX_CACHE_SIZE,
   };
 };
 
 // Fast URL parameter extraction (for req.query)
 export const extractQueryFromUrl = (url: string): string => {
-  const questionIndex = url.indexOf('?');
-  return questionIndex === -1 ? '' : url.substring(questionIndex + 1);
+  const questionIndex = url.indexOf("?");
+  return questionIndex === -1 ? "" : url.substring(questionIndex + 1);
 };
 
 // Common query string constants
 export const QUERY_CONSTANTS = {
   PAGINATION: {
-    PAGE: 'page',
-    LIMIT: 'limit',
-    OFFSET: 'offset',
-    SIZE: 'size'
+    PAGE: "page",
+    LIMIT: "limit",
+    OFFSET: "offset",
+    SIZE: "size",
   },
   SEARCH: {
-    QUERY: 'q',
-    SEARCH: 'search',
-    SORT: 'sort',
-    ORDER: 'order'
+    QUERY: "q",
+    SEARCH: "search",
+    SORT: "sort",
+    ORDER: "order",
   },
   FILTERS: {
-    FILTER_PREFIX: 'filter_',
-    WHERE_PREFIX: 'where_'
-  }
+    FILTER_PREFIX: "filter_",
+    WHERE_PREFIX: "where_",
+  },
 } as const;
 
 // Performance benchmarking
-export const benchmarkQueryParsing = (iterations = 10000): {
+export const benchmarkQueryParsing = (
+  iterations = 10000,
+): {
   simpleParseTime: number;
   cachedParseTime: number;
   fullParseTime: number;
   operationsPerSecond: number;
 } => {
-  const testQuery = 'name=John&age=30&city=New York&tags[]=javascript&tags[]=nodejs&active=true';
-  
+  const testQuery = "name=John&age=30&city=New York&tags[]=javascript&tags[]=nodejs&active=true";
+
   // Benchmark simple parsing
   const simpleStart = performance.now();
   for (let i = 0; i < iterations; i++) {
@@ -365,7 +385,7 @@ export const benchmarkQueryParsing = (iterations = 10000): {
   }
   const simpleEnd = performance.now();
   const simpleParseTime = simpleEnd - simpleStart;
-  
+
   // Benchmark cached parsing
   const cachedStart = performance.now();
   for (let i = 0; i < iterations; i++) {
@@ -373,7 +393,7 @@ export const benchmarkQueryParsing = (iterations = 10000): {
   }
   const cachedEnd = performance.now();
   const cachedParseTime = cachedEnd - cachedStart;
-  
+
   // Benchmark full parsing
   const fullStart = performance.now();
   for (let i = 0; i < iterations; i++) {
@@ -381,11 +401,11 @@ export const benchmarkQueryParsing = (iterations = 10000): {
   }
   const fullEnd = performance.now();
   const fullParseTime = fullEnd - fullStart;
-  
+
   return {
     simpleParseTime,
     cachedParseTime,
     fullParseTime,
-    operationsPerSecond: (iterations / fullParseTime) * 1000
+    operationsPerSecond: (iterations / fullParseTime) * 1000,
   };
 };

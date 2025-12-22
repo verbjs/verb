@@ -1,16 +1,16 @@
-import { test, expect } from "bun:test";
+import { expect, test } from "bun:test";
 import {
-  parseQueryString,
+  benchmarkQueryParsing,
   buildQueryString,
-  parseQueryStringCached,
-  parseCommonPatterns,
-  validateQueryString,
   clearQueryCache,
   enableQueryCache,
-  getQueryCacheStats,
   extractQueryFromUrl,
-  benchmarkQueryParsing,
-  QUERY_CONSTANTS
+  getQueryCacheStats,
+  parseCommonPatterns,
+  parseQueryString,
+  parseQueryStringCached,
+  QUERY_CONSTANTS,
+  validateQueryString,
 } from "./querystring";
 
 test("parseQueryString - basic functionality", () => {
@@ -18,7 +18,7 @@ test("parseQueryString - basic functionality", () => {
   expect(result).toEqual({
     name: "John",
     age: "30",
-    city: "New York"
+    city: "New York",
   });
 });
 
@@ -32,29 +32,29 @@ test("parseQueryString - empty and edge cases", () => {
 
 test("parseQueryString - array handling", () => {
   const result = parseQueryString("tags[]=javascript&tags[]=nodejs&tags[]=react", {
-    parseArrays: true
+    parseArrays: true,
   });
   expect(result).toEqual({
-    tags: ["javascript", "nodejs", "react"]
+    tags: ["javascript", "nodejs", "react"],
   });
 });
 
 test("parseQueryString - duplicate keys", () => {
   const result = parseQueryString("color=red&color=blue&color=green");
   expect(result).toEqual({
-    color: ["red", "blue", "green"]
+    color: ["red", "blue", "green"],
   });
 });
 
 test("parseQueryString - type parsing", () => {
   const result = parseQueryString("active=true&count=42&name=John", {
     parseBooleans: true,
-    parseNumbers: true
+    parseNumbers: true,
   });
   expect(result).toEqual({
     active: true,
     count: 42,
-    name: "John"
+    name: "John",
   });
 });
 
@@ -62,14 +62,14 @@ test("parseQueryString - dot notation", () => {
   const result = parseQueryString("user.name=John&user.age=30&user.active=true", {
     allowDots: true,
     parseBooleans: true,
-    parseNumbers: true
+    parseNumbers: true,
   });
   expect(result).toEqual({
     user: {
       name: "John",
       age: 30,
-      active: true
-    }
+      active: true,
+    },
   });
 });
 
@@ -80,21 +80,21 @@ test("parseQueryString - maxKeys limit", () => {
 
 test("parseQueryString - URL decoding", () => {
   const result = parseQueryString("message=Hello%20World&special=%21%40%23", {
-    decodeValues: true
+    decodeValues: true,
   });
   expect(result).toEqual({
     message: "Hello World",
-    special: "!@#"
+    special: "!@#",
   });
 });
 
 test("parseQueryString - malformed URI handling", () => {
   const result = parseQueryString("name=John&bad=%ZZ&good=test", {
-    decodeValues: true
+    decodeValues: true,
   });
   expect(result).toEqual({
     name: "John",
-    good: "test"
+    good: "test",
   });
 });
 
@@ -117,11 +117,11 @@ test("buildQueryString - empty params", () => {
 
 test("parseQueryStringCached - caching functionality", () => {
   clearQueryCache();
-  
+
   const query = "name=John&age=30";
   const result1 = parseQueryStringCached(query);
   const result2 = parseQueryStringCached(query);
-  
+
   expect(result1).toEqual(result2);
   expect(getQueryCacheStats().size).toBe(1);
 });
@@ -129,13 +129,13 @@ test("parseQueryStringCached - caching functionality", () => {
 test("parseQueryStringCached - cache management", () => {
   clearQueryCache();
   enableQueryCache(false);
-  
+
   const query = "name=John&age=30";
   parseQueryStringCached(query);
-  
+
   expect(getQueryCacheStats().size).toBe(0);
   expect(getQueryCacheStats().enabled).toBe(false);
-  
+
   enableQueryCache(true);
 });
 
@@ -144,7 +144,7 @@ test("parseCommonPatterns - simple parsing", () => {
   expect(result).toEqual({
     name: "John",
     age: "30",
-    city: "New York"
+    city: "New York",
   });
 });
 
@@ -153,7 +153,7 @@ test("parseCommonPatterns - pagination", () => {
   expect(result).toEqual({
     page: 2,
     limit: 10,
-    offset: 20
+    offset: 20,
   });
 });
 
@@ -162,16 +162,18 @@ test("parseCommonPatterns - search", () => {
   expect(result).toEqual({
     q: "javascript",
     sort: "date",
-    order: "desc"
+    order: "desc",
   });
 });
 
 test("parseCommonPatterns - filters", () => {
-  const result = parseCommonPatterns.filters("filter_category=tech&filter_status=active&where_date=2025");
+  const result = parseCommonPatterns.filters(
+    "filter_category=tech&filter_status=active&where_date=2025",
+  );
   expect(result).toEqual({
     filter_category: "tech",
     filter_status: "active",
-    where_date: "2025"
+    where_date: "2025",
   });
 });
 
@@ -195,7 +197,7 @@ test("QUERY_CONSTANTS - constants availability", () => {
 
 test("benchmarkQueryParsing - performance testing", () => {
   const results = benchmarkQueryParsing(100); // Small iteration count for tests
-  
+
   expect(results.simpleParseTime).toBeGreaterThan(0);
   expect(results.cachedParseTime).toBeGreaterThan(0);
   expect(results.fullParseTime).toBeGreaterThan(0);
@@ -203,13 +205,14 @@ test("benchmarkQueryParsing - performance testing", () => {
 });
 
 test("parseQueryString - complex real-world example", () => {
-  const query = "search=javascript%20tutorial&category=web&tags[]=frontend&tags[]=backend&page=1&limit=20&sort=date&order=desc&filter_difficulty=beginner&active=true";
+  const query =
+    "search=javascript%20tutorial&category=web&tags[]=frontend&tags[]=backend&page=1&limit=20&sort=date&order=desc&filter_difficulty=beginner&active=true";
   const result = parseQueryString(query, {
     parseArrays: true,
     parseBooleans: true,
-    parseNumbers: true
+    parseNumbers: true,
   });
-  
+
   expect(result).toEqual({
     search: "javascript tutorial",
     category: "web",
@@ -219,31 +222,32 @@ test("parseQueryString - complex real-world example", () => {
     sort: "date",
     order: "desc",
     filter_difficulty: "beginner",
-    active: true
+    active: true,
   });
 });
 
 test("parseQueryString - nested objects with dot notation", () => {
-  const query = "user.profile.name=John&user.profile.age=30&user.settings.theme=dark&user.settings.notifications.email=true";
+  const query =
+    "user.profile.name=John&user.profile.age=30&user.settings.theme=dark&user.settings.notifications.email=true";
   const result = parseQueryString(query, {
     allowDots: true,
     parseBooleans: true,
-    parseNumbers: true
+    parseNumbers: true,
   });
-  
+
   expect(result).toEqual({
     user: {
       profile: {
         name: "John",
-        age: 30
+        age: 30,
       },
       settings: {
         theme: "dark",
         notifications: {
-          email: true
-        }
-      }
-    }
+          email: true,
+        },
+      },
+    },
   });
 });
 
@@ -253,24 +257,24 @@ test("parseQueryString - performance with large query strings", () => {
   for (let i = 0; i < 100; i++) {
     pairs.push(`key${i}=value${i}`);
   }
-  const largeQuery = pairs.join('&');
-  
+  const largeQuery = pairs.join("&");
+
   const startTime = performance.now();
   const result = parseQueryString(largeQuery);
   const endTime = performance.now();
-  
+
   expect(Object.keys(result)).toHaveLength(100);
   expect(endTime - startTime).toBeLessThan(10); // Should be fast
 });
 
 test("cache management - LRU behavior", () => {
   clearQueryCache();
-  
+
   // Fill cache to near capacity
   for (let i = 0; i < 50; i++) {
     parseQueryStringCached(`key${i}=value${i}`);
   }
-  
+
   const stats = getQueryCacheStats();
   expect(stats.size).toBeGreaterThan(0);
   expect(stats.enabled).toBe(true);
@@ -280,11 +284,11 @@ test("cache management - LRU behavior", () => {
 test("parseQueryString - special characters and encoding", () => {
   const query = "name=John%20Doe&email=john%40example.com&message=Hello%2C%20World%21";
   const result = parseQueryString(query, { decodeValues: true });
-  
+
   expect(result).toEqual({
     name: "John Doe",
     email: "john@example.com",
-    message: "Hello, World!"
+    message: "Hello, World!",
   });
 });
 
@@ -292,32 +296,35 @@ test("buildQueryString - special characters handling", () => {
   const params = {
     name: "John Doe",
     email: "john@example.com",
-    message: "Hello, World!"
+    message: "Hello, World!",
   };
   const result = buildQueryString(params);
-  
+
   expect(result).toBe("name=John%20Doe&email=john%40example.com&message=Hello%2C%20World!");
 });
 
 test("parseQueryString - custom delimiter", () => {
   const result = parseQueryString("name=John;age=30;city=New York", {
-    delimiter: ";"
+    delimiter: ";",
   });
-  
+
   expect(result).toEqual({
     name: "John",
     age: "30",
-    city: "New York"
+    city: "New York",
   });
 });
 
 test("parseQueryString - mixed array formats", () => {
-  const result = parseQueryString("tags[]=javascript&tags[]=nodejs&categories=web&categories=tutorial", {
-    parseArrays: true
-  });
-  
+  const result = parseQueryString(
+    "tags[]=javascript&tags[]=nodejs&categories=web&categories=tutorial",
+    {
+      parseArrays: true,
+    },
+  );
+
   expect(result).toEqual({
     tags: ["javascript", "nodejs"],
-    categories: ["web", "tutorial"]
+    categories: ["web", "tutorial"],
   });
 });

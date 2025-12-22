@@ -1,16 +1,16 @@
-import type { Middleware, VerbRequest, VerbResponse } from "./types";
 import {
-  trustProxy,
-  rateLimit,
+  type CORSOptions,
   cors,
-  securityHeaders,
   createSecurityMiddleware,
+  type RateLimitOptions,
+  rateLimit,
+  type SecurityHeadersOptions,
+  securityHeaders,
   securityPresets,
   type TrustProxyOptions,
-  type RateLimitOptions,
-  type CORSOptions,
-  type SecurityHeadersOptions,
+  trustProxy,
 } from "./security";
+import type { Middleware, VerbRequest, VerbResponse } from "./types";
 
 // Static file serving middleware - similar to express.static()
 export const staticFiles = (

@@ -136,7 +136,10 @@ export type ServerInstance<TContext = Record<string, unknown>> = {
   patch: (path: string | string[], ...handlers: MiddlewareHandler[]) => void;
   head: (path: string | string[], ...handlers: MiddlewareHandler[]) => void;
   options: (path: string | string[], ...handlers: MiddlewareHandler[]) => void;
-  use: (pathOrMiddleware: string | Middleware | Middleware[], ...middlewares: (Middleware | Middleware[])[]) => void;
+  use: (
+    pathOrMiddleware: string | Middleware | Middleware[],
+    ...middlewares: (Middleware | Middleware[])[]
+  ) => void;
   route: (path: string) => any;
   withRoutes: (routes: RouteConfig) => void;
   withOptions: (options: ListenOptions) => void;

@@ -1,15 +1,15 @@
 import { ServerProtocol } from "../types";
+import { createDtlsServer, type DtlsServerInstance } from "./dtls";
+import { createGrpcServer, type GrpcServerInstance } from "./grpc";
 import { createHttpServer } from "./http";
-import { createHttpsServer, type HttpsServerInstance } from "./https";
 import { createHttp2Server } from "./http2";
 import { createHttp2sServer, type Http2sServerInstance } from "./http2s";
-import { createWebSocketServer, type WebSocketServerInstance } from "./websocket";
-import { createWebSocketsServer, type WebSocketsServerInstance } from "./websockets";
-import { createGrpcServer, type GrpcServerInstance } from "./grpc";
-import { createUdpServer, type UdpServerInstance } from "./udp";
-import { createDtlsServer, type DtlsServerInstance } from "./dtls";
+import { createHttpsServer, type HttpsServerInstance } from "./https";
 import { createTcpServer, type TcpServerInstance } from "./tcp";
 import { createTlsServer, type TlsServerInstance } from "./tls";
+import { createUdpServer, type UdpServerInstance } from "./udp";
+import { createWebSocketServer, type WebSocketServerInstance } from "./websocket";
+import { createWebSocketsServer, type WebSocketsServerInstance } from "./websockets";
 
 // Base interface for HTTP-based servers that support withRoutes
 export interface HttpBasedServerInstance {
@@ -28,7 +28,7 @@ export interface HttpBasedServerInstance {
 }
 
 // Union type for all server instances
-export type UnifiedServerInstance = 
+export type UnifiedServerInstance =
   | (ReturnType<typeof createHttpServer> & HttpBasedServerInstance)
   | (HttpsServerInstance & HttpBasedServerInstance)
   | (ReturnType<typeof createHttp2Server> & HttpBasedServerInstance)
@@ -42,7 +42,9 @@ export type UnifiedServerInstance =
   | TlsServerInstance;
 
 // Gateway function to create servers with protocol switching
-export const createUnifiedServer = (protocol: ServerProtocol = ServerProtocol.HTTP): UnifiedServerInstance => {
+export const createUnifiedServer = (
+  protocol: ServerProtocol = ServerProtocol.HTTP,
+): UnifiedServerInstance => {
   switch (protocol) {
     case ServerProtocol.HTTP:
       return createHttpServer();
@@ -85,21 +87,33 @@ type ProtocolGatewayState = {
 };
 
 // Create protocol gateway state
-const createProtocolGatewayState = (defaultProtocol: ServerProtocol = ServerProtocol.HTTP): ProtocolGatewayState => ({
+const createProtocolGatewayState = (
+  defaultProtocol: ServerProtocol = ServerProtocol.HTTP,
+): ProtocolGatewayState => ({
   servers: new Map(),
   activeProtocol: defaultProtocol,
 });
 
 // Get or create server for a specific protocol
-const getServerForProtocol = (state: ProtocolGatewayState, protocol: ServerProtocol): UnifiedServerInstance => {
+const getServerForProtocol = (
+  state: ProtocolGatewayState,
+  protocol: ServerProtocol,
+): UnifiedServerInstance => {
   if (!state.servers.has(protocol)) {
     state.servers.set(protocol, createUnifiedServer(protocol));
   }
-  return state.servers.get(protocol)!;
+  const server = state.servers.get(protocol);
+  if (!server) {
+    throw new Error(`Failed to get server for protocol: ${protocol}`);
+  }
+  return server;
 };
 
 // Switch to a different protocol
-const switchProtocol = (state: ProtocolGatewayState, protocol: ServerProtocol): UnifiedServerInstance => {
+const switchProtocol = (
+  state: ProtocolGatewayState,
+  protocol: ServerProtocol,
+): UnifiedServerInstance => {
   state.activeProtocol = protocol;
   return getServerForProtocol(state, protocol);
 };
@@ -123,15 +137,15 @@ const isHttpBasedServer = (server: any): boolean => {
 const defineRoutes = (state: ProtocolGatewayState, routeDefiner: (server: any) => void) => {
   // Apply routes to HTTP-based servers
   const httpProtocols = [
-    ServerProtocol.HTTP, 
+    ServerProtocol.HTTP,
     ServerProtocol.HTTPS,
-    ServerProtocol.HTTP2, 
+    ServerProtocol.HTTP2,
     ServerProtocol.HTTP2S,
     ServerProtocol.WEBSOCKET,
-    ServerProtocol.WEBSOCKETS
+    ServerProtocol.WEBSOCKETS,
   ];
-  
-  httpProtocols.forEach(protocol => {
+
+  httpProtocols.forEach((protocol) => {
     const server = getServerForProtocol(state, protocol);
     if (isHttpBasedServer(server)) {
       routeDefiner(server);
@@ -141,14 +155,14 @@ const defineRoutes = (state: ProtocolGatewayState, routeDefiner: (server: any) =
 
 // Start server for specific protocol
 const listenWithGateway = async (
-  state: ProtocolGatewayState, 
-  port?: number, 
-  hostname?: string, 
-  protocol?: ServerProtocol
+  state: ProtocolGatewayState,
+  port?: number,
+  hostname?: string,
+  protocol?: ServerProtocol,
 ): Promise<any> => {
   const targetProtocol = protocol || state.activeProtocol;
   const server = getServerForProtocol(state, targetProtocol);
-  
+
   if (server.listen) {
     return server.listen(port, hostname);
   } else {
@@ -158,8 +172,8 @@ const listenWithGateway = async (
 
 // Stop all servers
 const stopAllServers = (state: ProtocolGatewayState) => {
-  state.servers.forEach((server, protocol) => {
-    if (server && typeof (server as any).stop === 'function') {
+  state.servers.forEach((server, _protocol) => {
+    if (server && typeof (server as any).stop === "function") {
       (server as any).stop();
     }
   });
@@ -189,16 +203,18 @@ export type ProtocolGateway = {
 };
 
 // Create protocol gateway with functional approach
-export const createProtocolGatewayWithState = (defaultProtocol?: ServerProtocol): ProtocolGateway => {
+export const createProtocolGatewayWithState = (
+  defaultProtocol?: ServerProtocol,
+): ProtocolGateway => {
   const state = createProtocolGatewayState(defaultProtocol);
-  
+
   return {
     getServer: (protocol: ServerProtocol) => getServerForProtocol(state, protocol),
     switchProtocol: (protocol: ServerProtocol) => switchProtocol(state, protocol),
     current: () => getCurrentServer(state),
     getCurrentProtocol: () => getCurrentProtocol(state),
     defineRoutes: (routeDefiner: (server: any) => void) => defineRoutes(state, routeDefiner),
-    listen: (port?: number, hostname?: string, protocol?: ServerProtocol) => 
+    listen: (port?: number, hostname?: string, protocol?: ServerProtocol) =>
       listenWithGateway(state, port, hostname, protocol),
     stop: () => stopAllServers(state),
     getAvailableProtocols,
@@ -224,10 +240,10 @@ export const server = {
   dtls: () => createServer(ServerProtocol.DTLS),
   tcp: () => createServer(ServerProtocol.TCP),
   tls: () => createServer(ServerProtocol.TLS),
-  
+
   // Create server with protocol switching capability
   gateway: (defaultProtocol?: ServerProtocol) => createProtocolGateway(defaultProtocol),
-  
+
   // Create unified server
-  unified: (protocol?: ServerProtocol) => createServer(protocol)
+  unified: (protocol?: ServerProtocol) => createServer(protocol),
 };

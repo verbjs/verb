@@ -110,7 +110,7 @@ export const createGrpcMethod = (
   name: string,
   requestType: string,
   responseType: string,
-  handler: (request: any) => Promise<any> | any
+  handler: (request: any) => Promise<any> | any,
 ): GrpcMethod => {
   return {
     name,

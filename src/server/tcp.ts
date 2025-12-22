@@ -45,7 +45,11 @@ export const createTcpServer = (): TcpServerInstance => {
     serverOptions = options;
   };
 
-  const createMockConnection = (id: string, remoteAddress: string, remotePort: number): TcpConnection => {
+  const createMockConnection = (
+    id: string,
+    remoteAddress: string,
+    remotePort: number,
+  ): TcpConnection => {
     const connection: TcpConnection = {
       id,
       remoteAddress,
@@ -79,12 +83,12 @@ export const createTcpServer = (): TcpServerInstance => {
     // In a real implementation, you would use Node.js net module
     // const net = require('net');
     // const server = net.createServer((socket) => { ... });
-    
+
     // For now, we'll create a mock server
     const server = {
       port: finalPort,
       hostname: finalHostname,
-      type: 'tcp',
+      type: "tcp",
       connections: new Map<string, TcpConnection>(),
       close: () => {
         console.log("🛑 TCP Server stopped");
@@ -93,13 +97,13 @@ export const createTcpServer = (): TcpServerInstance => {
       _simulateConnection: (remoteAddress: string, remotePort: number) => {
         const connectionId = `${remoteAddress}:${remotePort}-${Date.now()}`;
         const connection = createMockConnection(connectionId, remoteAddress, remotePort);
-        
+
         server.connections.set(connectionId, connection);
-        
+
         if (connectionHandler) {
           connectionHandler(connection);
         }
-        
+
         return connection;
       },
       // Simulate data handling

@@ -1,3 +1,3 @@
-import { createBaseServer } from "./base"
+import { createBaseServer } from "./base";
 
-export const createHttp2Server = () => createBaseServer({ http2: true })
+export const createHttp2Server = () => createBaseServer({ http2: true });

@@ -46,12 +46,12 @@ export const createUdpServer = (): UdpServerInstance => {
     // In a real implementation, you would use Node.js dgram module
     // const dgram = require('dgram');
     // const server = dgram.createSocket('udp4');
-    
+
     // For now, we'll create a mock server
     const server = {
       port: finalPort,
       hostname: finalHostname,
-      type: 'udp',
+      type: "udp",
       close: () => {
         console.log("🛑 UDP Server stopped");
       },

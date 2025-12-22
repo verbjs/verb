@@ -6,7 +6,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=flat&logo=bun&logoColor=white)](https://bun.sh)
 
-## 📋 Requirements
+## Part of the Verb Ecosystem
+
+| Package | Description |
+|---------|-------------|
+| [Verb](https://github.com/verb-js/verb) | Fast web framework for Bun (this repo) |
+| [Hull](https://github.com/verb-js/hull) | Ecto-inspired database toolkit |
+| [Allow](https://github.com/verb-js/allow) | Authentication library |
+| [Hoist](https://github.com/verb-js/hoist) | Deployment platform |
+
+## Requirements
 
 **⚠️ Verb requires Bun runtime** - it won't work with Node.js, as it uses Bun-specific APIs.
 

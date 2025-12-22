@@ -22,9 +22,16 @@ export type UploadConfig = {
   virusScanHook?: (file: UploadedFile) => Promise<boolean>; // return true if clean
 };
 
-export const parseFormData = async (request: Request, config: UploadConfig = {}): Promise<{ fields: Record<string, string>; files: Record<string, UploadedFile | UploadedFile[]>; totalSize: number }> => {
+export const parseFormData = async (
+  request: Request,
+  config: UploadConfig = {},
+): Promise<{
+  fields: Record<string, string>;
+  files: Record<string, UploadedFile | UploadedFile[]>;
+  totalSize: number;
+}> => {
   // Check request size early to prevent memory overflow
-  const contentLength = request.headers.get('content-length');
+  const contentLength = request.headers.get("content-length");
   if (contentLength && config.maxRequestSize) {
     const requestSize = parseInt(contentLength, 10);
     if (requestSize > config.maxRequestSize) {
@@ -38,13 +45,20 @@ export const parseFormData = async (request: Request, config: UploadConfig = {})
   let totalSize = 0;
 
   for (const [key, value] of Array.from(formData.entries())) {
-    if (value != null && typeof value === 'object' && 'name' in (value as any) && 'size' in (value as any)) {
+    if (
+      value != null &&
+      typeof value === "object" &&
+      "name" in (value as any) &&
+      "size" in (value as any)
+    ) {
       const file = value as File;
       totalSize += file.size;
-      
+
       // Check total size during parsing
       if (config.maxRequestSize && totalSize > config.maxRequestSize) {
-        throw new Error(`Total upload size ${totalSize} exceeds maximum ${config.maxRequestSize} bytes`);
+        throw new Error(
+          `Total upload size ${totalSize} exceeds maximum ${config.maxRequestSize} bytes`,
+        );
       }
 
       const uploadedFile: UploadedFile = {
@@ -95,7 +109,7 @@ export const validateFile = (file: UploadedFile, config: UploadConfig = {}) => {
   }
 
   if (file.size === 0) {
-    errors.push('Empty files are not allowed');
+    errors.push("Empty files are not allowed");
   }
 
   return {
@@ -114,12 +128,12 @@ export const saveFile = async (file: UploadedFile, config: UploadConfig = {}) =>
   await Bun.write(`${uploadDir}/.keep`, "");
 
   const filePath = `${uploadDir}/${fileName}`;
-  
+
   // Virus scanning hook
   if (config.virusScanHook) {
     const isSafe = await config.virusScanHook(file);
     if (!isSafe) {
-      throw new Error('File failed virus scan');
+      throw new Error("File failed virus scan");
     }
   }
 
@@ -152,35 +166,58 @@ export const generateUniqueFileName = (originalName: string) => {
 export const sanitizeFileName = (filename: string): string => {
   // Remove path traversal attempts and dangerous characters
   const sanitized = filename
-    .replace(/\.\.\//g, '') // Remove ../ patterns
-    .replace(/\.\.\\/g, '') // Remove ..\ patterns  
-    .replace(/[\\/:*?"<>|]/g, '_') // Replace invalid chars
-    .replace(/^\.+/, '') // Remove leading dots
-    .replace(/\.+$/, '') // Remove trailing dots
-    .replace(/\s+/g, '_') // Replace spaces with underscores
+    .replace(/\.\.\//g, "") // Remove ../ patterns
+    .replace(/\.\.\\/g, "") // Remove ..\ patterns
+    .replace(/[\\/:*?"<>|]/g, "_") // Replace invalid chars
+    .replace(/^\.+/, "") // Remove leading dots
+    .replace(/\.+$/, "") // Remove trailing dots
+    .replace(/\s+/g, "_") // Replace spaces with underscores
     .substring(0, 255); // Limit filename length
-  
-  return sanitized || 'unnamed_file';
+
+  return sanitized || "unnamed_file";
 };
 
 export const isValidFileName = (filename: string): boolean => {
   // Check for path traversal attempts
-  if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+  if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
     return false;
   }
-  
+
   // Check for reserved names (Windows)
-  const reservedNames = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
-  const nameWithoutExt = filename.split('.')[0]?.toUpperCase() || '';
+  const reservedNames = [
+    "CON",
+    "PRN",
+    "AUX",
+    "NUL",
+    "COM1",
+    "COM2",
+    "COM3",
+    "COM4",
+    "COM5",
+    "COM6",
+    "COM7",
+    "COM8",
+    "COM9",
+    "LPT1",
+    "LPT2",
+    "LPT3",
+    "LPT4",
+    "LPT5",
+    "LPT6",
+    "LPT7",
+    "LPT8",
+    "LPT9",
+  ];
+  const nameWithoutExt = filename.split(".")[0]?.toUpperCase() || "";
   if (reservedNames.includes(nameWithoutExt)) {
     return false;
   }
-  
+
   // Check filename length
   if (filename.length > 255) {
     return false;
   }
-  
+
   return true;
 };
 
@@ -189,26 +226,26 @@ const saveFileStream = async (file: UploadedFile, filePath: string, config: Uplo
   const stream = file.stream();
   const reader = stream.getReader();
   let bytesWritten = 0;
-  
+
   try {
     const fileHandle = Bun.file(filePath).writer();
-    
+
     while (true) {
       const { done, value } = await reader.read();
-      
+
       if (done) {
         break;
       }
-      
+
       fileHandle.write(value);
       bytesWritten += value.byteLength;
-      
+
       // Progress callback
       if (config.onProgress) {
         config.onProgress(bytesWritten, file.size);
       }
     }
-    
+
     fileHandle.end();
   } finally {
     reader.releaseLock();
@@ -216,24 +253,26 @@ const saveFileStream = async (file: UploadedFile, filePath: string, config: Uplo
 };
 
 // File type validation by magic numbers
-export const validateFileType = async (file: UploadedFile): Promise<{ valid: boolean; detectedType?: string; errors: string[] }> => {
+export const validateFileType = async (
+  file: UploadedFile,
+): Promise<{ valid: boolean; detectedType?: string; errors: string[] }> => {
   const errors: string[] = [];
-  
+
   try {
     const buffer = await file.arrayBuffer();
     const bytes = new Uint8Array(buffer.slice(0, 12)); // Check first 12 bytes
-    
+
     // Common file signatures
     const signatures = {
-      'image/jpeg': [0xFF, 0xD8, 0xFF],
-      'image/png': [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
-      'image/gif': [0x47, 0x49, 0x46, 0x38],
-      'application/pdf': [0x25, 0x50, 0x44, 0x46],
-      'application/zip': [0x50, 0x4B, 0x03, 0x04],
+      "image/jpeg": [0xff, 0xd8, 0xff],
+      "image/png": [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+      "image/gif": [0x47, 0x49, 0x46, 0x38],
+      "application/pdf": [0x25, 0x50, 0x44, 0x46],
+      "application/zip": [0x50, 0x4b, 0x03, 0x04],
     };
-    
+
     let detectedType: string | undefined;
-    
+
     for (const [type, signature] of Object.entries(signatures)) {
       if (bytes.length >= signature.length) {
         const matches = signature.every((byte, index) => bytes[index] === byte);
@@ -243,19 +282,21 @@ export const validateFileType = async (file: UploadedFile): Promise<{ valid: boo
         }
       }
     }
-    
+
     // Compare with declared MIME type
     if (detectedType && file.type !== detectedType) {
       errors.push(`File type mismatch: declared ${file.type}, detected ${detectedType}`);
     }
-    
+
     return {
       valid: errors.length === 0,
       detectedType,
       errors,
     };
   } catch (error) {
-    errors.push(`Failed to validate file type: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    errors.push(
+      `Failed to validate file type: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
     return {
       valid: false,
       errors,

@@ -1,21 +1,21 @@
-import { createBaseServer } from "./base"
+import { createBaseServer } from "./base";
 
 export type TlsOptions = {
-  cert: string | ArrayBuffer
-  key: string | ArrayBuffer
-  passphrase?: string
-  ca?: string | ArrayBuffer
-}
+  cert: string | ArrayBuffer;
+  key: string | ArrayBuffer;
+  passphrase?: string;
+  ca?: string | ArrayBuffer;
+};
 
 export const createHttpsServer = () => {
-  const server = createBaseServer()
+  const server = createBaseServer();
 
   const withTLS = (options: TlsOptions) => {
-    server._setTls(options)
-    return server
-  }
+    server._setTls(options);
+    return server;
+  };
 
-  return { ...server, withTLS }
-}
+  return { ...server, withTLS };
+};
 
-export type HttpsServerInstance = ReturnType<typeof createHttpsServer>
+export type HttpsServerInstance = ReturnType<typeof createHttpsServer>;

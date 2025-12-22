@@ -75,12 +75,12 @@ export const createDtlsServer = (): DtlsServerInstance => {
     // const dgram = require('dgram');
     // const server = dgram.createSocket('udp4');
     // server.bind(port, hostname);
-    
+
     // For now, we'll create a mock server
     const server = {
       port: finalPort,
       hostname: finalHostname,
-      type: 'dtls',
+      type: "dtls",
       tlsOptions,
       close: () => {
         console.log("🛑 DTLS Server stopped");

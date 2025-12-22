@@ -1,3 +1,3 @@
-import { createBaseServer } from "./base"
+import { createBaseServer } from "./base";
 
-export const createHttpServer = () => createBaseServer()
+export const createHttpServer = () => createBaseServer();

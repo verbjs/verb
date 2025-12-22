@@ -70,7 +70,11 @@ export const createTlsServer = (): TlsServerInstance => {
     return tlsServer;
   };
 
-  const createMockConnection = (id: string, remoteAddress: string, remotePort: number): TlsConnection => {
+  const createMockConnection = (
+    id: string,
+    remoteAddress: string,
+    remotePort: number,
+  ): TlsConnection => {
     const connection: TlsConnection = {
       id,
       remoteAddress,
@@ -94,13 +98,13 @@ export const createTlsServer = (): TlsServerInstance => {
       },
       getPeerCertificate: () => {
         return {
-          subject: { CN: 'localhost' },
-          issuer: { CN: 'localhost' },
+          subject: { CN: "localhost" },
+          issuer: { CN: "localhost" },
           valid_from: new Date().toISOString(),
           valid_to: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-          fingerprint: 'AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD'
+          fingerprint: "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD",
         };
-      }
+      },
     };
     return connection;
   };
@@ -119,12 +123,12 @@ export const createTlsServer = (): TlsServerInstance => {
     // In a real implementation, you would use Node.js tls module
     // const tls = require('tls');
     // const server = tls.createServer(tlsOptions, (socket) => { ... });
-    
+
     // For now, we'll create a mock server
     const server = {
       port: finalPort,
       hostname: finalHostname,
-      type: 'tls',
+      type: "tls",
       connections: new Map<string, TlsConnection>(),
       tlsOptions,
       close: () => {
@@ -134,13 +138,13 @@ export const createTlsServer = (): TlsServerInstance => {
       _simulateConnection: (remoteAddress: string, remotePort: number) => {
         const connectionId = `${remoteAddress}:${remotePort}-${Date.now()}`;
         const connection = createMockConnection(connectionId, remoteAddress, remotePort);
-        
+
         server.connections.set(connectionId, connection);
-        
+
         if (connectionHandler) {
           connectionHandler(connection);
         }
-        
+
         return connection;
       },
       // Simulate data handling
