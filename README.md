@@ -10,10 +10,10 @@
 
 | Package | Description |
 |---------|-------------|
-| [Verb](https://github.com/verb-js/verb) | Fast web framework for Bun (this repo) |
-| [Hull](https://github.com/verb-js/hull) | Ecto-inspired database toolkit |
-| [Allow](https://github.com/verb-js/allow) | Authentication library |
-| [Hoist](https://github.com/verb-js/hoist) | Deployment platform |
+| [Verb](https://github.com/verbjs/verb) | Fast web framework for Bun (this repo) |
+| [Hull](https://github.com/verbjs/hull) | Ecto-inspired database toolkit |
+| [Allow](https://github.com/verbjs/allow) | Authentication library |
+| [Hoist](https://github.com/verbjs/hoist) | Deployment platform |
 
 ## Requirements
 

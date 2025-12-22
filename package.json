@@ -32,10 +32,13 @@
   "homepage": "https://verb.codes",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wess/verb.git"
+    "url": "https://github.com/verbjs/verb.git"
   },
   "bugs": {
-    "url": "https://github.com/wess/verb/issues"
+    "url": "https://github.com/verbjs/verb/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "preinstall": "bun scripts/check-package-manager.ts",
@@ -50,7 +53,8 @@
     "prepublishOnly": "bun run lint && bun test",
     "publish:dry": "npm publish --dry-run",
     "publish:beta": "npm publish --tag beta",
-    "publish:latest": "npm publish"
+    "publish:latest": "npm publish",
+    "publish:npm": "npm publish --access public"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.6",
