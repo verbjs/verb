@@ -221,9 +221,15 @@ test("defaultErrorHandler - handles regular Error", async () => {
   const res = createMockResponse();
   const error = new Error("Regular error");
   let nextCalled = false;
-  
+
+  // Suppress expected console.error during test
+  const originalError = console.error;
+  console.error = () => {};
+
   await defaultErrorHandler(error, req, res, () => { nextCalled = true; });
-  
+
+  console.error = originalError;
+
   expect(nextCalled).toBe(false);
   expect(res._getStatusCode()).toBe(500);
   expect(res._getResponseBody()).toEqual({
@@ -237,17 +243,22 @@ test("defaultErrorHandler - handles regular Error", async () => {
 test("defaultErrorHandler - exposes errors in development", async () => {
   const originalEnv = process.env.NODE_ENV;
   process.env.NODE_ENV = 'development';
-  
+
   const req = createMockRequest();
   const res = createMockResponse();
   const error = new Error("Development error");
   let nextCalled = false;
-  
+
+  // Suppress expected console.error during test
+  const originalError = console.error;
+  console.error = () => {};
+
   await defaultErrorHandler(error, req, res, () => { nextCalled = true; });
-  
-  expect(res._getResponseBody().error.message).toBe("Development error");
-  
+
+  console.error = originalError;
   process.env.NODE_ENV = originalEnv;
+
+  expect(res._getResponseBody().error.message).toBe("Development error");
 });
 
 test("defaultErrorHandler - skips if headers already sent", async () => {

@@ -29,7 +29,7 @@
 curl -fsSL https://bun.sh/install | bash
 
 # Install Verb
-bun add verb
+bun add @verb-js/verb
 ```
 
 ## 🚀 Quick Start

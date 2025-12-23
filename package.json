@@ -1,5 +1,5 @@
 {
-  "name": "verb",
+  "name": "@verb-js/verb",
   "author": "Wess Cope",
   "version": "1.0.1",
   "description": "A fast, modern server framework built specifically for Bun runtime with multi-protocol support",
