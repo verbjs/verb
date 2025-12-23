@@ -53,5 +53,5 @@ pnpm-lock.yaml
 !README.md
 !LICENSE
 !package.json
-!llm.txt
+!api-reference.txt
 !VERSION

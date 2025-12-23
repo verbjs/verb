@@ -77,7 +77,7 @@ All Verb features are available and optimized for maximum performance.
 
   console.log(`${colors.bright}Documentation:${colors.reset}
 • 📚 Getting Started: ${colors.blue}https://github.com/wess/verb#readme${colors.reset}
-• 🔗 API Reference: Check the llm.txt file for comprehensive docs
+• 🔗 API Reference: ${colors.blue}https://github.com/wess/verb/wiki${colors.reset}
 • 💡 Examples: See the examples/ directory
 
 ${colors.bright}Community:${colors.reset}
